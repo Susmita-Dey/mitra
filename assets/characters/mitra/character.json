@@ -1,0 +1,38 @@
+{
+  "name": "Mitra",
+  "species": "Red Panda",
+  "version": "1.0.0",
+  "renderer": "placeholder",
+  "assets": {
+    "rive": "rive/mitra_main.riv",
+    "svg": "svg/poses/front.svg"
+  },
+  "states": {
+    "animations": {
+      "idle":        { "riveInput": 0, "cssClass": "is-idle" },
+      "blink":       { "riveInput": 1, "cssClass": "is-blinking" },
+      "look-around": { "riveInput": 2, "cssClass": "is-looking-around" },
+      "stretch":     { "riveInput": 3, "cssClass": "is-stretching" },
+      "sleep":       { "riveInput": 4, "cssClass": "is-sleeping" },
+      "walk":        { "riveInput": 5, "cssClass": "is-walking" },
+      "observe":     { "riveInput": 6, "cssClass": "is-observing" },
+      "sit":         { "riveInput": 7, "cssClass": "is-sitting" },
+      "wave":        { "riveInput": 8, "cssClass": "is-waving" }
+    },
+    "emotions": {
+      "neutral":   { "riveInput": 0, "cssClass": "emotion-neutral" },
+      "relaxed":   { "riveInput": 1, "cssClass": "emotion-relaxed" },
+      "waiting":   { "riveInput": 2, "cssClass": "emotion-waiting" },
+      "curious":   { "riveInput": 3, "cssClass": "emotion-curious" },
+      "happy":     { "riveInput": 4, "cssClass": "emotion-happy" },
+      "concerned": { "riveInput": 5, "cssClass": "emotion-concerned" },
+      "sleepy":    { "riveInput": 6, "cssClass": "emotion-sleepy" },
+      "focused":   { "riveInput": 7, "cssClass": "emotion-focused" }
+    }
+  },
+  "layout": {
+    "anchorX": "50%",
+    "anchorY": "100%",
+    "baseScale": 1.0
+  }
+}

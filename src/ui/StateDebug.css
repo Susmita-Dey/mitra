@@ -1,0 +1,8 @@
+.state-debug {
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: rgba(100, 100, 100, 0.7);
+  text-align: center;
+}

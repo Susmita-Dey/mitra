@@ -1,0 +1,36 @@
+/**
+ * Global styles for the transparent companion window.
+ *
+ * Tauri renders a native transparent webview; every layer must opt out of
+ * opaque backgrounds or the desktop will show a solid rectangle behind Mitra.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+body {
+  /* Prevent accidental text selection while Mitra sits over other apps. */
+  user-select: none;
+}
+
+.companion-shell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
