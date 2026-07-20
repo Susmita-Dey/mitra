@@ -48,5 +48,6 @@
 ## Phase 5 — Community
 
 - Character customization
-- Plugin system
+- Plugin system API (Foundation)
+- Dynamic runtime plugin loading (Filesystem/JS)
 - Community contributions

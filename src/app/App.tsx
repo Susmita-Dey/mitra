@@ -12,6 +12,8 @@ import { createEnvironmentService } from "@/system/environment-service";
 import { createSchedulerService } from "@/system/index";
 import { createWindowController, createEventBus } from "@/system/index";
 import { createBrowserStorage, createAppStorage } from "@/storage/index";
+import { createPluginManager } from "@/plugin";
+import { HelloWorldPlugin } from "@/plugin/examples/hello-world-plugin";
 import { CompanionProvider } from "./companion-context";
 import { useCharacter } from "./use-character";
 import "./global.css";
@@ -49,6 +51,10 @@ export function App() {
     const scheduler     = createSchedulerService();
     const winCtrl       = createWindowController(appStorage);
     const brain         = createBrain(engine, env, winCtrl, eventBus);
+    const _pluginManager = createPluginManager(brain, eventBus);
+    
+    // Demonstrate loading a plugin statically
+    _pluginManager.loadPlugin(HelloWorldPlugin).catch(console.error);
 
     // Restore saved position on boot
     winCtrl.restorePosition().catch(console.error);
