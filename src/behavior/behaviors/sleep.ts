@@ -12,7 +12,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
  */
 const definition: BehaviorDefinition = {
   id: "ambient.sleep",
-  priority: 5,          // Higher bracket than ambient (0). Sleepy pre-empts idle actions.
+  priority: 30,          // Higher bracket than ambient (0). Sleepy pre-empts idle actions.
   weight: 10,           // Once eligible, always wins its bracket.
   cooldownMs: 30_000,   // Don't fall asleep and immediately wake every 30s.
   action: "sleep",
@@ -28,8 +28,8 @@ const definition: BehaviorDefinition = {
 export const SleepBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    // Only run if the companion is already expressing sleepiness.
-    return context.world.character.emotion === "sleepy";
+    // Run if presence dictates sleep or if already expressing sleepiness.
+    return context.world.presence === "Sleep" || context.world.character.emotion === "sleepy";
   },
   execute: (context: BehaviorContext) => {
     context.emit({ type: "PlayAnimation", animation: "sleep" });

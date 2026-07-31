@@ -102,6 +102,14 @@ export function createAudioSystem(eventBus?: EventBus): AudioSystem {
       
       const audio = new Audio(file);
       audio.volume = effectiveVolume;
+      
+      // Handle the baked in silence for yawns/sleepy by seeking forward
+      if (category === "sleepy" || category === "yawns" || file.includes("yawn")) {
+        audio.addEventListener("loadedmetadata", () => {
+          audio.currentTime = 1.5;
+        });
+      }
+      
       audio.play().catch(err => {
         console.warn("[AudioSystem] Could not play sound (autoplay blocked?):", err);
       });

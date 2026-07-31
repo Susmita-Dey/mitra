@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "reactive.look-at-cursor",
-  priority: 15,         // Below observe (20), but above ambient
+  priority: 70,         // Below observe (20), but above ambient
   weight: 8,
   cooldownMs: 3000,
   action: "look-around",

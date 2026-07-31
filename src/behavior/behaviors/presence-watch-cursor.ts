@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "presence.watch-cursor",
-  priority: 16,
+  priority: 50,
   weight: 6,
   cooldownMs: 0,
   action: "observe", // Reuse observe animation

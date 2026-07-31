@@ -4,9 +4,9 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "reactive.weather",
-  priority: 10, // Medium priority (between idle and battery)
+  priority: 60, // Medium priority (between idle and battery)
   weight: 5,
-  cooldownMs: 300_000, // Trigger once every 5 minutes if raining
+  cooldownMs: 0, // Persist while condition is true
   action: "idle",
   canInterrupt: true,
 };
@@ -20,18 +20,26 @@ export const WeatherBehavior: RegisteredBehavior = {
     const weather = context.world.weather;
     if (!weather) return false;
 
-    // React if it is raining
-    return weather.isRaining;
+    // React if it is raining or if it is sunny in July (month 6)
+    const isJuly = new Date().getMonth() === 6;
+    return weather.isRaining || (weather.isSunny && isJuly);
   },
   execute: (context: BehaviorContext) => {
-    // She looks a bit bored/sad about the rain and holds an umbrella
-    context.emit({ type: "ChangeEmotion", emotion: "bored" });
-    context.emit({ type: "PlayAnimation", animation: "stand" });
-    context.emit({ type: "SetInteraction", interaction: "weather:rain" });
+    const weather = context.world.weather;
+    const isJuly = new Date().getMonth() === 6;
     
-    // Hold it for 10 seconds
-    setTimeout(() => {
-       // Clears on next tick
-    }, 10000);
+    if (weather?.isRaining) {
+      // She looks a bit bored/sad about the rain and holds an umbrella
+      context.emit({ type: "ChangeEmotion", emotion: "bored" });
+      context.emit({ type: "PlayAnimation", animation: "stand" });
+      context.emit({ type: "SetInteraction", interaction: "weather:rain" });
+    } else if (weather?.isSunny && isJuly) {
+      // Beach sunbath mode!
+      context.emit({ type: "ChangeEmotion", emotion: "happy" });
+      context.emit({ type: "PlayAnimation", animation: "lie-down" });
+      context.emit({ type: "SetInteraction", interaction: "weather:beach" });
+    }
+    
+    // State persists natively until the weather changes or priority is overridden.
   },
 };

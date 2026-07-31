@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "presence.sit",
-  priority: 15, // Higher than ambient, lower than reactive
+  priority: 30, // Higher than ambient, lower than reactive
   weight: 5,
   cooldownMs: 0,
   action: "sit",

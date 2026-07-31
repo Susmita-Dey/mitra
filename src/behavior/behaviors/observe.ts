@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "reactive.observe",
-  priority: 20,         // Reactive bracket — higher than all ambient behaviors.
+  priority: 70,         // Reactive bracket — higher than all ambient behaviors.
   weight: 10,           // Always wins its bracket when eligible.
   cooldownMs: 5_000,    // Can repeat, but not too often.
   action: "observe",

@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "presence.follow-cursor",
-  priority: 17,
+  priority: 70,
   weight: 8,
   cooldownMs: 0,
   action: "walk",

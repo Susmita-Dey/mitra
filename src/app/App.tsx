@@ -16,11 +16,11 @@ import { createAudioSystem } from "@/system/audio-system";
 import { createBatterySystem } from "@/system/battery-system";
 import { createWeatherSystem } from "@/system/weather-system";
 import { createMeetingSystem } from "@/system/meeting-system";
+import { createGitWatcher } from "@/system/git-watcher";
 import { createPluginManager } from "@/plugin";
 import { HelloWorldPlugin } from "@/plugin/examples/hello-world-plugin";
 import { CompanionProvider } from "./companion-context";
 import { useCharacter } from "./use-character";
-import { ContextMenu } from "@/components/ContextMenu";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import type { AppPreferences } from "@/types";
 import "./global.css";
@@ -60,14 +60,13 @@ function CompanionView() {
   return (
     <div className="companion-shell">
       <Companion character={character} />
-      <StateDebug animation={character.animation} />
+      <StateDebug character={character} />
     </div>
   );
 }
 
 export function App() {
   const engine = useMemo(() => createCompanionEngine(), []);
-  const [contextMenu, setContextMenu] = useState<{x: number, y: number} | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [preferences, setPreferences] = useState<AppPreferences | null>(null);
@@ -92,18 +91,28 @@ export function App() {
     const batterySystem = createBatterySystem();
     const weatherSystem = createWeatherSystem();
     const meetingSystem = createMeetingSystem();
+    
     batterySystem.start();
     weatherSystem.start();
     meetingSystem.start();
+    
     const winCtrl       = createWindowController(appStorage);
     const brain         = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus);
     const _pluginManager = createPluginManager(brain, eventBus);
+    
+    const gitWatcher    = createGitWatcher(() => {
+      brain.triggerCelebration("git_commit");
+    });
+    gitWatcher.start();
     
     eventBus.subscribe("preferences:updated", (prefs: any) => {
       setPreferences(prefs);
       setIsMuted(prefs.audio?.muteSounds ?? false);
       if (prefs.behavior?.clickThrough !== undefined) {
         winCtrl.setIgnoreCursorEvents(prefs.behavior.clickThrough).catch(console.error);
+      }
+      if (prefs.behavior?.weatherLocation !== undefined) {
+        weatherSystem.setLocation(prefs.behavior.weatherLocation);
       }
     });
 
@@ -151,7 +160,6 @@ export function App() {
     
     const handlePointerDown = () => {
       brain.registerInteraction();
-      setContextMenu(null);
     };
 
     const handleTummyTickle = () => {
@@ -164,10 +172,7 @@ export function App() {
 
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      // Calculate local mouse position within the 300x300 window
-      const x = Math.min(e.clientX, 120);
-      const y = Math.min(e.clientY, 150);
-      setContextMenu({ x, y });
+      setIsSettingsOpen(true);
     };
 
     window.addEventListener("companion:reminder:ack", handleAck);
@@ -188,6 +193,7 @@ export function App() {
       scheduler.dispose();
       env.dispose();
       eventBus.clear();
+      gitWatcher.stop();
     };
   }, [engine]);
 
@@ -199,8 +205,7 @@ export function App() {
       <button 
         className="settings-btn"
         onClick={() => {
-          setContextMenu({ x: 120, y: 40 });
-          // setIsSettingsOpen(true);
+          setIsSettingsOpen(true);
         }}
         title="Mitra Options"
       >
@@ -217,26 +222,6 @@ export function App() {
             }
           }}
           onClose={() => setIsSettingsOpen(false)}
-        />
-      )}
-
-      {contextMenu && (
-        <ContextMenu 
-          x={contextMenu.x} 
-          y={contextMenu.y} 
-          isMuted={isMuted}
-          onClose={() => setContextMenu(null)}
-          onToggleMute={async () => {
-            if (appStorageRef.current) {
-              const current = await appStorageRef.current.load();
-              appStorageRef.current.update({
-                audio: { ...current.audio, muteSounds: !(current.audio?.muteSounds ?? false) }
-              });
-            }
-          }}
-          onOpenSettings={() => {
-            setIsSettingsOpen(true);
-          }}
         />
       )}
     </CompanionProvider>

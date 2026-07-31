@@ -23,6 +23,7 @@ export interface BehaviorPreferences {
   wanderEnabled: boolean;
   interactionLevel: "minimal" | "normal" | "active";
   clickThrough: boolean;
+  weatherLocation?: string;
 }
 
 export interface AnimationSettings {
@@ -66,6 +67,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     wanderEnabled: false,
     interactionLevel: "normal",
     clickThrough: false,
+    weatherLocation: "",
   },
   animation: {
     smoothTransitions: true,

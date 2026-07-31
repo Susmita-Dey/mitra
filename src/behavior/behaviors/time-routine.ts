@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "reactive.time",
-  priority: 2, // Low priority ambient modifier
+  priority: 60, // Low priority ambient modifier
   weight: 5,
   cooldownMs: 120_000, // Trigger every couple minutes
   action: "idle",

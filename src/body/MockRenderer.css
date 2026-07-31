@@ -31,25 +31,25 @@
 
 .panda-group {
   transform-origin: 100px 180px;
-  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .panda-head-group {
   transform-origin: 100px 140px;
-  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .panda-arm {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .panda-arm.left { transform-origin: 50px 140px; }
 .panda-arm.right { transform-origin: 150px 140px; }
 
 .panda-leg {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.panda-leg.left { transform-origin: 65px 215px; }
-.panda-leg.right { transform-origin: 135px 215px; }
+.panda-leg.left { transform-origin: 65px 190px; }
+.panda-leg.right { transform-origin: 135px 190px; }
 
 .panda-torso, .panda-tummy {
   transform-origin: 100px 160px;
@@ -93,8 +93,9 @@
 .panda-eye-wrapper { transition: transform 0.15s ease; }
 
 /* Props Visibility */
-.prop-laptop, .prop-mug, .prop-toy, .prop-umbrella, .prop-thermometer {
+.prop-laptop, .prop-mug, .prop-toy, .prop-umbrella, .prop-thermometer, .prop-towel, .prop-sunglasses {
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform: translateY(20px) scale(0.8);
 }
@@ -213,12 +214,12 @@
 }
 
 /* SLEEP (Curled up / Laying on back) */
-/* We rotate the entire body 90 degrees to lay down */
+/* SLEEP (Curled up / Tucked in) */
 .mock-renderer[data-animation="sleep"] .panda-group {
-  transform: translate(-20px, 40px) rotate(-90deg);
+  transform: translateY(20px);
 }
 .mock-renderer[data-animation="sleep"] .panda-shadow {
-  transform: scaleX(1.5) scaleY(0.8) translate(10px, -10px);
+  transform: scaleX(1.2) scaleY(0.9);
   opacity: 0.5;
 }
 .mock-renderer[data-animation="sleep"] .panda-eye,
@@ -229,24 +230,28 @@
   opacity: 1;
 }
 .mock-renderer[data-animation="sleep"] .panda-head-group {
-  transform: rotate(15deg);
+  transform: rotate(20deg) translate(10px, 20px);
   animation: sleepBreatheHead 4s ease-in-out infinite;
 }
 .mock-renderer[data-animation="sleep"] .panda-torso,
 .mock-renderer[data-animation="sleep"] .panda-tummy {
+  transform: scaleY(0.9) scaleX(1.05) translateY(10px);
   animation: sleepBreatheTorso 4s ease-in-out infinite;
 }
 .mock-renderer[data-animation="sleep"] .panda-arm.left {
-  transform: rotate(80deg) translate(-10px, -20px);
+  transform: rotate(60deg) translate(-5px, -15px);
 }
 .mock-renderer[data-animation="sleep"] .panda-arm.right {
-  transform: rotate(-100deg) translate(0px, -10px);
+  transform: rotate(-60deg) translate(5px, -15px);
 }
 .mock-renderer[data-animation="sleep"] .panda-leg.left {
-  transform: rotate(-45deg) translate(-10px, 0px);
+  transform: rotate(-30deg) translate(0px, -10px);
 }
 .mock-renderer[data-animation="sleep"] .panda-leg.right {
-  transform: rotate(-30deg) translate(5px, 10px);
+  transform: rotate(30deg) translate(0px, -10px);
+}
+.mock-renderer[data-animation="sleep"] .panda-tail-group {
+  transform: rotate(-140deg) translate(10px, -30px);
 }
 
 @keyframes sleepBreatheHead {
@@ -315,6 +320,11 @@
 
 /* Weather / Rain (Umbrella Prop) */
 .mock-renderer[data-interaction="weather:rain"] .prop-umbrella {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.mock-renderer[data-interaction="weather:beach"] .prop-towel,
+.mock-renderer[data-interaction="weather:beach"] .prop-sunglasses {
   opacity: 1;
   transform: translateY(0) scale(1);
 }
@@ -417,40 +427,57 @@
 ------------------------------------------------------------- */
 
 /* WAVE (Greeting or High Five) */
+.mock-renderer[data-animation="wave"] .panda-group {
+  animation: waveBody 1.5s ease-in-out infinite alternate;
+}
+@keyframes waveBody {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-4deg); }
+}
 .mock-renderer[data-animation="wave"] .panda-arm.right {
   transform-origin: 150px 140px;
-  animation: waveArm 0.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite alternate;
+  animation: waveArm 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite alternate;
 }
 @keyframes waveArm {
-  0% { transform: rotate(-40deg) translate(-10px, -15px); }
-  100% { transform: rotate(120deg) translate(-10px, -45px); }
+  0% { transform: rotate(100deg) translate(-10px, -20px); }
+  100% { transform: rotate(160deg) translate(-10px, -35px); }
 }
 .mock-renderer[data-animation="wave"] .panda-head-group {
-  transform: rotate(5deg) translateY(-2px);
+  transform: rotate(8deg) translateY(-2px);
+}
+.mock-renderer[data-animation="wave"] .panda-tail-group {
+  transform: rotate(-25deg);
 }
 
 /* LIE-DOWN (Very relaxed/sleepy, but awake) */
 .mock-renderer[data-animation="lie-down"] .panda-group {
-  transform: translate(-20px, 40px) rotate(-90deg);
+  transform: translateY(20px);
 }
 .mock-renderer[data-animation="lie-down"] .panda-shadow {
-  transform: scaleX(1.5) scaleY(0.8) translate(10px, -10px);
+  transform: scaleX(1.2) scaleY(0.9);
   opacity: 0.5;
 }
 .mock-renderer[data-animation="lie-down"] .panda-head-group {
-  transform: rotate(10deg);
+  transform: rotate(10deg) translate(5px, 15px);
+}
+.mock-renderer[data-animation="lie-down"] .panda-torso,
+.mock-renderer[data-animation="lie-down"] .panda-tummy {
+  transform: scaleY(0.9) scaleX(1.05) translateY(10px);
 }
 .mock-renderer[data-animation="lie-down"] .panda-arm.left {
-  transform: rotate(70deg) translate(-10px, -15px);
+  transform: rotate(50deg) translate(-5px, -10px);
 }
 .mock-renderer[data-animation="lie-down"] .panda-arm.right {
-  transform: rotate(-90deg) translate(0px, -5px);
+  transform: rotate(-50deg) translate(5px, -10px);
 }
 .mock-renderer[data-animation="lie-down"] .panda-leg.left {
-  transform: rotate(-45deg) translate(-10px, 0px);
+  transform: rotate(-20deg) translate(0px, -5px);
 }
 .mock-renderer[data-animation="lie-down"] .panda-leg.right {
-  transform: rotate(-30deg) translate(5px, 10px);
+  transform: rotate(20deg) translate(0px, -5px);
+}
+.mock-renderer[data-animation="lie-down"] .panda-tail-group {
+  transform: rotate(-100deg) translate(5px, -20px);
 }
 
 /* PEEK (Shyly looking from an edge) */

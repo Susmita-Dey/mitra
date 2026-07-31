@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "presence.wander",
-  priority: 14,
+  priority: 50,
   weight: 4,
   cooldownMs: 0,
   action: "walk",
@@ -17,7 +17,7 @@ const definition: BehaviorDefinition = {
 export const WanderBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    return context.world.presence === "Wander";
+    return context.world.presence === "Wander" && context.world.settings.behavior.wanderEnabled;
   },
   execute: (context: BehaviorContext) => {
     if (context.world.character.animation !== "walk") {

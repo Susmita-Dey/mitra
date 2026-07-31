@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "ambient.yawn",
-  priority: 4,          // Just below sleep (5)
+  priority: 40,          // Just below sleep (5)
   weight: 5,
   cooldownMs: 45_000,
   action: "yawn",

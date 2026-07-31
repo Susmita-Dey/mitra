@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { AppPreferences } from "@/types";
 import "./SettingsPanel.css";
 
@@ -9,46 +10,52 @@ export interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ preferences, onUpdatePreferences, onClose }: SettingsPanelProps) {
-  const [remindersEnabled, setRemindersEnabled] = useState(preferences.reminders.enabled);
-  const [waterInterval, setWaterInterval] = useState(preferences.reminders.water.intervalMs / 1000 / 60);
-  const [stretchInterval, setStretchInterval] = useState(preferences.reminders.stretch.intervalMs / 1000 / 60);
-  const [eyesInterval, setEyesInterval] = useState(preferences.reminders.eyes.intervalMs / 1000 / 60);
+  const [remindersEnabled, setRemindersEnabled] = useState(preferences?.reminders?.enabled ?? true);
+  const [waterInterval, setWaterInterval] = useState((preferences?.reminders?.water?.intervalMs ?? 7200000) / 1000 / 60);
+  const [stretchInterval, setStretchInterval] = useState((preferences?.reminders?.stretch?.intervalMs ?? 3600000) / 1000 / 60);
+  const [eyesInterval, setEyesInterval] = useState((preferences?.reminders?.eyes?.intervalMs ?? 1800000) / 1000 / 60);
   
-  const [muteSounds, setMuteSounds] = useState(preferences.audio.muteSounds);
-  const [volume, setVolume] = useState(preferences.audio.volume);
+  const [muteSounds, setMuteSounds] = useState(preferences?.audio?.muteSounds ?? false);
+  const [volume, setVolume] = useState(preferences?.audio?.volume ?? 0.5);
   
-  const [clickThrough, setClickThrough] = useState(preferences.behavior.clickThrough);
-  const [wanderEnabled, setWanderEnabled] = useState(preferences.behavior.wanderEnabled);
+  const [clickThrough, setClickThrough] = useState(preferences?.behavior?.clickThrough ?? false);
+  const [wanderEnabled, setWanderEnabled] = useState(preferences?.behavior?.wanderEnabled ?? false);
+  const [weatherLocation, setWeatherLocation] = useState(preferences?.behavior?.weatherLocation ?? "");
 
   useEffect(() => {
-    setRemindersEnabled(preferences.reminders.enabled);
-    setWaterInterval(preferences.reminders.water.intervalMs / 1000 / 60);
-    setStretchInterval(preferences.reminders.stretch.intervalMs / 1000 / 60);
-    setEyesInterval(preferences.reminders.eyes.intervalMs / 1000 / 60);
-    setMuteSounds(preferences.audio.muteSounds);
-    setVolume(preferences.audio.volume);
-    setClickThrough(preferences.behavior.clickThrough);
-    setWanderEnabled(preferences.behavior.wanderEnabled);
+    setRemindersEnabled(preferences?.reminders?.enabled ?? true);
+    setWaterInterval((preferences?.reminders?.water?.intervalMs ?? 7200000) / 1000 / 60);
+    setStretchInterval((preferences?.reminders?.stretch?.intervalMs ?? 3600000) / 1000 / 60);
+    setEyesInterval((preferences?.reminders?.eyes?.intervalMs ?? 1800000) / 1000 / 60);
+    setMuteSounds(preferences?.audio?.muteSounds ?? false);
+    setVolume(preferences?.audio?.volume ?? 0.5);
+    setClickThrough(preferences?.behavior?.clickThrough ?? false);
+    setWanderEnabled(preferences?.behavior?.wanderEnabled ?? false);
+    setWeatherLocation(preferences?.behavior?.weatherLocation ?? "");
   }, [preferences]);
 
   const handleSave = () => {
     onUpdatePreferences({
       reminders: {
-        ...preferences.reminders,
+        ...(preferences?.reminders || {}),
         enabled: remindersEnabled,
-        water: { ...preferences.reminders.water, intervalMs: waterInterval * 60 * 1000 },
-        stretch: { ...preferences.reminders.stretch, intervalMs: stretchInterval * 60 * 1000 },
-        eyes: { ...preferences.reminders.eyes, intervalMs: eyesInterval * 60 * 1000 },
+        quietHoursStart: preferences?.reminders?.quietHoursStart ?? "22:00",
+        quietHoursEnd: preferences?.reminders?.quietHoursEnd ?? "08:00",
+        lunch: preferences?.reminders?.lunch ?? { intervalMs: 14400000, jitterMs: 900000 },
+        water: { ...(preferences?.reminders?.water || { jitterMs: 600000 }), intervalMs: waterInterval * 60 * 1000 },
+        stretch: { ...(preferences?.reminders?.stretch || { jitterMs: 300000 }), intervalMs: stretchInterval * 60 * 1000 },
+        eyes: { ...(preferences?.reminders?.eyes || { jitterMs: 120000 }), intervalMs: eyesInterval * 60 * 1000 },
       },
       audio: {
-        ...preferences.audio,
+        ...(preferences?.audio || {}),
         muteSounds,
         volume,
       },
       behavior: {
-        ...preferences.behavior,
+        ...(preferences?.behavior || { idleAnimations: true, interactionLevel: "normal" }),
         clickThrough,
         wanderEnabled,
+        weatherLocation,
       }
     });
     onClose();
@@ -70,10 +77,27 @@ export function SettingsPanel({ preferences, onUpdatePreferences, onClose }: Set
               Click-Through Mode (Ignores mouse when idle)
             </label>
           </div>
-          <div className="setting-row">
+          <div className="setting-item">
             <label>
-              <input type="checkbox" checked={wanderEnabled} onChange={(e) => setWanderEnabled(e.target.checked)} />
-              Allow Wandering
+              <span>Wander Around Screen</span>
+              <input 
+                type="checkbox" 
+                checked={wanderEnabled}
+                onChange={e => setWanderEnabled(e.target.checked)}
+              />
+            </label>
+          </div>
+          
+          <div className="setting-item">
+            <label>
+              <span>Weather Location</span>
+              <input 
+                type="text" 
+                placeholder="e.g. Ranaghat, WB"
+                value={weatherLocation}
+                onChange={e => setWeatherLocation(e.target.value)}
+                style={{ width: '100%', marginTop: '4px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              />
             </label>
           </div>
         </section>
@@ -117,6 +141,7 @@ export function SettingsPanel({ preferences, onUpdatePreferences, onClose }: Set
 
       <div className="settings-footer">
         <button className="save-btn" onClick={handleSave}>Save Changes</button>
+        <button className="exit-btn" onClick={() => getCurrentWindow().close()} style={{ marginTop: '10px', background: '#EF4444', color: 'white', width: '100%', padding: '8px', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Say Goodbye ✖</button>
       </div>
     </div>
   );

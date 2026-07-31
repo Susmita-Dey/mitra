@@ -141,6 +141,12 @@ export function MockRenderer({ character }: RendererProps) {
               {/* Steam */}
               <path className="steam" d="M 140,135 Q 135,120 145,115" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" />
             </g>
+
+            {/* Beach Towel Prop */}
+            <g className="prop-towel">
+              <rect x="20" y="210" width="160" height="15" rx="7.5" fill="#FCD34D" />
+              <path d="M 30,210 L 30,225 M 50,210 L 50,225 M 70,210 L 70,225 M 90,210 L 90,225 M 110,210 L 110,225 M 130,210 L 130,225 M 150,210 L 150,225" stroke="#F59E0B" strokeWidth="4" />
+            </g>
           </g>
 
           {/* Arms with Paws */}
@@ -232,6 +238,15 @@ export function MockRenderer({ character }: RendererProps) {
                 <circle cx="134" cy="104" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />
                 <path className="panda-sleep-eye right" d="M 118,103 Q 130,110 142,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
               </g>
+            </g>
+            
+            {/* Sunglasses Prop */}
+            <g className="prop-sunglasses">
+              <path d="M 45,95 Q 100,90 155,95" fill="none" stroke="#1F2937" strokeWidth="3" />
+              <rect x="50" y="85" width="40" height="25" rx="8" fill="#111827" />
+              <rect x="110" y="85" width="40" height="25" rx="8" fill="#111827" />
+              <path d="M 55,90 L 75,90" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity="0.3" />
+              <path d="M 115,90 L 135,90" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity="0.3" />
             </g>
           </g>
         </g>

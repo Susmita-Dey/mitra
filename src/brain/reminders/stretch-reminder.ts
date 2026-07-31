@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "@/behavior/behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "reminder.stretch",
-  priority: 60,
+  priority: 80,
   weight: 5,
   cooldownMs: 0,
   action: "stretch",

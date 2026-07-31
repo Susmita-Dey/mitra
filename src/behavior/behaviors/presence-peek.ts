@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "presence.peek",
-  priority: 18,
+  priority: 50,
   weight: 5,
   cooldownMs: 0,
   action: "peek",

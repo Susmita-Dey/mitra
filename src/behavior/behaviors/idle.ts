@@ -20,17 +20,22 @@ export const IdleBehavior: RegisteredBehavior = {
   canExecute: () => true,
   execute: (context: BehaviorContext) => {
     // Add variations based on probabilities
+    // The engine ticks periodically, so these chances are per-tick when idle is chosen.
     const rand = Math.random();
     let anim: import("@/types").Animation = "idle";
     
-    // 5% chance of ear twitch, 5% tail flick, 2% sniff
-    if (rand < 0.05) {
+    if (rand < 0.10) {
+      anim = "look-around";
+    } else if (rand < 0.20) {
       anim = "ear-twitch";
-    } else if (rand < 0.10) {
+    } else if (rand < 0.30) {
       anim = "tail-flick";
-    } else if (rand < 0.12) {
+    } else if (rand < 0.35) {
       anim = "sniff";
+    } else if (rand < 0.38) {
+      anim = "yawn";
     }
+    // 62% chance to just stay 'idle' (breathing)
     
     // Only dispatch PlayAnimation if we are actually changing from current to something else, 
     // or if we are pushing a one-off variation that renderer will return to idle from.

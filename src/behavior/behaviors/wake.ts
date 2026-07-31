@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "reactive.wake",
-  priority: 30,         // High priority — wake up immediately
+  priority: 40,         // High priority — wake up immediately
   weight: 10,
   cooldownMs: 0,
   action: "observe",
