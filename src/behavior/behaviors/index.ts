@@ -18,3 +18,10 @@ export { TimeRoutineBehavior } from "./time-routine";
 export { WeatherBehavior } from "./weather";
 export { TickleBehavior } from "./tickle";
 export { MeetingHideBehavior } from "./meeting-hide";
+export { LieDownBehavior } from "./presence-lie-down";
+export { WatchCursorBehavior } from "./presence-watch-cursor";
+export { FollowCursorBehavior } from "./presence-follow-cursor";
+export { PeekBehavior } from "./presence-peek";
+export { WanderBehavior } from "./presence-wander";
+export { TaskbarBehavior } from "./presence-taskbar";
+

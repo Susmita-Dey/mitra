@@ -17,6 +17,10 @@ import type { AppPreferences } from "@/types";
 import { DEFAULT_PREFERENCES } from "@/types";
 import { createTimelineEngine } from "./timeline";
 import { createPresenceEngine } from "./presence-engine";
+import { createInteractionEngine } from "./interaction-engine";
+import { createCelebrationEngine } from "./celebration-engine";
+import { createPersonalityEngine } from "./personality-engine";
+import { createDelightEngine } from "./delight-engine";
 
 // A frozen empty snapshot used before the first real observation.
 const EMPTY_SNAPSHOT: EnvironmentSnapshot = Object.freeze({
@@ -59,6 +63,10 @@ export interface Brain {
   acknowledgeReminder(id: string): void;
   /** Registers a tummy tickle. */
   registerTickle(): void;
+  /** Trigger a specific companion interaction. */
+  triggerInteraction(interaction: import("./interaction-engine").CompanionInteraction): void;
+  /** Trigger a celebration event. */
+  triggerCelebration(event: import("./celebration-engine").CelebrationEvent): void;
 }
 
 import type { EventBus } from "@/system/index";
@@ -79,6 +87,10 @@ export function createBrain(
   const reminderEngine = createReminderEngine();
   const timelineEngine = createTimelineEngine();
   const presenceEngine = createPresenceEngine();
+  const interactionEngine = createInteractionEngine();
+  const celebrationEngine = createCelebrationEngine();
+  const personalityEngine = createPersonalityEngine();
+  const delightEngine = createDelightEngine();
 
   let currentPrefs = DEFAULT_PREFERENCES;
   
@@ -157,6 +169,42 @@ export function createBrain(
       }
     },
 
+    triggerInteraction(interaction) {
+      const { intents, memoryUpdate } = interactionEngine.handleInteraction(interaction, memoryEngine.get());
+      
+      const adaptedPersonality = personalityEngine.adaptToInteraction(interaction, memoryEngine.get());
+      const fullMemoryUpdate = { ...memoryUpdate, ...adaptedPersonality };
+      
+      memoryEngine.update(fullMemoryUpdate);
+      currentIntents.push(...intents);
+      
+      const newTimeline = timelineEngine.push(
+        memoryEngine.get().timeline, 
+        "interaction", 
+        `User triggered interaction: ${interaction}`
+      );
+      memoryEngine.update({ timeline: newTimeline });
+      
+      this.act();
+    },
+
+    triggerCelebration(event) {
+      const intents = celebrationEngine.handleEvent(event);
+      currentIntents.push(...intents);
+
+      const adaptedPersonality = personalityEngine.adaptToCelebration(event, memoryEngine.get());
+      
+      const newTimeline = timelineEngine.push(
+        memoryEngine.get().timeline, 
+        "celebration", 
+        `Celebration triggered: ${event}`
+      );
+      
+      memoryEngine.update({ timeline: newTimeline, ...adaptedPersonality });
+
+      this.act();
+    },
+
     observe() {
       if (environmentService) {
         currentSnapshot = environmentService.getSnapshot();
@@ -192,6 +240,18 @@ export function createBrain(
 
       // Step 2 — ask the BehaviorEngine for the winning behavior this tick.
       const context = getContext();
+      
+      // Inject personality influence into behavior selection (by modifying context or adjusting weights inside engine)
+      // For now, we adapt personality based on environment
+      const envUpdate = personalityEngine.adaptToEnvironment(currentSnapshot.idleMs, memoryEngine.get());
+      memoryEngine.update(envUpdate);
+      
+      // Step 3 — check for delight events
+      const delightIntents = delightEngine.tick(Date.now(), memoryEngine.get());
+      if (delightIntents.length > 0) {
+        currentIntents.push(...delightIntents);
+      }
+
       const selected = behaviorEngine.select(context);
 
       if (selected) {

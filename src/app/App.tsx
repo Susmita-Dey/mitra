@@ -46,6 +46,12 @@ import {
   WeatherBehavior,
   TickleBehavior,
   MeetingHideBehavior,
+  LieDownBehavior,
+  WatchCursorBehavior,
+  FollowCursorBehavior,
+  PeekBehavior,
+  WanderBehavior,
+  TaskbarBehavior,
 } from "@/behavior/behaviors";
 import { createCompanionEngine } from "./companion-engine";
 
@@ -121,6 +127,12 @@ export function App() {
     brain.registerBehavior(TickleBehavior);
     brain.registerBehavior(MeetingHideBehavior);
     brain.registerBehavior(BootGreetBehavior);
+    brain.registerBehavior(LieDownBehavior);
+    brain.registerBehavior(WatchCursorBehavior);
+    brain.registerBehavior(FollowCursorBehavior);
+    brain.registerBehavior(PeekBehavior);
+    brain.registerBehavior(WanderBehavior);
+    brain.registerBehavior(TaskbarBehavior);
 
     const stopBrain = initializeBrain(brain, scheduler);
 

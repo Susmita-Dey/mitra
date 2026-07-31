@@ -13,14 +13,31 @@ const definition: BehaviorDefinition = {
 
 /**
  * Idle — the baseline ambient behavior.
- * Priority 0, always eligible. Sets the companion to a calm neutral resting pose.
- * Other ambient behaviors compete against idle probabilistically.
+ * Has subtle variations to increase naturalness: ear twitches, tail flicks, sniffing.
  */
 export const IdleBehavior: RegisteredBehavior = {
   definition,
   canExecute: () => true,
   execute: (context: BehaviorContext) => {
-    context.emit({ type: "PlayAnimation", animation: "idle" });
+    // Add variations based on probabilities
+    const rand = Math.random();
+    let anim: import("@/types").Animation = "idle";
+    
+    // 5% chance of ear twitch, 5% tail flick, 2% sniff
+    if (rand < 0.05) {
+      anim = "ear-twitch";
+    } else if (rand < 0.10) {
+      anim = "tail-flick";
+    } else if (rand < 0.12) {
+      anim = "sniff";
+    }
+    
+    // Only dispatch PlayAnimation if we are actually changing from current to something else, 
+    // or if we are pushing a one-off variation that renderer will return to idle from.
+    if (context.world.character.animation !== anim || anim !== "idle") {
+      context.emit({ type: "PlayAnimation", animation: anim });
+    }
+    
     context.emit({ type: "ChangeEmotion", emotion: "neutral" });
   },
 };

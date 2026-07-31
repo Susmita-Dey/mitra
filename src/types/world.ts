@@ -12,7 +12,11 @@ export type PresenceState =
   | "Home"
   | "Peek"
   | "Hide"
-  | "Sleep";
+  | "Sleep"
+  | "FollowCursor"
+  | "WatchCursor"
+  | "Sitting"
+  | "LyingDown";
 
 export interface WorldState {
   time: number;

@@ -3,27 +3,27 @@ import type { BehaviorDefinition } from "../behavior-definition";
 import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
-  id: "ambient.sit",
-  priority: 1, // Just above idle
-  weight: 3,
-  cooldownMs: 30_000,
+  id: "presence.sit",
+  priority: 15, // Higher than ambient, lower than reactive
+  weight: 5,
+  cooldownMs: 0,
   action: "sit",
-  canInterrupt: false,
+  canInterrupt: true,
 };
 
 /**
- * Sit — Mitra occasionally sits down when idling.
+ * Sit — Mitra sits down when the user is somewhat idle.
+ * Driven by the PresenceEngine's "Sitting" state.
  */
 export const SitBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    // Only sit if currently idle and has been idle for a short time
-    return (
-      context.world.character.animation === "idle" &&
-      context.world.environment.idleMs > 5_000
-    );
+    return context.world.presence === "Sitting";
   },
   execute: (context: BehaviorContext) => {
-    context.emit({ type: "PlayAnimation", animation: "sit" });
+    if (context.world.character.animation !== "sit") {
+      context.emit({ type: "PlayAnimation", animation: "sit" });
+      context.emit({ type: "ChangeEmotion", emotion: "relaxed" });
+    }
   },
 };

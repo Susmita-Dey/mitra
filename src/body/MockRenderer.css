@@ -412,3 +412,135 @@
   0% { transform: scale(0.5) translateY(10px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
+
+/* -------------------------------------------------------------
+   NEW ANIMATION STATES (ADDED FOR PRESENCE & NATURALNESS)
+------------------------------------------------------------- */
+
+/* WAVE (Greeting or High Five) */
+.mock-renderer[data-animation="wave"] .panda-arm.right {
+  transform-origin: 150px 140px;
+  animation: waveArm 0.6s ease-in-out infinite alternate;
+}
+@keyframes waveArm {
+  0% { transform: rotate(-30deg) translate(-10px, -20px); }
+  100% { transform: rotate(110deg) translate(-10px, -40px); }
+}
+.mock-renderer[data-animation="wave"] .panda-head-group {
+  transform: rotate(5deg) translateY(-2px);
+}
+
+/* LIE-DOWN (Very relaxed/sleepy, but awake) */
+.mock-renderer[data-animation="lie-down"] .panda-group {
+  transform: translate(-20px, 40px) rotate(-90deg);
+}
+.mock-renderer[data-animation="lie-down"] .panda-shadow {
+  transform: scaleX(1.5) scaleY(0.8) translate(10px, -10px);
+  opacity: 0.5;
+}
+.mock-renderer[data-animation="lie-down"] .panda-head-group {
+  transform: rotate(10deg);
+}
+.mock-renderer[data-animation="lie-down"] .panda-arm.left {
+  transform: rotate(70deg) translate(-10px, -15px);
+}
+.mock-renderer[data-animation="lie-down"] .panda-arm.right {
+  transform: rotate(-90deg) translate(0px, -5px);
+}
+.mock-renderer[data-animation="lie-down"] .panda-leg.left {
+  transform: rotate(-45deg) translate(-10px, 0px);
+}
+.mock-renderer[data-animation="lie-down"] .panda-leg.right {
+  transform: rotate(-30deg) translate(5px, 10px);
+}
+
+/* PEEK (Shyly looking from an edge) */
+.mock-renderer[data-animation="peek"] .panda-group {
+  transform: translate(60px, 20px) rotate(-15deg) scale(0.9);
+}
+.mock-renderer[data-animation="peek"] .panda-head-group {
+  transform: rotate(20deg) translate(-10px, -5px);
+}
+.mock-renderer[data-animation="peek"] .panda-arm.left {
+  transform: rotate(45deg) translate(-15px, 10px);
+}
+.mock-renderer[data-animation="peek"] .panda-arm.right {
+  transform: rotate(-45deg) translate(15px, 10px);
+}
+
+/* SNIFF (Curious smelling the air) */
+.mock-renderer[data-animation="sniff"] .panda-head-group {
+  animation: sniffHead 1.5s ease-in-out infinite;
+}
+@keyframes sniffHead {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(-5deg); }
+  50% { transform: translateY(-5px) rotate(5deg); }
+  75% { transform: translateY(-8px) rotate(-3deg); }
+}
+
+/* TAIL-FLICK (Subtle idle variation) */
+.mock-renderer[data-animation="tail-flick"] .panda-tail-group {
+  animation: flickTail 2s ease-in-out;
+}
+@keyframes flickTail {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(30deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(25deg); }
+  80% { transform: rotate(-5deg); }
+}
+
+/* EAR-TWITCH (Subtle idle variation) */
+.mock-renderer[data-animation="ear-twitch"] .left-ear {
+  transform-origin: 55px 65px;
+  animation: twitchLeftEar 1.5s ease-in-out;
+}
+.mock-renderer[data-animation="ear-twitch"] .right-ear {
+  transform-origin: 145px 65px;
+  animation: twitchRightEar 1.5s ease-in-out 0.2s; /* offset */
+}
+@keyframes twitchLeftEar {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(-25deg); }
+  20%, 40% { transform: rotate(10deg); }
+}
+@keyframes twitchRightEar {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(25deg); }
+  20%, 40% { transform: rotate(-10deg); }
+}
+
+/* LOOK-AROUND */
+.mock-renderer[data-animation="look-around"] .panda-head-group {
+  animation: lookAroundHead 3s ease-in-out infinite;
+}
+@keyframes lookAroundHead {
+  0%, 100% { transform: rotate(0deg); }
+  20%, 40% { transform: rotate(-15deg); }
+  60%, 80% { transform: rotate(15deg); }
+}
+.mock-renderer[data-animation="look-around"] .panda-eye-wrapper {
+  animation: lookAroundEyes 3s ease-in-out infinite;
+}
+@keyframes lookAroundEyes {
+  0%, 100% { transform: translateX(0); }
+  20%, 40% { transform: translateX(-4px); }
+  60%, 80% { transform: translateX(4px); }
+}
+
+/* STAND (Alert, straight posture) */
+.mock-renderer[data-animation="stand"] .panda-torso,
+.mock-renderer[data-animation="stand"] .panda-tummy {
+  transform: scaleY(1.1) scaleX(0.95) translateY(-5px);
+}
+.mock-renderer[data-animation="stand"] .panda-head-group {
+  transform: translateY(-8px);
+}
+.mock-renderer[data-animation="stand"] .panda-arm.left {
+  transform: rotate(-10deg) translate(0px, -5px);
+}
+.mock-renderer[data-animation="stand"] .panda-arm.right {
+  transform: rotate(10deg) translate(0px, -5px);
+}
+

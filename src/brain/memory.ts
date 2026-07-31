@@ -40,6 +40,19 @@ export interface CompanionMemory {
 
   /** History of events for debugging and organic state evaluation */
   timeline: TimelineEvent[];
+
+  /**
+   * Personality traits (0.0 to 1.0).
+   * Evolve slowly over time based on interaction patterns.
+   */
+  personality: {
+    playful: number;
+    curious: number;
+    shy: number;
+    gentle: number;
+    energetic: number;
+    sleepy: number;
+  };
 }
 
 export const DEFAULT_MEMORY: CompanionMemory = {
@@ -59,4 +72,12 @@ export const DEFAULT_MEMORY: CompanionMemory = {
     lunch: { id: "lunch", state: "idle", scheduledFor: null },
   },
   timeline: [],
+  personality: {
+    playful: 0.5,
+    curious: 0.5,
+    shy: 0.2,
+    gentle: 0.5,
+    energetic: 0.5,
+    sleepy: 0.3,
+  }
 };

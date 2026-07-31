@@ -55,7 +55,7 @@ export function executeIntents(intents: Intent[], deps: ExecutorDependencies) {
 
     // ── Audio Intents ──────────────────────────────────────────────────────
     else if (intent.type === "PlaySound") {
-      deps.audioSystem?.playSound(intent.category);
+      deps.audioSystem?.playSound(intent.category, intent.emotion);
     }
   }
 }

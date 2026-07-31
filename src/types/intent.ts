@@ -29,4 +29,4 @@ export type Intent =
   | { type: "ShowWindow" }
   
   // ── Audio Intents ──────────────────────────────────────────────────────
-  | { type: "PlaySound"; category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" };
+  | { type: "PlaySound"; category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" | "chirps" | "yawns" | "stretch" | "celebration" | "footsteps" | "idle"; emotion?: Emotion };
