@@ -6,7 +6,7 @@ import type { Character } from "@/types";
  */
 export interface CharacterConfig {
   name: string;
-  renderer: "rive" | "svg" | "placeholder";
+  renderer: "rive" | "svg" | "mock";
   assets: {
     rive?: string;
     svg?: string;

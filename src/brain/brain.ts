@@ -6,6 +6,11 @@ import type { EnvironmentService, EnvironmentSnapshot } from "@/system/environme
 import type { WindowController } from "@/system/window-controller";
 import type { MovementIntent } from "@/types";
 import { createEmotionEngine } from "./emotion-engine";
+import { createMemoryEngine } from "./memory-engine";
+import { createReminderEngine } from "./reminders/reminder-engine";
+import type { AppPreferences } from "@/types";
+import { DEFAULT_PREFERENCES } from "@/types";
+import { createTimelineEngine } from "./timeline";
 
 // A frozen empty snapshot used before the first real observation.
 const EMPTY_SNAPSHOT: EnvironmentSnapshot = Object.freeze({
@@ -42,6 +47,10 @@ export interface Brain {
   observe(): void;
   think(): void;
   act(): void;
+  pushEmotion(emotion: import("@/types").Emotion): void;
+  // Expose these for the bootstrap event listeners to interact with
+  _internalMemory: ReturnType<typeof createMemoryEngine>;
+  _internalTimeline: ReturnType<typeof createTimelineEngine>;
 }
 
 import type { EventBus } from "@/system/index";
@@ -50,10 +59,21 @@ export function createBrain(
   engine: CompanionEngine,
   environmentService?: EnvironmentService,
   windowController?: WindowController,
-  _eventBus?: EventBus,
+  eventBus?: EventBus,
 ): Brain {
   const behaviorEngine = createBehaviorEngine();
   const emotionEngine  = createEmotionEngine();
+  const memoryEngine   = createMemoryEngine();
+  const reminderEngine = createReminderEngine();
+  const timelineEngine = createTimelineEngine();
+
+  let currentPrefs = DEFAULT_PREFERENCES;
+  
+  if (eventBus) {
+    eventBus.subscribe("preferences:updated", (prefs: any) => {
+      currentPrefs = prefs as AppPreferences;
+    });
+  }
 
   let currentSnapshot: EnvironmentSnapshot = EMPTY_SNAPSHOT;
   let pendingMovementIntent: MovementIntent | null = null;
@@ -61,6 +81,8 @@ export function createBrain(
   const getContext = (): BehaviorContext => ({
     character:   engine.getCharacter(),
     environment: currentSnapshot,
+    memory:      memoryEngine.get(),
+    setMemory:   (update) => memoryEngine.update(update),
     pushEmotion: (emotion) => emotionEngine.push(emotion),
     setEmotion:  engine.setEmotion,
     setAnimation: engine.setAnimation,
@@ -71,6 +93,13 @@ export function createBrain(
   });
 
   return {
+    _internalMemory: memoryEngine,
+    _internalTimeline: timelineEngine,
+
+    pushEmotion(emotion: import("@/types").Emotion) {
+      emotionEngine.push(emotion);
+    },
+
     registerBehavior(behavior: RegisteredBehavior) {
       behaviorEngine.register(behavior);
     },
@@ -84,8 +113,14 @@ export function createBrain(
     think() {
       pendingMovementIntent = null; // Clear from previous tick
       
-      // Step 1 — advance emotion decay timers.
+      // Step 1 — advance emotion decay timers and reminder timers.
       emotionEngine.tick();
+      reminderEngine.tick(
+        memoryEngine.get(), 
+        (update) => memoryEngine.update(update), 
+        currentPrefs,
+        timelineEngine
+      );
 
       // Step 2 — ask the BehaviorEngine for the winning behavior this tick.
       const context = getContext();
@@ -146,11 +181,51 @@ export function initializeBrain(brain: Brain, scheduler: import("@/system/schedu
     brain.act();
   };
 
-  // Use the central scheduler instead of direct setInterval
   const handle = scheduler.schedule(tick, { intervalMs: 1000, priority: 100 });
+  
+  // Listen for interaction events from the renderer
+  const handleAck = (e: Event) => {
+    const ce = e as CustomEvent;
+    const memory = brain._internalMemory.get();
+    const type = ce.detail.id as keyof typeof memory.activeReminders;
+    if (memory.activeReminders[type]) {
+      const active = { ...memory.activeReminders };
+      active[type].state = "acknowledged";
+      active[type].scheduledFor = null;
+      
+      const newTimeline = brain._internalTimeline.push(
+        memory.timeline, 
+        "reminder:acknowledged", 
+        `User acknowledged ${type}`
+      );
+      
+      brain._internalMemory.update({ 
+        activeReminders: active,
+        lastUserInteraction: Date.now(),
+        timeline: newTimeline
+      });
+      
+      brain.pushEmotion("happy"); // Organic response to acknowledgment
+      
+      // Force an immediate tick to clear the interaction state and push emotion
+      brain.think();
+      brain.act();
+    }
+  };
+  
+  const handlePointerDown = () => {
+    brain._internalMemory.update({ lastUserInteraction: Date.now() });
+  };
+
+  window.addEventListener("companion:reminder:ack", handleAck);
+  window.addEventListener("pointerdown", handlePointerDown);
   
   // Run an immediate initial tick
   tick();
 
-  return () => handle.cancel();
+  return () => {
+    handle.cancel();
+    window.removeEventListener("companion:reminder:ack", handleAck);
+    window.removeEventListener("pointerdown", handlePointerDown);
+  };
 }

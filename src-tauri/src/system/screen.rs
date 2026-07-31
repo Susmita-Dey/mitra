@@ -4,7 +4,7 @@
 //! No personal data is collected — only integer pixel counts
 //! and the number of connected displays.
 
-use tauri::Manager;
+// use tauri::Manager;
 
 /// Serialisable screen information returned to the frontend.
 #[derive(serde::Serialize)]

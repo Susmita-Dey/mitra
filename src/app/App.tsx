@@ -26,6 +26,13 @@ import {
   SleepBehavior,
   WalkBehavior,
   ObserveBehavior,
+  YawnBehavior,
+  WakeBehavior,
+  LookAtCursorBehavior,
+  WaterReminderBehavior,
+  StretchReminderBehavior,
+  EyesReminderBehavior,
+  BootGreetBehavior,
 } from "@/behavior/behaviors";
 import { createCompanionEngine } from "./companion-engine";
 
@@ -66,6 +73,13 @@ export function App() {
     brain.registerBehavior(SleepBehavior);
     brain.registerBehavior(WalkBehavior);
     brain.registerBehavior(ObserveBehavior);
+    brain.registerBehavior(YawnBehavior);
+    brain.registerBehavior(WakeBehavior);
+    brain.registerBehavior(LookAtCursorBehavior);
+    brain.registerBehavior(WaterReminderBehavior);
+    brain.registerBehavior(StretchReminderBehavior);
+    brain.registerBehavior(EyesReminderBehavior);
+    brain.registerBehavior(BootGreetBehavior);
 
     const stopBrain = initializeBrain(brain, scheduler);
 

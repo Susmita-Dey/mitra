@@ -120,4 +120,20 @@ export const EMOTION_DEFINITIONS: Readonly<Record<Emotion, EmotionDefinition>> =
       // focused may only be entered from calm, non-active states
       allowedFrom: ["neutral", "relaxed", "waiting"],
     },
+
+    sad: {
+      id: "sad",
+      priority: 3,
+      decayMs: 15_000,
+      interruptible: true,
+      allowedFrom: "any",
+    },
+
+    bored: {
+      id: "bored",
+      priority: 2,
+      decayMs: 30_000,
+      interruptible: true,
+      allowedFrom: "any",
+    },
   };

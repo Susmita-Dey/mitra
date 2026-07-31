@@ -23,7 +23,8 @@ export const StretchBehavior: RegisteredBehavior = {
     return (
       context.character.animation === "idle" &&
       context.character.emotion !== "focused" &&
-      context.character.emotion !== "concerned"
+      context.character.emotion !== "concerned" &&
+      context.environment.idleMs > 15_000 // Only stretch after 15s of idle time
     );
   },
   execute: (context: BehaviorContext) => {

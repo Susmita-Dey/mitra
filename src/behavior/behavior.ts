@@ -1,5 +1,6 @@
 import type { Animation, Character, Emotion, Interaction, MovementIntent } from "@/types";
 import type { EnvironmentSnapshot } from "@/system/environment";
+import type { CompanionMemory } from "../brain/memory";
 
 /**
  * Context passed to behaviors on each Brain tick.
@@ -17,6 +18,8 @@ import type { EnvironmentSnapshot } from "@/system/environment";
 export interface BehaviorContext {
   character: Character;
   environment: EnvironmentSnapshot;
+  memory: Readonly<CompanionMemory>;
+  setMemory(update: Partial<CompanionMemory>): void;
   /**
    * Request an emotional transition through the EmotionEngine.
    * Returns true if the engine accepted the push.

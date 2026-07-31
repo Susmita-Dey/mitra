@@ -1,5 +1,5 @@
 import type { Character } from "@/types";
-import { PlaceholderRenderer } from "./PlaceholderRenderer";
+import { MockRenderer } from "./MockRenderer";
 import type { CharacterConfig } from "./types";
 
 export interface CompanionProps {
@@ -10,7 +10,7 @@ export interface CompanionProps {
 
 const DEFAULT_CONFIG: CharacterConfig = {
   name: "Mitra (Default)",
-  renderer: "placeholder",
+  renderer: "mock",
   assets: {},
 };
 
@@ -23,14 +23,14 @@ export function Companion({ character, config = DEFAULT_CONFIG }: CompanionProps
   switch (config.renderer) {
     case "rive":
       // return <RiveRenderer character={character} config={config} />;
-      return <PlaceholderRenderer character={character} config={config} />;
+      return <MockRenderer character={character} config={config} />;
     
     case "svg":
       // return <SVGRenderer character={character} config={config} />;
-      return <PlaceholderRenderer character={character} config={config} />;
+      return <MockRenderer character={character} config={config} />;
       
-    case "placeholder":
+    case "mock":
     default:
-      return <PlaceholderRenderer character={character} config={config} />;
+      return <MockRenderer character={character} config={config} />;
   }
 }

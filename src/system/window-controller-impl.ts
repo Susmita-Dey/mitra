@@ -98,8 +98,8 @@ export function createWindowController(storage: AppStorage): WindowController {
       }
 
       // Default fallback: bottom-right of primary monitor
-      const defaultX = primary.position.x + primary.size.width - 220 - EDGE_MARGIN_PX;
-      const defaultY = primary.position.y + primary.size.height - 220 - EDGE_MARGIN_PX;
+      const defaultX = primary.position.x + primary.size.width - 300 - EDGE_MARGIN_PX;
+      const defaultY = primary.position.y + primary.size.height - 300 - EDGE_MARGIN_PX;
       await this.moveTo(defaultX, defaultY);
     },
 

@@ -8,6 +8,8 @@ export type Animation =
   | "walk"
   | "observe"
   | "sit"
-  | "wave";
+  | "wave"
+  | "yawn"
+  | "stand";
 
 export const DEFAULT_ANIMATION: Animation = "idle";

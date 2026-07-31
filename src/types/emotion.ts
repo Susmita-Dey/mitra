@@ -1,12 +1,13 @@
-/** Internal mood expressed through future expressions. Independent from animation. */
 export type Emotion =
   | "neutral"
   | "relaxed"
   | "waiting"
   | "curious"
   | "happy"
+  | "sad"
   | "concerned"
   | "sleepy"
-  | "focused";
+  | "focused"
+  | "bored";
 
 export const DEFAULT_EMOTION: Emotion = "neutral";

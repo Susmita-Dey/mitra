@@ -1,4 +1,13 @@
 /** How the user is currently engaging with the companion surface. */
-export type Interaction = "hover" | "click" | "drag" | "idle";
+export type Interaction = 
+  | "none" 
+  | "hover" 
+  | "click"
+  | "reminder:water"
+  | "reminder:stretch"
+  | "reminder:eyes"
+  | "reminder:lunch"
+  | "drag" 
+  | "idle";
 
 export const DEFAULT_INTERACTION: Interaction = "idle";

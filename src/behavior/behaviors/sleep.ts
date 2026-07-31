@@ -35,5 +35,6 @@ export const SleepBehavior: RegisteredBehavior = {
     context.setAnimation("sleep");
     // Re-push sleepy to keep the EmotionEngine's sticky state confirmed.
     context.pushEmotion("sleepy");
+    context.setMemory({ wasAsleep: true });
   },
 };
