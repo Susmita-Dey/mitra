@@ -47,7 +47,7 @@ export function createCelebrationEngine(): CelebrationEngine {
         case "GitCommit":
         case "ReminderAcknowledged":
           // Minor celebration
-          intents.push({ type: "PlayAnimation", animation: "idle" });
+          intents.push({ type: "PlayAnimation", animation: "celebrate" });
           break;
       }
 

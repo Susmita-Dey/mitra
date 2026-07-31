@@ -23,7 +23,7 @@ export function executeIntents(intents: Intent[], deps: ExecutorDependencies) {
       deps.engine.setEmotion("happy");
       deps.audioSystem?.playSound("greet");
     } else if (intent.type === "Celebrate") {
-      deps.engine.setAnimation("idle"); // Wait, don't have a celebrate animation yet.
+      deps.engine.setAnimation("celebrate");
       deps.engine.setEmotion("happy");
       deps.audioSystem?.playSound("happy");
     } else if (intent.type === "Sleep") {

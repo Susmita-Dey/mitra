@@ -209,6 +209,14 @@ export function createBrain(
       if (environmentService) {
         currentSnapshot = environmentService.getSnapshot();
       }
+
+      // Wake up immediately if there's user activity (mouse movement/typing)
+      if (memoryEngine.get().wasAsleep && currentSnapshot.idleMs < 1000) {
+        memoryEngine.update({ wasAsleep: false });
+        if (emotionEngine.getCurrent() === "sleepy") {
+           emotionEngine.clear();
+        }
+      }
       
       const meetingState = meetingSystem?.getState();
       currentPresence = presenceEngine.tick(currentSnapshot, memoryEngine.get(), meetingState);

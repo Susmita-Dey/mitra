@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { Companion } from "@/body";
 import { createBrain, initializeBrain } from "@/brain";
 import { StateDebug } from "@/ui";
+import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
 import { createEnvironmentService } from "@/system/environment-service";
 import { createSchedulerService } from "@/system/index";
 import { createWindowController, createEventBus } from "@/system/index";
@@ -70,6 +71,16 @@ export function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [preferences, setPreferences] = useState<AppPreferences | null>(null);
   const appStorageRef = useRef<any>(null);
+
+  // Resize window dynamically for the settings panel to ensure it has enough room
+  useEffect(() => {
+    const win = getCurrentWindow();
+    if (isSettingsOpen) {
+      win.setSize(new LogicalSize(350, 480)).catch(console.error);
+    } else {
+      win.setSize(new LogicalSize(300, 300)).catch(console.error);
+    }
+  }, [isSettingsOpen]);
 
   useEffect(() => {
     const eventBus      = createEventBus();
@@ -161,7 +172,7 @@ export function App() {
     };
 
     const handleInteraction = (interaction: string) => {
-      brain.triggerInteraction(interaction as any);
+      brain.triggerInteraction(interaction as import("@/brain/interaction-engine").CompanionInteraction);
     };
 
     const handleDragStart = () => {

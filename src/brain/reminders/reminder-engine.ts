@@ -41,6 +41,14 @@ export function createReminderEngine(): ReminderEngine {
           item.scheduledFor = calculateNextSchedule(config.intervalMs, config.jitterMs);
           changed = true;
           newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Scheduled ${key} for ${new Date(item.scheduledFor).toLocaleTimeString()}`);
+        } else if (item.state === "scheduled" && item.scheduledFor) {
+          // If user reduced the interval in settings and it's now scheduled too far in the future
+          const maxAllowedTime = now + config.intervalMs + config.jitterMs;
+          if (item.scheduledFor > maxAllowedTime) {
+             item.scheduledFor = calculateNextSchedule(config.intervalMs, config.jitterMs);
+             changed = true;
+             newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Rescheduled ${key} due to settings change`);
+          }
         }
       }
 

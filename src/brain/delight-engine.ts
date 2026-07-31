@@ -56,7 +56,7 @@ export function createDelightEngine(): DelightEngine {
         intents.push({ type: "PlayAnimation", animation: "peek" });
       } else {
         // Chasing a floating leaf (wander)
-        intents.push({ type: "ChangeEmotion", emotion: "energetic" } as any);
+        intents.push({ type: "ChangeEmotion", emotion: "energetic" });
         intents.push({ type: "PlayAnimation", animation: "walk" });
       }
 

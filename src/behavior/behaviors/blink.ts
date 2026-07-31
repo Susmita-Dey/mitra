@@ -28,7 +28,7 @@ export const BlinkBehavior: RegisteredBehavior = {
     const isDouble = Math.random() < 0.15;
     
     if (isDouble) {
-      context.emit({ type: "PlayAnimation", animation: "double-blink" } as any);
+      context.emit({ type: "PlayAnimation", animation: "double-blink" });
     } else {
       context.emit({ type: "PlayAnimation", animation: "blink" });
     }

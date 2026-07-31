@@ -1,13 +1,32 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
+import { exec } from "node:child_process";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
+const gitHashPlugin = () => {
+  return {
+    name: 'git-hash',
+    configureServer(server: any) {
+      server.middlewares.use('/api/git-hash', (req: any, res: any) => {
+        exec('git rev-parse HEAD', (err, stdout) => {
+          res.setHeader('Content-Type', 'application/json');
+          if (err) {
+            res.end(JSON.stringify({ hash: null }));
+          } else {
+            res.end(JSON.stringify({ hash: stdout.trim() }));
+          }
+        });
+      });
+    }
+  };
+};
+
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react()],
+  plugins: [react(), gitHashPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

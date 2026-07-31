@@ -77,26 +77,24 @@ export function SettingsPanel({ preferences, onUpdatePreferences, onClose }: Set
               Click-Through Mode (Ignores mouse when idle)
             </label>
           </div>
-          <div className="setting-item">
+          <div className="setting-row">
             <label>
-              <span>Wander Around Screen</span>
               <input 
                 type="checkbox" 
                 checked={wanderEnabled}
                 onChange={e => setWanderEnabled(e.target.checked)}
               />
+              Wander Around Screen
             </label>
           </div>
-          
-          <div className="setting-item">
+          <div className="setting-row">
             <label>
-              <span>Weather Location</span>
+              Weather Location
               <input 
                 type="text" 
                 placeholder="e.g. Ranaghat, WB"
                 value={weatherLocation}
                 onChange={e => setWeatherLocation(e.target.value)}
-                style={{ width: '100%', marginTop: '4px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #ccc' }}
               />
             </label>
           </div>
