@@ -4,11 +4,11 @@
  * Wires the Companion Engine, EnvironmentService, Brain, and rendering layers.
  * Mitra stays a companion surface — no routes, settings, or productivity UI.
  */
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Companion } from "@/body";
 import { createBrain, initializeBrain } from "@/brain";
 import { StateDebug } from "@/ui";
-import { getCurrentWindow, LogicalSize } from "@tauri-apps/api/window";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { createEnvironmentService } from "@/system/environment-service";
 import { createSchedulerService } from "@/system/index";
 import { createWindowController, createEventBus } from "@/system/index";
@@ -22,8 +22,6 @@ import { createPluginManager } from "@/plugin";
 import { HelloWorldPlugin } from "@/plugin/examples/hello-world-plugin";
 import { CompanionProvider } from "./companion-context";
 import { useCharacter } from "./use-character";
-import { SettingsPanel } from "@/components/SettingsPanel";
-import type { AppPreferences } from "@/types";
 import "./global.css";
 
 import {
@@ -52,6 +50,7 @@ import {
   PeekBehavior,
   WanderBehavior,
   TaskbarBehavior,
+  InteractionBehavior,
 } from "@/behavior/behaviors";
 import { createCompanionEngine } from "./companion-engine";
 
@@ -68,19 +67,31 @@ function CompanionView() {
 
 export function App() {
   const engine = useMemo(() => createCompanionEngine(), []);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [preferences, setPreferences] = useState<AppPreferences | null>(null);
   const appStorageRef = useRef<any>(null);
 
-  // Resize window dynamically for the settings panel to ensure it has enough room
-  useEffect(() => {
-    const win = getCurrentWindow();
-    if (isSettingsOpen) {
-      win.setSize(new LogicalSize(350, 480)).catch(console.error);
-    } else {
-      win.setSize(new LogicalSize(300, 300)).catch(console.error);
+  const openSettingsWindow = async () => {
+    try {
+      const win = await WebviewWindow.getByLabel("settings");
+      if (win) {
+        await win.show();
+        await win.setFocus();
+      } else {
+        // Fallback if window needs to be created
+        const newWin = new WebviewWindow("settings", {
+          url: "/?page=settings",
+          title: "Mitra Settings",
+          width: 350,
+          height: 480,
+          decorations: true,
+          transparent: false,
+          alwaysOnTop: true,
+        });
+        await newWin.once("tauri://error", (e) => console.error(e));
+      }
+    } catch (err) {
+      console.error("Failed to open settings window", err);
     }
-  }, [isSettingsOpen]);
+  };
 
   useEffect(() => {
     const eventBus      = createEventBus();
@@ -116,7 +127,6 @@ export function App() {
     gitWatcher.start();
     
     eventBus.subscribe("preferences:updated", (prefs: any) => {
-      setPreferences(prefs);
       if (prefs.behavior?.clickThrough !== undefined) {
         winCtrl.setIgnoreCursorEvents(prefs.behavior.clickThrough).catch(console.error);
       }
@@ -156,6 +166,7 @@ export function App() {
     brain.registerBehavior(PeekBehavior);
     brain.registerBehavior(WanderBehavior);
     brain.registerBehavior(TaskbarBehavior);
+    brain.registerBehavior(InteractionBehavior);
 
     const stopBrain = initializeBrain(brain, scheduler);
 
@@ -181,7 +192,7 @@ export function App() {
 
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      setIsSettingsOpen(true);
+      openSettingsWindow();
     };
 
     window.addEventListener("companion:reminder:ack", handleAck);
@@ -221,26 +232,11 @@ export function App() {
       {/* Settings / Menu Gear Icon */}
       <button 
         className="settings-btn"
-        onClick={() => {
-          setIsSettingsOpen(true);
-        }}
+        onClick={openSettingsWindow}
         title="Mitra Options"
       >
         ⚙️
       </button>
-
-      {/* Settings Panel Sliding UI */}
-      {isSettingsOpen && preferences && (
-        <SettingsPanel 
-          preferences={preferences}
-          onUpdatePreferences={(patch) => {
-            if (appStorageRef.current) {
-              appStorageRef.current.update(patch);
-            }
-          }}
-          onClose={() => setIsSettingsOpen(false)}
-        />
-      )}
     </CompanionProvider>
   );
 }

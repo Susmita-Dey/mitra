@@ -41,6 +41,9 @@ export interface CompanionMemory {
   /** History of events for debugging and organic state evaluation */
   timeline: TimelineEvent[];
 
+  /** Currently playing interaction override (if any) */
+  activeInteraction: { id: string; until: number } | null;
+
   /**
    * Personality traits (0.0 to 1.0).
    * Evolve slowly over time based on interaction patterns.
@@ -72,6 +75,7 @@ export const DEFAULT_MEMORY: CompanionMemory = {
     lunch: { id: "lunch", state: "idle", scheduledFor: null },
   },
   timeline: [],
+  activeInteraction: null,
   personality: {
     playful: 0.5,
     curious: 0.5,

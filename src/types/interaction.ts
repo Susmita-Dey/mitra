@@ -11,6 +11,7 @@ export type Interaction =
   | "state:sick"
   | "weather:rain"
   | "weather:beach"
+  | "weather:cloudy"
   | "idle";
 
 export const DEFAULT_INTERACTION: Interaction = "idle";

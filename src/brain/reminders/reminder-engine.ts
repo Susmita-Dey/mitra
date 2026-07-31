@@ -35,7 +35,7 @@ export function createReminderEngine(): ReminderEngine {
         const item = active[key];
         const config = prefs.reminders[key];
         
-        if (item.state === "idle" || item.state === "completed" || item.state === "ignored") {
+        if (item.state === "idle" || item.state === "completed" || item.state === "ignored" || item.state === "acknowledged") {
           // Schedule it
           item.state = "scheduled";
           item.scheduledFor = calculateNextSchedule(config.intervalMs, config.jitterMs);

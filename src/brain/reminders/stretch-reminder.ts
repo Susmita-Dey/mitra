@@ -17,7 +17,8 @@ export const StretchReminderBehavior: RegisteredBehavior = {
     return context.world.memory.activeReminders.stretch.state === "triggered";
   },
   execute: (context: BehaviorContext) => {
-    context.emit({ type: "PlayAnimation", animation: "stretch" }); 
+    context.emit({ type: "PlayAnimation", animation: "stretch" });
     context.emit({ type: "SetInteraction", interaction: "reminder:stretch" });
+    context.emit({ type: "PlaySound", category: "alert" });
   },
 };

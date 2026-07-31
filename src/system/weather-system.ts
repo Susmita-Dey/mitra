@@ -7,6 +7,7 @@ export interface WeatherState {
   temperature: number;
   isRaining: boolean;
   isSunny: boolean;
+  isCloudy: boolean;
   lastUpdated: number;
 }
 
@@ -44,7 +45,9 @@ export interface WeatherSystem {
               if (locData.latitude) lat = locData.latitude;
               if (locData.longitude) lon = locData.longitude;
             }
-          } catch(e) { /* ignore ipapi fail */ }
+          } catch(e) {
+            console.error("Weather API error:", e);
+           }
         }
       
       const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
@@ -55,16 +58,18 @@ export interface WeatherSystem {
       // WMO Weather interpretation codes (WW)
       const rainCodes = [51, 53, 55, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99];
       const sunnyCodes = [0, 1]; // Clear sky, mainly clear
+      const cloudyCodes = [2, 3]; // Partly cloudy, overcast
       
       currentState = {
         code,
         temperature: weatherData.current.temperature_2m,
         isRaining: rainCodes.includes(code),
         isSunny: sunnyCodes.includes(code),
+        isCloudy: cloudyCodes.includes(code),
         lastUpdated: Date.now()
       };
       
-      console.log(`[WeatherSystem] Weather updated: Temp ${currentState.temperature}°C, Raining: ${currentState.isRaining}, Sunny: ${currentState.isSunny}`);
+      console.log(`[WeatherSystem] Weather updated: Temp ${currentState.temperature}°C, Raining: ${currentState.isRaining}, Sunny: ${currentState.isSunny}, Cloudy: ${currentState.isCloudy}`);
     } catch (err) {
       // Fail silently to treat weather as an optional context, not a strict dependency.
       console.warn("[WeatherSystem] Could not update weather:", err);

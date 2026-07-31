@@ -14,16 +14,31 @@
       {
         "label": "main",
         "title": "Mitra",
-        "width": 300,
-        "height": 300,
+        "width": 350,
+        "height": 400,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
-        "resizable": false,
+        "resizable": true,
         "maximizable": false,
         "fullscreen": false,
         "shadow": false,
         "visible": true
+      },
+      {
+        "label": "settings",
+        "title": "Mitra Settings",
+        "width": 350,
+        "height": 480,
+        "decorations": true,
+        "transparent": false,
+        "alwaysOnTop": true,
+        "resizable": false,
+        "maximizable": false,
+        "fullscreen": false,
+        "shadow": true,
+        "visible": false,
+        "url": "/?page=settings"
       }
     ],
     "security": {

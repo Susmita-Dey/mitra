@@ -19,5 +19,6 @@ export const WaterReminderBehavior: RegisteredBehavior = {
   execute: (context: BehaviorContext) => {
     context.emit({ type: "PlayAnimation", animation: "sit" }); // Mitra sits patiently with a reminder
     context.emit({ type: "SetInteraction", interaction: "reminder:water" });
+    context.emit({ type: "PlaySound", category: "alert" });
   },
 };

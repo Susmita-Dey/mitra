@@ -60,14 +60,14 @@ export function createInteractionEngine(): InteractionEngine {
 
         if (pokeCount > 3) {
           intents.push({ type: "ChangeEmotion", emotion: "concerned" });
-          intents.push({ type: "PlayAnimation", animation: "look-around" });
+          memoryUpdate.activeInteraction = { id: "poke-annoyed", until: now + 2000 };
         } else {
           intents.push({ type: "ChangeEmotion", emotion: "alert" });
-          intents.push({ type: "PlayAnimation", animation: "blink" });
+          memoryUpdate.activeInteraction = { id: "poke-alert", until: now + 1000 };
         }
       } else if (interaction === "gentle-tap") {
         intents.push({ type: "ChangeEmotion", emotion: "curious" });
-        intents.push({ type: "PlayAnimation", animation: "observe" });
+        memoryUpdate.activeInteraction = { id: "gentle-tap", until: now + 3000 };
       } else if (interaction === "drag") {
         intents.push({ type: "ChangeEmotion", emotion: "concerned" });
       } else if (interaction === "wave") {
@@ -75,14 +75,14 @@ export function createInteractionEngine(): InteractionEngine {
         intents.push({ type: "Greet" }); // Emits Greet intent which handles wave
       } else if (interaction === "high-five") {
         intents.push({ type: "ChangeEmotion", emotion: "happy" });
-        intents.push({ type: "PlayAnimation", animation: "wave" });
+        memoryUpdate.activeInteraction = { id: "high-five", until: now + 2500 };
         intents.push({ type: "PlaySound", category: "happy" });
       } else if (interaction === "tail-flick") {
         intents.push({ type: "ChangeEmotion", emotion: "alert" });
-        intents.push({ type: "PlayAnimation", animation: "look-around" });
+        memoryUpdate.activeInteraction = { id: "tail-flick", until: now + 2000 };
       } else if (interaction === "ear-twitch") {
         intents.push({ type: "ChangeEmotion", emotion: "curious" });
-        intents.push({ type: "PlayAnimation", animation: "blink" });
+        memoryUpdate.activeInteraction = { id: "ear-twitch", until: now + 1500 };
       } else if (interaction === "tickle") {
         intents.push({ type: "ChangeEmotion", emotion: "happy" });
         intents.push({ type: "PlaySound", category: "happy" });

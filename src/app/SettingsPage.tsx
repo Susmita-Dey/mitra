@@ -1,41 +1,45 @@
 import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { AppPreferences } from "@/types";
-import "./SettingsPanel.css";
+import { createAppStorage } from "@/storage/app-storage";
+import { createBrowserStorage } from "@/storage/browser-storage";
+import "@/components/SettingsPanel.css";
+import "./global.css"; // Ensure global styles are applied
 
-export interface SettingsPanelProps {
-  preferences: AppPreferences;
-  onUpdatePreferences: (patch: Partial<AppPreferences>) => void;
-  onClose: () => void;
-}
+export function SettingsPage() {
+  const [preferences, setPreferences] = useState<AppPreferences | null>(null);
+  
+  const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [waterInterval, setWaterInterval] = useState(120);
+  const [stretchInterval, setStretchInterval] = useState(60);
+  const [eyesInterval, setEyesInterval] = useState(30);
+  
+  const [muteSounds, setMuteSounds] = useState(false);
+  const [volume, setVolume] = useState(0.5);
+  
+  const [clickThrough, setClickThrough] = useState(false);
+  const [wanderEnabled, setWanderEnabled] = useState(false);
+  const [weatherLocation, setWeatherLocation] = useState("");
 
-export function SettingsPanel({ preferences, onUpdatePreferences, onClose }: SettingsPanelProps) {
-  const [remindersEnabled, setRemindersEnabled] = useState(preferences?.reminders?.enabled ?? true);
-  const [waterInterval, setWaterInterval] = useState((preferences?.reminders?.water?.intervalMs ?? 7200000) / 1000 / 60);
-  const [stretchInterval, setStretchInterval] = useState((preferences?.reminders?.stretch?.intervalMs ?? 3600000) / 1000 / 60);
-  const [eyesInterval, setEyesInterval] = useState((preferences?.reminders?.eyes?.intervalMs ?? 1800000) / 1000 / 60);
-  
-  const [muteSounds, setMuteSounds] = useState(preferences?.audio?.muteSounds ?? false);
-  const [volume, setVolume] = useState(preferences?.audio?.volume ?? 0.5);
-  
-  const [clickThrough, setClickThrough] = useState(preferences?.behavior?.clickThrough ?? false);
-  const [wanderEnabled, setWanderEnabled] = useState(preferences?.behavior?.wanderEnabled ?? false);
-  const [weatherLocation, setWeatherLocation] = useState(preferences?.behavior?.weatherLocation ?? "");
+  const appStorage = createAppStorage(createBrowserStorage());
 
   useEffect(() => {
-    setRemindersEnabled(preferences?.reminders?.enabled ?? true);
-    setWaterInterval((preferences?.reminders?.water?.intervalMs ?? 7200000) / 1000 / 60);
-    setStretchInterval((preferences?.reminders?.stretch?.intervalMs ?? 3600000) / 1000 / 60);
-    setEyesInterval((preferences?.reminders?.eyes?.intervalMs ?? 1800000) / 1000 / 60);
-    setMuteSounds(preferences?.audio?.muteSounds ?? false);
-    setVolume(preferences?.audio?.volume ?? 0.5);
-    setClickThrough(preferences?.behavior?.clickThrough ?? false);
-    setWanderEnabled(preferences?.behavior?.wanderEnabled ?? false);
-    setWeatherLocation(preferences?.behavior?.weatherLocation ?? "");
-  }, [preferences]);
+    appStorage.load().then(prefs => {
+      setPreferences(prefs);
+      setRemindersEnabled(prefs.reminders?.enabled ?? true);
+      setWaterInterval((prefs.reminders?.water?.intervalMs ?? 7200000) / 1000 / 60);
+      setStretchInterval((prefs.reminders?.stretch?.intervalMs ?? 3600000) / 1000 / 60);
+      setEyesInterval((prefs.reminders?.eyes?.intervalMs ?? 1800000) / 1000 / 60);
+      setMuteSounds(prefs.audio?.muteSounds ?? false);
+      setVolume(prefs.audio?.volume ?? 0.5);
+      setClickThrough(prefs.behavior?.clickThrough ?? false);
+      setWanderEnabled(prefs.behavior?.wanderEnabled ?? false);
+      setWeatherLocation(prefs.behavior?.weatherLocation ?? "");
+    });
+  }, []);
 
-  const handleSave = () => {
-    onUpdatePreferences({
+  const handleSave = async () => {
+    await appStorage.update({
       reminders: {
         ...(preferences?.reminders || {}),
         enabled: remindersEnabled,
@@ -58,14 +62,15 @@ export function SettingsPanel({ preferences, onUpdatePreferences, onClose }: Set
         weatherLocation,
       }
     });
-    onClose();
+    getCurrentWindow().hide();
   };
 
+  if (!preferences) return <div>Loading...</div>;
+
   return (
-    <div className="settings-panel">
+    <div className="settings-panel" style={{ position: 'relative', width: '100%', height: '100vh', borderRadius: 0 }}>
       <div className="settings-header">
         <h2>Mitra Settings</h2>
-        <button className="close-btn" onClick={onClose}>✖</button>
       </div>
 
       <div className="settings-content">
@@ -139,7 +144,7 @@ export function SettingsPanel({ preferences, onUpdatePreferences, onClose }: Set
 
       <div className="settings-footer">
         <button className="save-btn" onClick={handleSave}>Save Changes</button>
-        <button className="exit-btn" onClick={() => getCurrentWindow().close()}>Say Goodbye ✖</button>
+        <button className="exit-btn" onClick={() => getCurrentWindow().hide()}>Cancel</button>
       </div>
     </div>
   );

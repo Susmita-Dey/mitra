@@ -30,6 +30,7 @@ const INITIAL_MEMORY: CompanionMemory = {
   lastUserInteraction: Date.now(),
   lastTickle: 0,
   timeline: [],
+  activeInteraction: null,
   personality: {
     playful: 0.5,
     curious: 0.5,
