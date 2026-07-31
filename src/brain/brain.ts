@@ -6,6 +6,9 @@ import type { EnvironmentService, EnvironmentSnapshot } from "@/system/environme
 import type { WindowController } from "@/system/window-controller";
 import type { AudioSystem } from "@/system/audio-system";
 import { executeIntents } from "@/system/executors";
+import type { BatterySystem } from "@/system/battery-system";
+import type { WeatherSystem } from "@/system/weather-system";
+import type { MeetingSystem } from "@/system/meeting-system";
 import type { Intent, WorldState, PresenceState } from "@/types";
 import { createEmotionEngine } from "./emotion-engine";
 import { createMemoryEngine } from "./memory-engine";
@@ -54,6 +57,8 @@ export interface Brain {
   registerInteraction(): void;
   /** Acknowledges a specific reminder bubble. */
   acknowledgeReminder(id: string): void;
+  /** Registers a tummy tickle. */
+  registerTickle(): void;
 }
 
 import type { EventBus } from "@/system/index";
@@ -63,6 +68,9 @@ export function createBrain(
   environmentService?: EnvironmentService,
   windowController?: WindowController,
   audioSystem?: AudioSystem,
+  batterySystem?: BatterySystem,
+  weatherSystem?: WeatherSystem,
+  meetingSystem?: MeetingSystem,
   eventBus?: EventBus,
 ): Brain {
   const behaviorEngine = createBehaviorEngine();
@@ -110,6 +118,17 @@ export function createBrain(
       memoryEngine.update({ lastUserInteraction: Date.now() });
     },
 
+    registerTickle() {
+      memoryEngine.update({ 
+        lastUserInteraction: Date.now(),
+        lastTickle: Date.now()
+      });
+      emotionEngine.push("happy");
+      // Force immediate tick
+      this.think();
+      this.act();
+    },
+
     acknowledgeReminder(id: string) {
       const memory = memoryEngine.get();
       const type = id as keyof typeof memory.activeReminders;
@@ -143,7 +162,8 @@ export function createBrain(
         currentSnapshot = environmentService.getSnapshot();
       }
       
-      currentPresence = presenceEngine.tick(currentSnapshot, memoryEngine.get());
+      const meetingState = meetingSystem?.getState();
+      currentPresence = presenceEngine.tick(currentSnapshot, memoryEngine.get(), meetingState);
       
       currentWorldState = {
         time: Date.now(),
@@ -151,7 +171,10 @@ export function createBrain(
         character: engine.getCharacter(),
         memory: memoryEngine.get(),
         presence: currentPresence,
-        settings: currentPrefs
+        settings: currentPrefs,
+        battery: batterySystem?.getState(),
+        weather: weatherSystem?.getState(),
+        meeting: meetingSystem?.getState(),
       };
     },
 

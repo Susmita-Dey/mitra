@@ -47,6 +47,10 @@ export function executeIntents(intents: Intent[], deps: ExecutorDependencies) {
       deps.windowController?.snapToEdge().catch(console.error);
     } else if (intent.type === "MoveToTaskbar") {
       deps.windowController?.restorePosition().catch(console.error); // Restore goes to bottom right currently
+    } else if (intent.type === "HideWindow") {
+      deps.windowController?.hide().catch(console.error);
+    } else if (intent.type === "ShowWindow") {
+      deps.windowController?.show().catch(console.error);
     }
 
     // ── Audio Intents ──────────────────────────────────────────────────────

@@ -8,6 +8,8 @@ export type Interaction =
   | "reminder:eyes"
   | "reminder:lunch"
   | "drag" 
+  | "state:sick"
+  | "weather:rain"
   | "idle";
 
 export const DEFAULT_INTERACTION: Interaction = "idle";

@@ -1,17 +1,22 @@
 import type { EnvironmentSnapshot } from "@/system/environment";
 import type { PresenceState } from "@/types";
 import type { CompanionMemory } from "./memory";
+import type { MeetingState } from "@/system/meeting-system";
 
 export interface PresenceEngine {
   /**
    * Determine where Mitra should logically exist or what her presence should be.
    */
-  tick(environment: EnvironmentSnapshot, memory: CompanionMemory): PresenceState;
+  tick(environment: EnvironmentSnapshot, memory: CompanionMemory, meeting?: MeetingState): PresenceState;
 }
 
 export function createPresenceEngine(): PresenceEngine {
   return {
-    tick(environment, memory) {
+    tick(environment, memory, meeting) {
+      if (meeting?.inMeeting) {
+        return "Hide";
+      }
+
       if (memory.wasAsleep) {
         return "Sleep";
       }

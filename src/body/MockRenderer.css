@@ -22,6 +22,14 @@
   transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Fix dragging: make all child elements ignore clicks unless explicitly marked as a drag region */
+.panda-svg * {
+  pointer-events: none;
+}
+.panda-svg [data-tauri-drag-region] {
+  pointer-events: auto;
+}
+
 .panda-group {
   transform-origin: 100px 180px;
   transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -54,7 +62,7 @@
   transform-origin: 100px 225px;
 }
 
-.panda-tail {
+.panda-tail-group {
   transform-origin: 140px 180px;
   animation: lazyTail 8s ease-in-out infinite;
   transition: transform 0.8s ease;
@@ -65,7 +73,7 @@
   50% { transform: rotate(8deg); }
 }
 
-.mock-renderer[data-emotion="happy"] .panda-tail {
+.mock-renderer[data-emotion="happy"] .panda-tail-group {
   animation: wagTail 0.3s ease-in-out infinite alternate;
 }
 
@@ -86,7 +94,7 @@
 .panda-eye-wrapper { transition: transform 0.15s ease; }
 
 /* Props Visibility */
-.prop-laptop, .prop-mug, .prop-toy {
+.prop-laptop, .prop-mug, .prop-toy, .prop-umbrella, .prop-thermometer {
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform: translateY(20px) scale(0.8);
@@ -304,6 +312,21 @@
 @keyframes steamRise {
   0% { transform: translateY(0) scale(1); opacity: 0.8; }
   100% { transform: translateY(-15px) scale(1.5); opacity: 0; }
+}
+
+/* Weather / Rain (Umbrella Prop) */
+.mock-renderer[data-interaction="weather:rain"] .prop-umbrella {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.mock-renderer[data-interaction="weather:rain"] .panda-arm.right {
+  transform: rotate(-120deg) translate(-10px, -20px);
+}
+
+/* Sick / Low Battery (Thermometer Prop) */
+.mock-renderer[data-interaction="state:sick"] .prop-thermometer {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 /* Sleep Zzz particles */

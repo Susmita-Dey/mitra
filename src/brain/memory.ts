@@ -16,6 +16,11 @@ export interface CompanionMemory {
 
   /** Timestamp of the last time the user actively interacted with Mitra (drag, pet, click). */
   lastInteractionTime: number | null;
+  /** Timestamp of the last explicit user interaction (click, drag, hover, etc.) */
+  lastUserInteraction: number;
+  /** Timestamp of the last tummy tickle. */
+  lastTickle: number;
+
   /** Number of times the user has ignored consecutive reminders. */
   consecutiveIgnoredReminders: number;
   /** Mitra's favorite resting spot on the screen (x, y coordinates). */
@@ -33,9 +38,25 @@ export interface CompanionMemory {
     lunch: ReminderItem;
   };
 
-  /** Timestamp of the last explicit user interaction (click, drag, hover, etc.) */
-  lastUserInteraction: number;
-
   /** History of events for debugging and organic state evaluation */
   timeline: TimelineEvent[];
 }
+
+export const DEFAULT_MEMORY: CompanionMemory = {
+  bootTime: Date.now(),
+  hasGreeted: false,
+  lastInteractionTime: null,
+  lastUserInteraction: Date.now(),
+  lastTickle: 0,
+  consecutiveIgnoredReminders: 0,
+  favoriteSpot: null,
+  interactionCount: 0,
+  wasAsleep: false,
+  activeReminders: {
+    water: { id: "water", state: "idle", scheduledFor: null },
+    stretch: { id: "stretch", state: "idle", scheduledFor: null },
+    eyes: { id: "eyes", state: "idle", scheduledFor: null },
+    lunch: { id: "lunch", state: "idle", scheduledFor: null },
+  },
+  timeline: [],
+};

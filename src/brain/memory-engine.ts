@@ -28,6 +28,7 @@ const INITIAL_MEMORY: CompanionMemory = {
     lunch: { id: "lunch", state: "idle", scheduledFor: null },
   },
   lastUserInteraction: Date.now(),
+  lastTickle: 0,
   timeline: [],
 };
 

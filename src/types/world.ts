@@ -1,6 +1,9 @@
 import type { EnvironmentSnapshot } from "@/system/environment";
 import type { Character, AppPreferences } from "./index";
 import type { CompanionMemory } from "@/brain/memory";
+import type { BatteryState } from "@/system/battery-system";
+import type { WeatherState } from "@/system/weather-system";
+import type { MeetingState } from "@/system/meeting-system";
 
 export type PresenceState = 
   | "Wander"
@@ -8,6 +11,7 @@ export type PresenceState =
   | "AvoidFullscreen"
   | "Home"
   | "Peek"
+  | "Hide"
   | "Sleep";
 
 export interface WorldState {
@@ -17,4 +21,7 @@ export interface WorldState {
   memory: Readonly<CompanionMemory>;
   presence: PresenceState;
   settings: Readonly<AppPreferences>;
+  battery?: Readonly<BatteryState>;
+  weather?: Readonly<WeatherState> | null;
+  meeting?: Readonly<MeetingState>;
 }

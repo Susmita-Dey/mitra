@@ -3,7 +3,7 @@ import "./MockRenderer.css";
 
 /**
  * MockRenderer — Super cute SVG based visual representation of a Red Panda.
- * Now with dynamic postures (sit, sleep on back, stretch) and props (laptop, mug).
+ * Features dynamic postures, props, and detailed anatomy (tail rings, toe beans).
  */
 export function MockRenderer({ character }: RendererProps) {
   const isSleeping = character.animation === "sleep";
@@ -32,7 +32,8 @@ export function MockRenderer({ character }: RendererProps) {
       role="img"
       aria-label={`Mitra - ${character.animation}`}
       onPointerDown={(e) => {
-        if (e.button === 0) {
+        // Only trigger drag if the click wasn't on the tummy
+        if (e.button === 0 && !(e.target as HTMLElement).classList.contains('panda-tummy')) {
           window.dispatchEvent(new CustomEvent("companion:drag:start"));
         }
       }}
@@ -41,7 +42,7 @@ export function MockRenderer({ character }: RendererProps) {
         className="panda-svg"
         viewBox="0 -20 200 260"
         xmlns="http://www.w3.org/2000/svg"
-        data-tauri-drag-region
+       
       >
         <defs>
           <radialGradient id="blush" cx="50%" cy="50%" r="50%">
@@ -54,32 +55,81 @@ export function MockRenderer({ character }: RendererProps) {
         <ellipse className="panda-shadow" cx="100" cy="225" rx="60" ry="10" fill="rgba(0,0,0,0.15)" />
 
         {/* Main Panda Group */}
-        <g className="panda-group" data-tauri-drag-region>
+        <g className="panda-group">
           
-          {/* Tail */}
-          <path className="panda-tail" d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="#C24F1E" strokeWidth="28" strokeLinecap="round" data-tauri-drag-region />
+          {/* Tail with Thick Rings */}
+          <g className="panda-tail-group">
+            {/* Orange Base */}
+            <path className="panda-tail-base" d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="#E86A33" strokeWidth="36" strokeLinecap="round" />
+            
+            {/* Real Red Panda Stripes (Deep Auburn/Reddish Brown) */}
+            <path className="panda-tail-rings" d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="#9A3712" strokeWidth="36" strokeLinecap="round" strokeDasharray="18 24" />
+          </g>
 
-          {/* Legs */}
+          {/* Legs with Toe Beans */}
           <g className="panda-legs">
-            <ellipse cx="65" cy="215" rx="18" ry="14" fill="#4F3527" className="panda-leg left" data-tauri-drag-region />
-            <ellipse cx="135" cy="215" rx="18" ry="14" fill="#4F3527" className="panda-leg right" data-tauri-drag-region />
+            <g className="panda-leg left">
+              <ellipse cx="65" cy="215" rx="18" ry="14" fill="#150A05" />
+              <circle cx="53" cy="217" r="3.5" fill="#5c2915" />
+              <circle cx="65" cy="221" r="3.5" fill="#5c2915" />
+              <circle cx="77" cy="217" r="3.5" fill="#5c2915" />
+              <ellipse cx="65" cy="210" rx="7" ry="5" fill="#5c2915" />
+            </g>
+            <g className="panda-leg right">
+              <ellipse cx="135" cy="215" rx="18" ry="14" fill="#150A05" />
+              <circle cx="123" cy="217" r="3.5" fill="#5c2915ff" />
+              <circle cx="135" cy="221" r="3.5" fill="#5c2915ff" />
+              <circle cx="147" cy="217" r="3.5" fill="#5c2915ff" />
+              <ellipse cx="135" cy="210" rx="7" ry="5" fill="#5c2915ff" />
+            </g>
           </g>
 
           {/* Torso */}
-          <ellipse className="panda-torso" cx="100" cy="160" rx="55" ry="60" fill="#E86A33" data-tauri-drag-region />
+          <ellipse className="panda-torso" cx="100" cy="160" rx="55" ry="60" fill="#E86A33" />
+          {/* Soft Tummy Fur Fluffs (Orange curves) */}
+          <path d="M 45,150 Q 35,152 47,160 Z" fill="#E86A33" />
+          <path d="M 44,170 Q 32,172 46,180 Z" fill="#E86A33" />
+          <path d="M 155,150 Q 165,152 153,160 Z" fill="#E86A33" />
+          <path d="M 156,170 Q 168,172 154,180 Z" fill="#E86A33" />
           
-          {/* Tummy Fluff */}
-          <ellipse className="panda-tummy" cx="100" cy="170" rx="35" ry="40" fill="#FFF9ED" data-tauri-drag-region />
+          {/* Tummy Fluff (Ticklish!) */}
+          <ellipse 
+            className="panda-tummy" 
+            cx="100" cy="170" rx="35" ry="40" 
+            fill="#FFF9ED" 
+            style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              window.dispatchEvent(new CustomEvent("companion:interaction:tummy"));
+            }}
+          />
 
           {/* Props Layer (Behind Arms) */}
-          <g className="panda-props" data-tauri-drag-region>
+          <g className="panda-props">
             {/* Laptop Prop */}
             <g className="prop-laptop">
-              <rect x="50" y="150" width="100" height="60" rx="4" fill="#E2E8F0" />
-              <rect x="55" y="155" width="90" height="40" rx="2" fill="#1E293B" />
-              <rect x="45" y="210" width="110" height="5" rx="2" fill="#CBD5E1" />
-              {/* Apple logo or glowing light */}
-              <circle cx="100" cy="175" r="5" fill="#38BDF8" opacity="0.8" />
+              <rect x="40" y="150" width="120" height="70" rx="6" fill="#E2E8F0" />
+              <rect x="45" y="155" width="110" height="50" rx="4" fill="#1E293B" />
+              <rect x="35" y="220" width="130" height="8" rx="4" fill="#CBD5E1" />
+              {/* Glowing logo */}
+              <circle cx="100" cy="180" r="6" fill="#38BDF8" opacity="0.9" />
+              {/* Keyboard suggestion */}
+              <rect x="50" y="222" width="100" height="2" rx="1" fill="#94A3B8" opacity="0.5" />
+            </g>
+
+            {/* Umbrella Prop (For Rain) */}
+            <g className="prop-umbrella">
+              <path d="M 145,150 L 145,50" stroke="#333" strokeWidth="4" strokeLinecap="round" />
+              <path d="M 145,150 Q 145,160 135,160" stroke="#333" strokeWidth="4" fill="none" strokeLinecap="round" />
+              <path d="M 95,80 Q 145,30 195,80 Z" fill="#EF4444" />
+              <path d="M 95,80 Q 120,70 145,80 Q 170,70 195,80 Z" fill="#DC2626" />
+            </g>
+
+            {/* Thermometer Prop (For Sick/Low Battery) */}
+            <g className="prop-thermometer">
+              <rect x="75" y="130" width="8" height="35" rx="4" fill="#FFF" transform="rotate(-30 75 130)" />
+              <circle cx="88" cy="155" r="7" fill="#EF4444" />
+              <line x1="88" y1="155" x2="78" y2="135" stroke="#EF4444" strokeWidth="3" strokeLinecap="round" />
             </g>
 
             {/* Mug Prop */}
@@ -91,91 +141,96 @@ export function MockRenderer({ character }: RendererProps) {
               {/* Steam */}
               <path className="steam" d="M 140,135 Q 135,120 145,115" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" />
             </g>
+          </g>
 
-            {/* Toy / Gamepad Prop */}
-            <g className="prop-toy">
-              <rect x="70" y="160" width="60" height="30" rx="15" fill="#EF4444" />
-              <circle cx="85" cy="175" r="8" fill="#333" />
-              <circle cx="115" cy="175" r="4" fill="#FDE047" />
-              <circle cx="105" cy="175" r="4" fill="#60A5FA" />
+          {/* Arms with Paws */}
+          <g className="panda-arms">
+            <g className="panda-arm left">
+              <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
+              <ellipse cx="44" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(-20 44 186)" />
+            </g>
+            <g className="panda-arm right">
+              <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
+              <ellipse cx="156" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(20 156 186)" />
             </g>
           </g>
 
-          {/* Arms */}
-          <g className="panda-arms">
-            <path className="panda-arm left" d="M 50,140 Q 30,170 45,190" fill="none" stroke="#4F3527" strokeWidth="18" strokeLinecap="round" data-tauri-drag-region />
-            <path className="panda-arm right" d="M 150,140 Q 170,170 155,190" fill="none" stroke="#4F3527" strokeWidth="18" strokeLinecap="round" data-tauri-drag-region />
-          </g>
-
           {/* Head */}
-          <g className="panda-head-group" data-tauri-drag-region>
+          <g className="panda-head-group">
             {/* Left Ear */}
-            <g className="panda-ear left-ear" data-tauri-drag-region>
+            <g className="panda-ear left-ear">
               <circle cx="55" cy="45" r="22" fill="#E86A33" />
-              <circle cx="55" cy="45" r="12" fill="#FFF9ED" />
+              {/* Extra ear fluff */}
+              <path d="M 40,40 Q 25,35 35,50" fill="#E86A33" />
+              <circle cx="55" cy="45" r="14" fill="#FFF9ED" />
               <path d="M 40,45 Q 30,65 55,65" fill="none" stroke="#E86A33" strokeWidth="4" strokeLinecap="round" />
             </g>
             
             {/* Right Ear */}
-            <g className="panda-ear right-ear" data-tauri-drag-region>
+            <g className="panda-ear right-ear">
               <circle cx="145" cy="45" r="22" fill="#E86A33" />
-              <circle cx="145" cy="45" r="12" fill="#FFF9ED" />
+              {/* Extra ear fluff */}
+              <path d="M 160,40 Q 175,35 165,50" fill="#E86A33" />
+              <circle cx="145" cy="45" r="14" fill="#FFF9ED" />
               <path d="M 160,45 Q 170,65 145,65" fill="none" stroke="#E86A33" strokeWidth="4" strokeLinecap="round" />
             </g>
 
-            {/* Main Head Shape (Squishy Oval) */}
-            <ellipse cx="100" cy="90" rx="70" ry="55" fill="#E86A33" data-tauri-drag-region />
+            {/* Main Head Shape */}
+            <ellipse cx="100" cy="90" rx="72" ry="58" fill="#E86A33" />
+            
+            {/* Top Head Fur Tufts (Smooth curves) */}
+            <path d="M 90,32 Q 95,20 100,32 Q 105,20 110,32 Z" fill="#E86A33" />
+            
+            {/* Cheek Fluff Tufts (Smooth curves) */}
+            <path d="M 28,95 Q 15,100 30,105 Q 12,110 32,112 Z" fill="#E86A33" />
+            <path d="M 172,95 Q 185,100 170,105 Q 188,110 168,112 Z" fill="#E86A33" />
 
-            {/* White Face Markings (Brows/Cheeks) */}
-            <path d="M 100,60 Q 60,55 45,85 Q 35,105 55,125 Q 80,140 100,110 Q 120,140 145,125 Q 165,105 155,85 Q 140,55 100,60 Z" fill="#FFF9ED" data-tauri-drag-region />
+            {/* White Face Markings */}
+            <path d="M 100,58 Q 55,50 40,85 Q 30,110 50,130 Q 80,145 100,115 Q 120,145 150,130 Q 170,110 160,85 Q 145,50 100,58 Z" fill="#FFF9ED" />
 
             {/* Dark Red/Brown Eye Mask Lines */}
-            <path d="M 45,95 Q 65,125 90,115" fill="none" stroke="#C24F1E" strokeWidth="6" strokeLinecap="round" data-tauri-drag-region />
-            <path d="M 155,95 Q 135,125 110,115" fill="none" stroke="#C24F1E" strokeWidth="6" strokeLinecap="round" data-tauri-drag-region />
+            <path d="M 40,95 Q 65,125 90,115" fill="none" stroke="#C24F1E" strokeWidth="6" strokeLinecap="round" />
+            <path d="M 160,95 Q 135,125 110,115" fill="none" stroke="#C24F1E" strokeWidth="6" strokeLinecap="round" />
 
             {/* Blush */}
-            <ellipse className="panda-blush" cx="65" cy="115" rx="14" ry="8" fill="url(#blush)" data-tauri-drag-region />
-            <ellipse className="panda-blush" cx="135" cy="115" rx="14" ry="8" fill="url(#blush)" data-tauri-drag-region />
+            <ellipse className="panda-blush" cx="60" cy="120" rx="16" ry="10" fill="url(#blush)" />
+            <ellipse className="panda-blush" cx="140" cy="120" rx="16" ry="10" fill="url(#blush)" />
 
             {/* Muzzle */}
-            <ellipse cx="100" cy="120" rx="20" ry="14" fill="#FFFFFF" data-tauri-drag-region />
+            <ellipse cx="100" cy="122" rx="22" ry="15" fill="#FFFFFF" />
 
             {/* Nose */}
-            <path d="M 94,115 Q 100,113 106,115 Q 108,118 100,121 Q 92,118 94,115 Z" fill="#4F3527" data-tauri-drag-region />
+            <path d="M 93,116 Q 100,114 107,116 Q 109,119 100,123 Q 91,119 93,116 Z" fill="#2E1C12" />
 
             {/* Mouth */}
-            <g className="panda-mouth-group" data-tauri-drag-region>
+            <g className="panda-mouth-group">
               {isHappy ? (
-                /* Big Smile */
-                <path className="panda-mouth-happy" d="M 90,123 Q 100,135 110,123" fill="none" stroke="#4F3527" strokeWidth="3" strokeLinecap="round" />
+                <path className="panda-mouth-happy" d="M 90,125 Q 100,138 110,125" fill="none" stroke="#2E1C12" strokeWidth="3" strokeLinecap="round" />
               ) : isSad ? (
-                /* Sad mouth */
-                <path className="panda-mouth-sad" d="M 94,128 Q 100,124 106,128" fill="none" stroke="#4F3527" strokeWidth="2.5" strokeLinecap="round" />
+                <path className="panda-mouth-sad" d="M 94,130 Q 100,126 106,130" fill="none" stroke="#2E1C12" strokeWidth="2.5" strokeLinecap="round" />
               ) : (
-                /* Cute 'w' mouth */
-                <path className="panda-mouth" d="M 92,125 Q 96,130 100,125 Q 104,130 108,125" fill="none" stroke="#4F3527" strokeWidth="2.5" strokeLinecap="round" />
+                <path className="panda-mouth" d="M 90,127 Q 95,133 100,127 Q 105,133 110,127" fill="none" stroke="#2E1C12" strokeWidth="2.5" strokeLinecap="round" />
               )}
               
-              {/* Open mouth for Yawn/Observe */}
-              <path className="panda-mouth-open" d="M 94,124 Q 100,138 106,124 Z" fill="#4F3527" />
+              <path className="panda-mouth-open" d="M 94,126 Q 100,140 106,126 Z" fill="#2E1C12" />
             </g>
 
             {/* Eyes */}
-            <g className="panda-eyes" data-tauri-drag-region>
+            <g className="panda-eyes">
               {/* Left Eye */}
               <g className="panda-eye-wrapper" style={{ transformOrigin: '70px 100px' }}>
-                <circle cx="70" cy="100" r="10" fill="#4F3527" className="panda-eye" />
-                <circle cx="67" cy="97" r="3.5" fill="#FFFFFF" className="panda-eye-glint" />
-                <circle cx="73" cy="103" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />
-                <path className="panda-sleep-eye left" d="M 60,103 Q 70,110 80,103" fill="none" stroke="#4F3527" strokeWidth="3.5" strokeLinecap="round" />
+                <circle cx="70" cy="100" r="11" fill="#2E1C12" className="panda-eye" />
+                <circle cx="66" cy="96" r="4" fill="#FFFFFF" className="panda-eye-glint" />
+                <circle cx="74" cy="104" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />
+                <path className="panda-sleep-eye left" d="M 58,103 Q 70,110 82,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
               </g>
               
               {/* Right Eye */}
               <g className="panda-eye-wrapper" style={{ transformOrigin: '130px 100px' }}>
-                <circle cx="130" cy="100" r="10" fill="#4F3527" className="panda-eye" />
-                <circle cx="127" cy="97" r="3.5" fill="#FFFFFF" className="panda-eye-glint" />
-                <circle cx="133" cy="103" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />
-                <path className="panda-sleep-eye right" d="M 120,103 Q 130,110 140,103" fill="none" stroke="#4F3527" strokeWidth="3.5" strokeLinecap="round" />
+                <circle cx="130" cy="100" r="11" fill="#2E1C12" className="panda-eye" />
+                <circle cx="126" cy="96" r="4" fill="#FFFFFF" className="panda-eye-glint" />
+                <circle cx="134" cy="104" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />
+                <path className="panda-sleep-eye right" d="M 118,103 Q 130,110 142,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
               </g>
             </g>
           </g>
@@ -183,10 +238,10 @@ export function MockRenderer({ character }: RendererProps) {
       </svg>
 
       {isSleeping && (
-        <div className="mock-zzz-container" data-tauri-drag-region>
-          <span className="mock-zzz z1" data-tauri-drag-region>Z</span>
-          <span className="mock-zzz z2" data-tauri-drag-region>z</span>
-          <span className="mock-zzz z3" data-tauri-drag-region>z</span>
+        <div className="mock-zzz-container">
+          <span className="mock-zzz z1">Z</span>
+          <span className="mock-zzz z2">z</span>
+          <span className="mock-zzz z3">z</span>
         </div>
       )}
 

@@ -29,6 +29,11 @@ export interface AnimationSettings {
   framerate: number; // e.g., 30 or 60
 }
 
+export interface AudioPreferences {
+  muteSounds: boolean;
+  volume: number; // 0.0 to 1.0
+}
+
 /**
  * The consolidated application state that requires persistence.
  */
@@ -39,6 +44,7 @@ export interface AppPreferences {
   reminders: ReminderPreferences;
   behavior: BehaviorPreferences;
   animation: AnimationSettings;
+  audio: AudioPreferences;
 }
 
 export const DEFAULT_PREFERENCES: AppPreferences = {
@@ -62,5 +68,9 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   animation: {
     smoothTransitions: true,
     framerate: 60,
+  },
+  audio: {
+    muteSounds: false,
+    volume: 0.5,
   },
 };

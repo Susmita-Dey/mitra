@@ -25,6 +25,8 @@ export type Intent =
   | { type: "MoveToCursor" }
   | { type: "MoveToCenter" }
   | { type: "SnapToEdge" }
+  | { type: "HideWindow" }
+  | { type: "ShowWindow" }
   
   // ── Audio Intents ──────────────────────────────────────────────────────
   | { type: "PlaySound"; category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" };
