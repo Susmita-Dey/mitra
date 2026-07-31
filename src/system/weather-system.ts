@@ -47,6 +47,7 @@ export function createWeatherSystem(): WeatherSystem {
       
       console.log(`[WeatherSystem] Weather updated: Temp ${currentState.temperature}°C, Raining: ${currentState.isRaining}`);
     } catch (err) {
+      // Fail silently to treat weather as an optional context, not a strict dependency.
       console.warn("[WeatherSystem] Could not update weather:", err);
     }
   };

@@ -44,7 +44,6 @@ import {
   BatteryBehavior,
   TimeRoutineBehavior,
   WeatherBehavior,
-  TickleBehavior,
   MeetingHideBehavior,
   LieDownBehavior,
   WatchCursorBehavior,
@@ -81,7 +80,11 @@ export function App() {
     appStorageRef.current = appStorage;
     
     // Load preferences on startup so the Settings Panel can render
-    appStorage.load().catch(console.error);
+    appStorage.load().then((prefs: any) => {
+      if (prefs?.behavior?.clickThrough) {
+        winCtrl.setIgnoreCursorEvents(true).catch(console.error);
+      }
+    }).catch(console.error);
 
     const env           = createEnvironmentService();
     const scheduler     = createSchedulerService();
@@ -99,6 +102,9 @@ export function App() {
     eventBus.subscribe("preferences:updated", (prefs: any) => {
       setPreferences(prefs);
       setIsMuted(prefs.audio?.muteSounds ?? false);
+      if (prefs.behavior?.clickThrough !== undefined) {
+        winCtrl.setIgnoreCursorEvents(prefs.behavior.clickThrough).catch(console.error);
+      }
     });
 
     // Demonstrate loading a plugin statically
@@ -124,7 +130,6 @@ export function App() {
     brain.registerBehavior(BatteryBehavior);
     brain.registerBehavior(TimeRoutineBehavior);
     brain.registerBehavior(WeatherBehavior);
-    brain.registerBehavior(TickleBehavior);
     brain.registerBehavior(MeetingHideBehavior);
     brain.registerBehavior(BootGreetBehavior);
     brain.registerBehavior(LieDownBehavior);
@@ -195,6 +200,7 @@ export function App() {
         className="settings-btn"
         onClick={() => {
           setContextMenu({ x: 120, y: 40 });
+          // setIsSettingsOpen(true);
         }}
         title="Mitra Options"
       >

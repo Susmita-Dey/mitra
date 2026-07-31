@@ -44,6 +44,16 @@ export function createCompanionEngine(
   };
 
   const patch = (next: Partial<Character>): void => {
+    let hasChanges = false;
+    for (const key of Object.keys(next) as Array<keyof Character>) {
+      if (character[key] !== next[key]) {
+        hasChanges = true;
+        break;
+      }
+    }
+
+    if (!hasChanges) return; // Prevent unnecessary React re-renders
+
     character = { ...character, ...next };
     notify();
   };

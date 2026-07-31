@@ -22,6 +22,7 @@ export interface BehaviorPreferences {
   idleAnimations: boolean;
   wanderEnabled: boolean;
   interactionLevel: "minimal" | "normal" | "active";
+  clickThrough: boolean;
 }
 
 export interface AnimationSettings {
@@ -64,6 +65,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     idleAnimations: true,
     wanderEnabled: false,
     interactionLevel: "normal",
+    clickThrough: false,
   },
   animation: {
     smoothTransitions: true,

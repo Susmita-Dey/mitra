@@ -2,7 +2,7 @@ import type { CompanionMemory, ReminderItem } from "../memory";
 import type { AppPreferences } from "@/types";
 import type { TimelineEngine } from "../timeline";
 
-const INTERACTION_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutes cooldown after user interaction
+const INTERACTION_COOLDOWN_MS = 30 * 1000; // 30 seconds cooldown after user interaction
 const TRIGGERED_TIMEOUT_MS = 5 * 60 * 1000;    // Move to "ignored" if not clicked in 5 mins
 
 export interface ReminderEngine {

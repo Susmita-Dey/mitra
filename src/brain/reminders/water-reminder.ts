@@ -4,7 +4,7 @@ import type { RegisteredBehavior } from "@/behavior/behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "reminder.water",
-  priority: 10,         // Higher than ambient, lower than reactive
+  priority: 60,         // Higher than ambient, lower than reactive
   weight: 5,
   cooldownMs: 0,
   action: "idle",       // Uses idle animation, but we render a bubble
