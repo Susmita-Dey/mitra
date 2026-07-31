@@ -167,25 +167,35 @@
   to { transform: rotate(30deg); }
 }
 
-/* SIT (Squashed torso, legs pointed forward, arms resting) */
+/* SIT (Chilling out: relaxed posture, crossed legs, slight sway) */
+.mock-renderer[data-animation="sit"] .panda-group {
+  animation: chillSway 5s ease-in-out infinite;
+}
+@keyframes chillSway {
+  0%, 100% { transform: translateY(5px) rotate(-2deg); }
+  50% { transform: translateY(5px) rotate(2deg); }
+}
 .mock-renderer[data-animation="sit"] .panda-torso,
 .mock-renderer[data-animation="sit"] .panda-tummy {
   transform: scaleY(0.85) scaleX(1.05) translateY(15px);
 }
 .mock-renderer[data-animation="sit"] .panda-head-group {
-  transform: translateY(12px);
+  transform: translateY(15px) rotate(4deg);
+}
+.mock-renderer[data-animation="sit"] .panda-eye-wrapper {
+  transform: scaleY(0.7) translateY(2px);
 }
 .mock-renderer[data-animation="sit"] .panda-leg.left {
-  transform: translate(-10px, -15px) rotate(-90deg) scaleY(1.3);
+  transform: translate(15px, -20px) rotate(-60deg) scaleY(1.2);
 }
 .mock-renderer[data-animation="sit"] .panda-leg.right {
-  transform: translate(10px, -15px) rotate(90deg) scaleY(1.3);
+  transform: translate(-15px, -15px) rotate(70deg) scaleY(1.2);
 }
 .mock-renderer[data-animation="sit"] .panda-arm.left {
-  transform: translateY(10px) rotate(30deg);
+  transform: translate(5px, 15px) rotate(50deg);
 }
 .mock-renderer[data-animation="sit"] .panda-arm.right {
-  transform: translateY(10px) rotate(-30deg);
+  transform: translate(-5px, 15px) rotate(-50deg);
 }
 
 /* STRETCH (Torso elongated, arms high, head tilted back) */
@@ -325,6 +335,15 @@
 @keyframes steamRise {
   0% { transform: translateY(0) scale(1); opacity: 0.8; }
   100% { transform: translateY(-15px) scale(1.5); opacity: 0; }
+}
+
+/* Resting Eyes Reminder (Closed Eyes) */
+.mock-renderer[data-interaction="reminder:eyes"] .panda-eye,
+.mock-renderer[data-interaction="reminder:eyes"] .panda-eye-glint {
+  opacity: 0;
+}
+.mock-renderer[data-interaction="reminder:eyes"] .panda-sleep-eye {
+  opacity: 1;
 }
 
 /* Weather / Rain (Umbrella Prop) */

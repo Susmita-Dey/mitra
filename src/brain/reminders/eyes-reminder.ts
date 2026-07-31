@@ -17,7 +17,7 @@ export const EyesReminderBehavior: RegisteredBehavior = {
     return context.world.memory.activeReminders.eyes.state === "triggered";
   },
   execute: (context: BehaviorContext) => {
-    context.emit({ type: "PlayAnimation", animation: "observe" });
+    context.emit({ type: "PlayAnimation", animation: "sit" });
     context.emit({ type: "SetInteraction", interaction: "reminder:eyes" });
     context.emit({ type: "PlaySound", category: "alert" });
   },
