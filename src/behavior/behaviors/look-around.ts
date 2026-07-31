@@ -21,12 +21,12 @@ export const LookAroundBehavior: RegisteredBehavior = {
   canExecute: (context: BehaviorContext) => {
     // Don't look around if already engaged in a higher state.
     return (
-      context.character.animation === "idle" ||
-      context.character.animation === "blink"
+      context.world.character.animation === "idle" ||
+      context.world.character.animation === "blink"
     );
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("look-around");
-    context.pushEmotion("curious");
+    context.emit({ type: "PlayAnimation", animation: "look-around" });
+    context.emit({ type: "ChangeEmotion", emotion: "curious" });
   },
 };

@@ -14,10 +14,10 @@ const definition: BehaviorDefinition = {
 export const StretchReminderBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    return context.memory.activeReminders.stretch.state === "triggered";
+    return context.world.memory.activeReminders.stretch.state === "triggered";
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("stretch"); 
-    context.setInteraction("reminder:stretch");
+    context.emit({ type: "PlayAnimation", animation: "stretch" }); 
+    context.emit({ type: "SetInteraction", interaction: "reminder:stretch" });
   },
 };

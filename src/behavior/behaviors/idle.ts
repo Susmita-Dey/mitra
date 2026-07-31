@@ -20,7 +20,7 @@ export const IdleBehavior: RegisteredBehavior = {
   definition,
   canExecute: () => true,
   execute: (context: BehaviorContext) => {
-    context.setAnimation("idle");
-    context.pushEmotion("neutral");
+    context.emit({ type: "PlayAnimation", animation: "idle" });
+    context.emit({ type: "ChangeEmotion", emotion: "neutral" });
   },
 };

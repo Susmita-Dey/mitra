@@ -14,10 +14,10 @@ const definition: BehaviorDefinition = {
 export const EyesReminderBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    return context.memory.activeReminders.eyes.state === "triggered";
+    return context.world.memory.activeReminders.eyes.state === "triggered";
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("observe"); // Look around to remind about eyes
-    context.setInteraction("reminder:eyes");
+    context.emit({ type: "PlayAnimation", animation: "observe" }); // Look around to remind about eyes
+    context.emit({ type: "SetInteraction", interaction: "reminder:eyes" });
   },
 };

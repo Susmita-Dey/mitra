@@ -20,10 +20,10 @@ const definition: BehaviorDefinition = {
 export const ObserveBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    return context.character.interaction === "hover";
+    return context.world.character.interaction === "hover";
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("observe");
-    context.pushEmotion("curious");
+    context.emit({ type: "PlayAnimation", animation: "observe" });
+    context.emit({ type: "ChangeEmotion", emotion: "curious" });
   },
 };

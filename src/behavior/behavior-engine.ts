@@ -29,6 +29,8 @@ export interface SelectedBehavior {
  */
 export interface BehaviorEngine {
   register(behavior: RegisteredBehavior): void;
+  /** Remove a behavior from the engine. */
+  unregister(id: string): void;
   /**
    * Evaluate all behaviors and return the one that should run this tick.
    * Returns null if no behavior is eligible (should not happen if IdleBehavior is registered).
@@ -75,7 +77,7 @@ const HISTORY_SIZE = 5;
 const RECENCY_PENALTY = 0.5;
 
 export function createBehaviorEngine(): BehaviorEngine {
-  const behaviors: RegisteredBehavior[] = [];
+  let behaviors: RegisteredBehavior[] = [];
   /** id → timestamp of last execution */
   const cooldowns = new Map<string, number>();
   /** Ring buffer of recently executed behavior ids */
@@ -98,7 +100,15 @@ export function createBehaviorEngine(): BehaviorEngine {
 
   return {
     register(behavior: RegisteredBehavior) {
-      behaviors.push(behavior);
+      // Prevent duplicates
+      if (!behaviors.some(b => b.definition.id === behavior.definition.id)) {
+        behaviors.push(behavior);
+      }
+    },
+
+    unregister(id: string) {
+      behaviors = behaviors.filter((b) => b.definition.id !== id);
+      cooldowns.delete(id);
     },
 
     select(context: BehaviorContext): RegisteredBehavior | null {

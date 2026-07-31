@@ -34,11 +34,8 @@ export function createTimelineEngine(maxEvents = 100): TimelineEngine {
         metadata
       };
       
-      const timeStr = new Date(newEvent.timestamp).toLocaleTimeString();
-      console.log(`%c[Timeline] %c[${timeStr}] %c${type}%c - ${description}`, 
-        'color: #888', 'color: #3498db', 'color: #2ecc71; font-weight: bold', 'color: inherit', 
-        metadata ? metadata : ''
-      );
+      // Debug logs removed to keep console clean for developers.
+      // If needed, an event-based log stream should be used instead.
       
       const newEvents = [...events, newEvent];
       if (newEvents.length > maxEvents) {

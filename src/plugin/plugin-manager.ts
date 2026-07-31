@@ -18,6 +18,8 @@ export interface PluginManager {
   loadPlugin(plugin: MitraPlugin): Promise<void>;
   /** Unloads a plugin. */
   unloadPlugin(pluginId: string): Promise<void>;
+  /** Unloads all loaded plugins. */
+  unloadAll(): Promise<void>;
 
   // Registries exposed to the React UI or Engine
   getCommands(): CommandDefinition[];
@@ -32,6 +34,7 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
   const commands = new Map<string, CommandDefinition>();
   const widgets = new Map<string, WidgetDefinition>();
   const reminders = new Map<string, ReminderDefinition>();
+  const registeredBehaviorIds = new Set<string>();
 
   // Utility to check permissions securely
   const requirePermission = (plugin: MitraPlugin, permission: PluginPermission) => {
@@ -44,11 +47,8 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
    * Adapts the engine's internal BehaviorContext into the safe PluginBehaviorContext.
    */
   const wrapContext = (context: BehaviorContext): PluginBehaviorContext => ({
-    getEnvironment: () => context.environment,
-    getCharacterState: () => context.character,
-    requestEmotion: (emotion) => context.pushEmotion(emotion),
-    requestMovement: (intent) => context.requestMovement(intent),
-    setAnimation: (animation) => context.setAnimation(animation),
+    getWorldState: () => context.world,
+    emit: (intent) => context.emit(intent),
   });
 
   return {
@@ -71,14 +71,15 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
         registerBehavior: (pluginBehavior: PluginBehavior) => {
           requirePermission(plugin, "behaviors");
           
-          // Wrap the plugin behavior into an internal RegisteredBehavior
+          const behaviorId = `plugin:${plugin.manifest.id}:${pluginBehavior.definition.id}`;
           const internalBehavior: RegisteredBehavior = {
-            definition: pluginBehavior.definition,
+            definition: { ...pluginBehavior.definition, id: behaviorId },
             canExecute: (context) => pluginBehavior.canExecute(wrapContext(context)),
             execute: (context) => pluginBehavior.execute(wrapContext(context)),
           };
           
           brain.registerBehavior(internalBehavior);
+          registeredBehaviorIds.add(behaviorId);
         },
         registerCommand: (command: CommandDefinition) => {
           requirePermission(plugin, "commands");
@@ -119,10 +120,25 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
 
       loadedPlugins.delete(pluginId);
       
-      // We would also need to clean up registered behaviors, commands, etc.
-      // For now, this is a stub as unregistering behaviors from the BehaviorEngine 
-      // requires additional engine support (e.g., behaviorEngine.unregister(id)).
+      // Clear out plugin contributions
+      const prefix = `plugin:${pluginId}:`;
+      
+      for (const id of registeredBehaviorIds) {
+        if (id.startsWith(prefix)) {
+          brain.unregisterBehavior(id);
+          registeredBehaviorIds.delete(id);
+        }
+      }
+      
+      // Also clean up commands, widgets, etc. here if needed.
       console.log(`[PluginManager] Unloaded plugin: ${plugin.manifest.id}`);
+    },
+
+    async unloadAll() {
+      const ids = Array.from(loadedPlugins.keys());
+      for (const id of ids) {
+        await this.unloadPlugin(id);
+      }
     },
 
     getCommands: () => Array.from(commands.values()),

@@ -23,9 +23,10 @@ export function createWindowController(storage: AppStorage): WindowController {
       await win.setPosition(new PhysicalPosition(x, y));
     },
 
-    async animateTo(_x: number, _y: number) {
-      // Future: Implement smooth stepping or native animation
-      console.warn("[WindowController] animateTo not yet implemented");
+    async animateTo(x: number, y: number) {
+      // Future: Implement smooth stepping or native animation.
+      // For now, gracefully fall back to an instant move so intents don't fail silently.
+      await this.moveTo(x, y);
     },
 
     async snapToEdge() {

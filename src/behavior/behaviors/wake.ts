@@ -20,15 +20,16 @@ export const WakeBehavior: RegisteredBehavior = {
   canExecute: (context: BehaviorContext) => {
     // If we haven't greeted yet, don't wake up from normal user activity.
     // The BootGreetBehavior will handle the initial wake up.
-    if (!context.memory.hasGreeted) return false;
+    if (!context.world.memory.hasGreeted) return false;
 
-    const isUserActive = !context.environment.idleMs || context.environment.idleMs < 1000;
-    return context.memory.wasAsleep && isUserActive;
+    const isUserActive = !context.world.environment.idleMs || context.world.environment.idleMs < 1000;
+    return context.world.memory.wasAsleep && isUserActive;
   },
   execute: (context: BehaviorContext) => {
     // Clear sleepy state and memory
     context.setMemory({ wasAsleep: false });
-    context.setEmotion("curious");
-    context.setAnimation("observe");
+    context.emit({ type: "ChangeEmotion", emotion: "curious" });
+    context.emit({ type: "PlayAnimation", animation: "observe" });
+    context.emit({ type: "PlaySound", category: "happy" });
   },
 };

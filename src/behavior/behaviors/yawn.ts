@@ -18,10 +18,11 @@ const definition: BehaviorDefinition = {
 export const YawnBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    return context.character.emotion === "sleepy" && context.character.animation !== "sleep";
+    return context.world.character.emotion === "sleepy" && context.world.character.animation !== "sleep";
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("yawn");
-    context.pushEmotion("sleepy");
+    context.emit({ type: "PlayAnimation", animation: "yawn" });
+    context.emit({ type: "ChangeEmotion", emotion: "sleepy" });
+    context.emit({ type: "PlaySound", category: "sleepy" });
   },
 };

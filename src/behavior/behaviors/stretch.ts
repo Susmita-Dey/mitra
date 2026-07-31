@@ -21,14 +21,15 @@ export const StretchBehavior: RegisteredBehavior = {
   canExecute: (context: BehaviorContext) => {
     // Only stretch when calm — not when already moving.
     return (
-      context.character.animation === "idle" &&
-      context.character.emotion !== "focused" &&
-      context.character.emotion !== "concerned" &&
-      context.environment.idleMs > 15_000 // Only stretch after 15s of idle time
+      context.world.character.animation === "idle" &&
+      context.world.character.emotion !== "focused" &&
+      context.world.character.emotion !== "concerned" &&
+      context.world.environment.idleMs > 180_000 // Only stretch after 15s of idle time
     );
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("stretch");
-    context.pushEmotion("relaxed");
+    context.emit({ type: "PlayAnimation", animation: "stretch" });
+    context.emit({ type: "PlaySound", category: "bored" });
+    context.emit({ type: "ChangeEmotion", emotion: "relaxed" });
   },
 };

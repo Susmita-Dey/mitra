@@ -14,10 +14,10 @@ const definition: BehaviorDefinition = {
 export const WaterReminderBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    return context.memory.activeReminders.water.state === "triggered";
+    return context.world.memory.activeReminders.water.state === "triggered";
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("sit"); // Mitra sits patiently with a reminder
-    context.setInteraction("reminder:water");
+    context.emit({ type: "PlayAnimation", animation: "sit" }); // Mitra sits patiently with a reminder
+    context.emit({ type: "SetInteraction", interaction: "reminder:water" });
   },
 };

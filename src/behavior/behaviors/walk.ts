@@ -22,13 +22,13 @@ export const WalkBehavior: RegisteredBehavior = {
   canExecute: (context: BehaviorContext) => {
     // Only walk from a resting state.
     return (
-      context.character.animation === "idle" &&
-      context.character.emotion !== "sleepy" &&
-      context.character.emotion !== "focused"
+      context.world.character.animation === "idle" &&
+      context.world.character.emotion !== "sleepy" &&
+      context.world.character.emotion !== "focused"
     );
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("walk");
-    context.pushEmotion("relaxed");
+    context.emit({ type: "PlayAnimation", animation: "walk" });
+    context.emit({ type: "ChangeEmotion", emotion: "relaxed" });
   },
 };

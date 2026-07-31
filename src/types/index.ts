@@ -8,6 +8,8 @@ export { DEFAULT_INTERACTION } from "./interaction";
 export type { Position } from "./position";
 export { DEFAULT_POSITION } from "./position";
 export type { MovementIntent } from "./movement";
+export * from "./intent";
+export * from "./world";
 export type { 
   AppPreferences, 
   WindowPosition, 

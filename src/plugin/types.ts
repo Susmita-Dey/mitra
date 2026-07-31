@@ -1,5 +1,4 @@
-import type { Animation, Character, Emotion, MovementIntent } from "@/types";
-import type { EnvironmentSnapshot } from "@/system/environment";
+// Unused imports removed
 import type { EventName, EventHandler, Unsubscribe, SystemEvents } from "@/system/event-bus";
 import type { BehaviorDefinition } from "@/behavior/behavior-definition";
 
@@ -60,11 +59,10 @@ export interface MitraPlugin {
  * Exposes NO internal engine stores or dependencies.
  */
 export interface PluginBehaviorContext {
-  getEnvironment(): EnvironmentSnapshot;
-  getCharacterState(): Character;
-  requestEmotion(emotion: Emotion): boolean;
-  requestMovement(intent: MovementIntent): void;
-  setAnimation(animation: Animation): void;
+  /** Get a read-only snapshot of the world state. */
+  getWorldState(): Readonly<import("@/types").WorldState>;
+  /** Emit an intent to the system. */
+  emit(intent: import("@/types").Intent): void;
   // scheduleTask(task: any): void; // Stub for future async task scheduling
 }
 

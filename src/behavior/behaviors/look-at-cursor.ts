@@ -18,10 +18,10 @@ export const LookAtCursorBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
     // Trigger if mouse is active and in window
-    return context.environment.mouseActive && context.environment.cursorInWindow;
+    return context.world.environment.mouseActive && context.world.environment.cursorInWindow;
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("observe"); // Or a specific look-at-cursor animation
-    context.pushEmotion("curious");
+    context.emit({ type: "PlayAnimation", animation: "observe" }); // Or a specific look-at-cursor animation
+    context.emit({ type: "ChangeEmotion", emotion: "curious" });
   },
 };

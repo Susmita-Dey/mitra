@@ -15,12 +15,12 @@ const CustomWobbleBehavior: PluginBehavior = {
   },
   canExecute(context) {
     // Only execute if Mitra is happy
-    const char = context.getCharacterState();
-    return char.emotion === "happy";
+    const world = context.getWorldState();
+    return world.character.emotion === "happy";
   },
   execute(context) {
     // Request a movement safely
-    context.requestMovement({ type: "snap-to-edge" });
+    context.emit({ type: "SnapToEdge" });
   }
 };
 

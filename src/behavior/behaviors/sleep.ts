@@ -29,12 +29,12 @@ export const SleepBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
     // Only run if the companion is already expressing sleepiness.
-    return context.character.emotion === "sleepy";
+    return context.world.character.emotion === "sleepy";
   },
   execute: (context: BehaviorContext) => {
-    context.setAnimation("sleep");
+    context.emit({ type: "PlayAnimation", animation: "sleep" });
     // Re-push sleepy to keep the EmotionEngine's sticky state confirmed.
-    context.pushEmotion("sleepy");
+    context.emit({ type: "ChangeEmotion", emotion: "sleepy" });
     context.setMemory({ wasAsleep: true });
   },
 };

@@ -1,5 +1,4 @@
-import type { Animation, Character, Emotion, Interaction, MovementIntent } from "@/types";
-import type { EnvironmentSnapshot } from "@/system/environment";
+// Unused imports removed
 import type { CompanionMemory } from "../brain/memory";
 
 /**
@@ -16,21 +15,9 @@ import type { CompanionMemory } from "../brain/memory";
  * Behaviors read it to make context-aware decisions (e.g., sleep when idle).
  */
 export interface BehaviorContext {
-  character: Character;
-  environment: EnvironmentSnapshot;
-  memory: Readonly<CompanionMemory>;
+  world: import("@/types").WorldState;
   setMemory(update: Partial<CompanionMemory>): void;
-  /**
-   * Request an emotional transition through the EmotionEngine.
-   * Returns true if the engine accepted the push.
-   */
-  pushEmotion(emotion: Emotion): boolean;
-  /** Direct engine override — bypasses EmotionEngine rules entirely. */
-  setEmotion(emotion: Emotion): void;
-  setAnimation(animation: Animation): void;
-  setInteraction(interaction: Interaction): void;
-  /** Emits a movement intent to the Brain. The Brain decides if movement is permitted. */
-  requestMovement(intent: MovementIntent): void;
+  emit(intent: import("@/types").Intent): void;
 }
 
 /**

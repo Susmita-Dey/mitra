@@ -13,12 +13,12 @@ export const IdleBehavior: Behavior = {
   priority: 0,
   canExecute: () => true,
   execute: (context: BehaviorContext) => {
-    if (context.character.animation !== "idle") {
-      context.setAnimation("idle");
+    if (context.world.character.animation !== "idle") {
+      context.emit({ type: "PlayAnimation", animation: "idle" });
     }
     // pushEmotion will silently fail (return false) if a sticky emotion is active.
     // That is the correct behavior — idle should never override focused or sleepy.
-    context.pushEmotion("neutral");
+    context.emit({ type: "ChangeEmotion", emotion: "neutral" });
   },
 };
 

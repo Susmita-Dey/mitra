@@ -1,16 +1,14 @@
 .mock-renderer {
   width: 300px;
-  height: 300px; /* Increased to fit the new Tauri window size and give room to stretch */
-  background: rgba(0, 0, 0, 0.01); /* Invisible but captures clicks on Windows */
+  height: 300px;
+  background: rgba(0, 0, 0, 0.01);
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
-  /* Add a gentle shadow to ground it */
-  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.15));
-  /* Cursor changes to pointer to indicate dragging */
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.2));
   cursor: grab;
-  -webkit-app-region: drag; /* Fallback for some OS environments */
+  -webkit-app-region: drag;
 }
 
 .mock-renderer:active {
@@ -21,76 +19,91 @@
   width: 100%;
   height: 100%;
   overflow: visible;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.panda-group {
+  transform-origin: 100px 180px;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .panda-head-group {
-  transform-origin: 100px 140px; /* Base of the neck */
+  transform-origin: 100px 140px;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.panda-arm.left {
-  transform-origin: 50px 140px;
-  transition: transform 0.5s ease;
+.panda-arm {
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.panda-arm.left { transform-origin: 50px 140px; }
+.panda-arm.right { transform-origin: 150px 140px; }
 
-.panda-arm.right {
-  transform-origin: 150px 140px;
-  transition: transform 0.5s ease;
+.panda-leg {
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.panda-leg.left { transform-origin: 65px 215px; }
+.panda-leg.right { transform-origin: 135px 215px; }
 
-.panda-torso {
+.panda-torso, .panda-tummy {
   transform-origin: 100px 160px;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panda-shadow {
+  transition: transform 0.8s ease, opacity 0.8s ease;
+  transform-origin: 100px 225px;
 }
 
 .panda-tail {
   transform-origin: 140px 180px;
   animation: lazyTail 8s ease-in-out infinite;
+  transition: transform 0.8s ease;
 }
 
 @keyframes lazyTail {
   0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(5deg); }
+  50% { transform: rotate(8deg); }
 }
 
 .mock-renderer[data-emotion="happy"] .panda-tail {
-  animation: wagTail 0.5s ease-in-out infinite alternate;
+  animation: wagTail 0.3s ease-in-out infinite alternate;
 }
 
 @keyframes wagTail {
-  0% { transform: rotate(-10deg); }
-  100% { transform: rotate(20deg); }
+  0% { transform: rotate(-15deg); }
+  100% { transform: rotate(25deg); }
 }
 
-.panda-mouth-open {
-  opacity: 0;
-  transform-origin: 100px 124px;
-  transition: all 0.2s ease;
-}
+/* Mouth states */
+.panda-mouth-open { opacity: 0; transform-origin: 100px 124px; transition: all 0.2s ease; }
+.panda-mouth { opacity: 1; transition: opacity 0.2s ease; }
+.panda-sleep-eye { opacity: 0; }
 
-.panda-mouth {
-  opacity: 1;
-  transition: opacity 0.2s ease;
-}
-
-.panda-sleep-eye {
-  opacity: 0;
-}
-
-/* Explicit absolute pixel transform-origin for eyes! 
-   This fixes the jumping bug when scaling/stretching. */
 .panda-eye, .panda-eye-glint {
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.2s ease;
   transform-origin: center center;
 }
-.panda-eye-wrapper {
-  /* Defined directly via style inline so each eye has its proper cx cy */
-  transition: transform 0.15s ease;
+.panda-eye-wrapper { transition: transform 0.15s ease; }
+
+/* Props Visibility */
+.prop-laptop, .prop-mug, .prop-toy {
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateY(20px) scale(0.8);
 }
 
-/* ANIMATIONS */
+.panda-props {
+  transform-origin: 100px 180px;
+  transition: transform 0.8s ease;
+}
 
-/* Idle (Breathing) */
-.mock-renderer[data-animation="idle"] .panda-torso {
+/* -------------------------------------------------------------
+   ANIMATION STATES (POSTURES) 
+------------------------------------------------------------- */
+
+/* IDLE (Breathing naturally) */
+.mock-renderer[data-animation="idle"] .panda-torso,
+.mock-renderer[data-animation="idle"] .panda-tummy {
   animation: torsoBreathe 4s ease-in-out infinite;
 }
 .mock-renderer[data-animation="idle"] .panda-head-group {
@@ -103,10 +116,10 @@
 }
 @keyframes headBreathe {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(2px); }
+  50% { transform: translateY(3px) rotate(1deg); }
 }
 
-/* Walk */
+/* WALK */
 .mock-renderer[data-animation="walk"] .panda-group {
   animation: walkBounce 0.5s ease-in-out infinite alternate;
 }
@@ -117,81 +130,63 @@
   animation: waddleRight 0.5s ease-in-out infinite alternate-reverse;
 }
 .mock-renderer[data-animation="walk"] .panda-arm.left {
-  transform: rotate(-15deg);
+  transform: rotate(-20deg);
   animation: swingLeft 0.5s ease-in-out infinite alternate-reverse;
 }
 .mock-renderer[data-animation="walk"] .panda-arm.right {
-  transform: rotate(15deg);
+  transform: rotate(20deg);
   animation: swingRight 0.5s ease-in-out infinite alternate;
 }
 
 @keyframes walkBounce {
-  from { transform: translateY(0) rotate(-2deg); }
-  to { transform: translateY(-8px) rotate(2deg); }
+  from { transform: translateY(0) rotate(-3deg); }
+  to { transform: translateY(-10px) rotate(3deg); }
 }
 @keyframes waddleLeft {
-  from { transform: translateY(0); }
-  to { transform: translateY(-5px); }
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-8px) scale(1.1); }
 }
 @keyframes waddleRight {
-  from { transform: translateY(-5px); }
-  to { transform: translateY(0); }
+  from { transform: translateY(-8px) scale(1.1); }
+  to { transform: translateY(0) scale(1); }
 }
 @keyframes swingLeft {
-  from { transform: rotate(-25deg); }
+  from { transform: rotate(-30deg); }
   to { transform: rotate(-5deg); }
 }
 @keyframes swingRight {
   from { transform: rotate(5deg); }
-  to { transform: rotate(25deg); }
+  to { transform: rotate(30deg); }
 }
 
-/* Blink */
-@keyframes fastBlink {
-  0% { transform: scaleY(1); }
-  50% { transform: scaleY(0.1); }
-  100% { transform: scaleY(1); }
+/* SIT (Squashed torso, legs pointed forward, arms resting) */
+.mock-renderer[data-animation="sit"] .panda-torso,
+.mock-renderer[data-animation="sit"] .panda-tummy {
+  transform: scaleY(0.85) scaleX(1.05) translateY(15px);
+}
+.mock-renderer[data-animation="sit"] .panda-head-group {
+  transform: translateY(12px);
+}
+.mock-renderer[data-animation="sit"] .panda-leg.left {
+  transform: translate(-10px, -15px) rotate(-90deg) scaleY(1.3);
+}
+.mock-renderer[data-animation="sit"] .panda-leg.right {
+  transform: translate(10px, -15px) rotate(90deg) scaleY(1.3);
+}
+.mock-renderer[data-animation="sit"] .panda-arm.left {
+  transform: translateY(10px) rotate(30deg);
+}
+.mock-renderer[data-animation="sit"] .panda-arm.right {
+  transform: translateY(10px) rotate(-30deg);
 }
 
-.mock-renderer[data-animation="blink"] .panda-eye-wrapper {
-  animation: fastBlink 0.3s ease-in-out;
-  transform-origin: center;
+/* STRETCH (Torso elongated, arms high, head tilted back) */
+.mock-renderer[data-animation="stretch"] .panda-torso,
+.mock-renderer[data-animation="stretch"] .panda-tummy {
+  transform: scaleY(1.2) scaleX(0.85) translateY(-15px);
 }
-
-/* Look Around */
-.mock-renderer[data-animation="look-around"] .panda-eyes {
-  animation: lookAround 3s ease-in-out;
-}
-@keyframes lookAround {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
-}
-
-/* Observe (Wide eyes, slightly open mouth, head tilts slightly) */
-.mock-renderer[data-animation="observe"] .panda-eye-wrapper {
-  transform: scale(1.2);
-}
-.mock-renderer[data-animation="observe"] .panda-mouth-open {
-  opacity: 1;
-  transform: scale(0.8);
-}
-.mock-renderer[data-animation="observe"] .panda-mouth {
-  opacity: 0;
-}
-.mock-renderer[data-animation="observe"] .panda-head-group {
-  transform: rotate(-3deg);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Stretch (Elongate head and torso, arms up) */
 .mock-renderer[data-animation="stretch"] .panda-head-group {
-  transform: scaleY(1.1) scaleX(0.95) translateY(-15px);
-  transition: transform 1s ease-in-out;
-}
-.mock-renderer[data-animation="stretch"] .panda-torso {
-  transform: scaleY(1.1) scaleX(0.9) translateY(-5px);
-  transition: transform 1s ease-in-out;
+  transform: scaleY(1.05) translateY(-25px) rotate(-5deg);
 }
 .mock-renderer[data-animation="stretch"] .panda-arm.left {
   transform: translateY(-10px) rotate(160deg);
@@ -206,27 +201,19 @@
 .mock-renderer[data-animation="stretch"] .panda-mouth {
   opacity: 0;
 }
-.mock-renderer[data-animation="stretch"] .panda-eyes {
-  transform: translateY(-2px);
+.mock-renderer[data-animation="stretch"] .panda-eye-wrapper {
+  transform: translateY(-4px) scaleY(0.2); /* squinting */
 }
 
-/* Yawn */
-.mock-renderer[data-animation="yawn"] .panda-mouth-open {
-  opacity: 1;
-  transform: scale(1.5);
+/* SLEEP (Curled up / Laying on back) */
+/* We rotate the entire body 90 degrees to lay down */
+.mock-renderer[data-animation="sleep"] .panda-group {
+  transform: translate(-20px, 40px) rotate(-90deg);
 }
-.mock-renderer[data-animation="yawn"] .panda-mouth {
-  opacity: 0;
+.mock-renderer[data-animation="sleep"] .panda-shadow {
+  transform: scaleX(1.5) scaleY(0.8) translate(10px, -10px);
+  opacity: 0.5;
 }
-.mock-renderer[data-animation="yawn"] .panda-eye-wrapper {
-  transform: scaleY(0.4) translateY(4px); /* Fixed! Absolute origin in inline style prevents flying */
-}
-.mock-renderer[data-animation="yawn"] .panda-head-group {
-  transform: scaleY(0.95) scaleX(1.05) translateY(4px);
-  transition: transform 0.5s ease-in-out;
-}
-
-/* Sleep */
 .mock-renderer[data-animation="sleep"] .panda-eye,
 .mock-renderer[data-animation="sleep"] .panda-eye-glint {
   opacity: 0;
@@ -235,114 +222,170 @@
   opacity: 1;
 }
 .mock-renderer[data-animation="sleep"] .panda-head-group {
-  animation: cuteDeepBreathe 6s ease-in-out infinite;
+  transform: rotate(15deg);
+  animation: sleepBreatheHead 4s ease-in-out infinite;
 }
-.mock-renderer[data-animation="sleep"] .panda-torso {
-  animation: cuteDeepBreatheTorso 6s ease-in-out infinite;
+.mock-renderer[data-animation="sleep"] .panda-torso,
+.mock-renderer[data-animation="sleep"] .panda-tummy {
+  animation: sleepBreatheTorso 4s ease-in-out infinite;
 }
-@keyframes cuteDeepBreathe {
-  0%, 100% { transform: scale(1) translateY(8px); }
-  50% { transform: scale(1.03, 0.96) translateY(12px); }
+.mock-renderer[data-animation="sleep"] .panda-arm.left {
+  transform: rotate(80deg) translate(-10px, -20px);
 }
-@keyframes cuteDeepBreatheTorso {
-  0%, 100% { transform: scale(1) translateY(2px); }
-  50% { transform: scale(1.04, 0.95) translateY(4px); }
+.mock-renderer[data-animation="sleep"] .panda-arm.right {
+  transform: rotate(-100deg) translate(0px, -10px);
+}
+.mock-renderer[data-animation="sleep"] .panda-leg.left {
+  transform: rotate(-45deg) translate(-10px, 0px);
+}
+.mock-renderer[data-animation="sleep"] .panda-leg.right {
+  transform: rotate(-30deg) translate(5px, 10px);
+}
+
+@keyframes sleepBreatheHead {
+  0%, 100% { transform: rotate(15deg) translateY(0); }
+  50% { transform: rotate(12deg) translateY(-2px); }
+}
+@keyframes sleepBreatheTorso {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03, 0.97); }
+}
+
+/* BLINK & YAWN & OBSERVE */
+.mock-renderer[data-animation="blink"] .panda-eye-wrapper {
+  animation: fastBlink 0.3s ease-in-out;
+}
+@keyframes fastBlink {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.1); }
+}
+
+.mock-renderer[data-animation="yawn"] .panda-mouth-open {
+  opacity: 1;
+  transform: scale(1.6);
+}
+.mock-renderer[data-animation="yawn"] .panda-mouth {
+  opacity: 0;
+}
+.mock-renderer[data-animation="yawn"] .panda-eye-wrapper {
+  transform: scaleY(0.3) translateY(6px);
+}
+.mock-renderer[data-animation="yawn"] .panda-head-group {
+  transform: translateY(3px) rotate(-3deg);
+}
+
+.mock-renderer[data-animation="observe"] .panda-eye-wrapper {
+  transform: scale(1.3);
+}
+.mock-renderer[data-animation="observe"] .panda-mouth-open {
+  opacity: 1;
+  transform: scale(0.8);
+}
+.mock-renderer[data-animation="observe"] .panda-mouth { opacity: 0; }
+.mock-renderer[data-animation="observe"] .panda-head-group {
+  transform: rotate(-6deg) translateY(-4px);
+}
+
+/* -------------------------------------------------------------
+   PROPS AND INTERACTIONS (Water, Laptop, etc.)
+------------------------------------------------------------- */
+
+/* Drinking Water (Mug Prop) */
+.mock-renderer[data-interaction="reminder:water"] .prop-mug {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.mock-renderer[data-interaction="reminder:water"] .panda-arm.right {
+  transform: rotate(-100deg) translate(-20px, -20px);
+}
+.mock-renderer[data-interaction="reminder:water"] .steam {
+  animation: steamRise 2s infinite ease-out;
+}
+@keyframes steamRise {
+  0% { transform: translateY(0) scale(1); opacity: 0.8; }
+  100% { transform: translateY(-15px) scale(1.5); opacity: 0; }
 }
 
 /* Sleep Zzz particles */
 .mock-zzz-container {
   position: absolute;
   top: 10px;
-  right: 15px;
+  right: 25px;
   font-family: "Quicksand", "Nunito", sans-serif;
   font-weight: 800;
-  pointer-events: none; /* Let drag clicks pass through */
+  pointer-events: none;
 }
-.mock-zzz {
-  position: absolute;
-  opacity: 0;
-}
-.z1 { font-size: 26px; animation: floatZ 3s infinite 0s; right: 0; bottom: 0; color: #a2d2ff; }
-.z2 { font-size: 20px; animation: floatZ 3s infinite 1s; right: 15px; bottom: 15px; color: #bde0fe; }
-.z3 { font-size: 16px; animation: floatZ 3s infinite 2s; right: 25px; bottom: 30px; color: #ffc8dd; }
+.mock-zzz { position: absolute; opacity: 0; }
+.z1 { font-size: 32px; animation: floatZ 3s infinite 0s; right: 0; bottom: 0; color: #a2d2ff; }
+.z2 { font-size: 24px; animation: floatZ 3s infinite 1s; right: 20px; bottom: 20px; color: #bde0fe; }
+.z3 { font-size: 18px; animation: floatZ 3s infinite 2s; right: 35px; bottom: 40px; color: #ffc8dd; }
 
 @keyframes floatZ {
-  0% { transform: translate(0, 0) scale(0.5) rotate(-10deg); opacity: 0; }
+  0% { transform: translate(0, 0) scale(0.5) rotate(-15deg); opacity: 0; }
   20% { opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: translate(15px, -35px) scale(1.5) rotate(10deg); opacity: 0; }
+  100% { transform: translate(20px, -45px) scale(1.5) rotate(15deg); opacity: 0; }
 }
 
-/* Hover interaction - wiggle ears or lift slightly */
+/* Hover interaction - wiggle ears */
 .mock-renderer[data-interaction="hover"] .panda-svg {
-  transform: translateY(-5px);
-  filter: drop-shadow(0 15px 20px rgba(0, 0, 0, 0.15));
+  transform: translateY(-6px);
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.25));
 }
 .mock-renderer[data-interaction="hover"] .left-ear {
-  transform: rotate(-5deg);
+  transform: rotate(-10deg);
   transform-origin: 55px 65px;
 }
 .mock-renderer[data-interaction="hover"] .right-ear {
-  transform: rotate(5deg);
+  transform: rotate(10deg);
   transform-origin: 145px 65px;
-}
-
-/* Sit and Stand */
-.mock-renderer[data-animation="sit"] .panda-torso {
-  transform: scaleY(0.9) translateY(10px);
-}
-.mock-renderer[data-animation="sit"] .panda-head-group {
-  transform: translateY(5px);
-}
-.mock-renderer[data-animation="sit"] .panda-leg {
-  transform: translateY(-5px) scaleX(1.2);
-}
-
-.mock-renderer[data-animation="stand"] .panda-torso {
-  transform: scaleY(1.1) translateY(-10px);
-}
-.mock-renderer[data-animation="stand"] .panda-head-group {
-  transform: translateY(-15px);
-}
-.mock-renderer[data-animation="stand"] .panda-leg {
-  transform: scaleY(1.5) translateY(5px);
 }
 
 /* Reminder Speech Bubble */
 .reminder-bubble {
   position: absolute;
-  top: 10px;
-  right: -40px;
+  top: -10px;
+  right: -50px;
   background: white;
-  padding: 10px 15px;
+  padding: 12px 18px;
   border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: 14px;
   color: #333;
   cursor: pointer;
-  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   z-index: 10;
+  border: 2px solid #E2E8F0;
 }
-
 .reminder-bubble::after {
   content: '';
   position: absolute;
-  bottom: -8px;
+  bottom: -10px;
   left: 20px;
-  border-width: 8px 8px 0;
+  border-width: 10px 10px 0;
   border-style: solid;
   border-color: white transparent transparent transparent;
   display: block;
   width: 0;
 }
-
+.reminder-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -13px;
+  left: 18px;
+  border-width: 12px 12px 0;
+  border-style: solid;
+  border-color: #E2E8F0 transparent transparent transparent;
+  display: block;
+  width: 0;
+}
 .reminder-bubble:hover {
   transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
-
 @keyframes popIn {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(0.5) translateY(10px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
 }

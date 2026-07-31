@@ -20,7 +20,7 @@ export const BlinkBehavior: RegisteredBehavior = {
   definition,
   canExecute: () => true,
   execute: (context: BehaviorContext) => {
-    context.setAnimation("blink");
+    context.emit({ type: "PlayAnimation", animation: "blink" });
     // Blink does not change emotion — it is purely physical.
   },
 };

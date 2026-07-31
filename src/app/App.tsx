@@ -12,6 +12,7 @@ import { createEnvironmentService } from "@/system/environment-service";
 import { createSchedulerService } from "@/system/index";
 import { createWindowController, createEventBus } from "@/system/index";
 import { createBrowserStorage, createAppStorage } from "@/storage/index";
+import { createAudioSystem } from "@/system/audio-system";
 import { createPluginManager } from "@/plugin";
 import { HelloWorldPlugin } from "@/plugin/examples/hello-world-plugin";
 import { CompanionProvider } from "./companion-context";
@@ -56,8 +57,9 @@ export function App() {
     const appStorage    = createAppStorage(backend, eventBus);
     const env           = createEnvironmentService();
     const scheduler     = createSchedulerService();
+    const audioSystem   = createAudioSystem();
     const winCtrl       = createWindowController(appStorage);
-    const brain         = createBrain(engine, env, winCtrl, eventBus);
+    const brain         = createBrain(engine, env, winCtrl, audioSystem, eventBus);
     const _pluginManager = createPluginManager(brain, eventBus);
     
     // Demonstrate loading a plugin statically
@@ -83,8 +85,33 @@ export function App() {
 
     const stopBrain = initializeBrain(brain, scheduler);
 
+    // Host integration: bind DOM events to the headless Brain API
+    const handleAck = (e: Event) => {
+      const ce = e as CustomEvent;
+      if (ce.detail?.id) {
+        brain.acknowledgeReminder(ce.detail.id);
+      }
+    };
+    
+    const handlePointerDown = () => {
+      brain.registerInteraction();
+    };
+
+    const handleDragStart = () => {
+      winCtrl.startDrag().catch(console.error);
+    };
+
+    window.addEventListener("companion:reminder:ack", handleAck);
+    window.addEventListener("companion:drag:start", handleDragStart);
+    window.addEventListener("pointerdown", handlePointerDown);
+
     return () => {
       stopBrain();
+      window.removeEventListener("companion:reminder:ack", handleAck);
+      window.removeEventListener("companion:drag:start", handleDragStart);
+      window.removeEventListener("pointerdown", handlePointerDown);
+      // Clean up plugins
+      // TODO: _pluginManager.unloadAll();
       scheduler.dispose();
       env.dispose();
       eventBus.clear();

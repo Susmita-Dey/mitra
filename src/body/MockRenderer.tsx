@@ -1,10 +1,9 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { RendererProps } from "./types";
 import "./MockRenderer.css";
 
 /**
  * MockRenderer — Super cute SVG based visual representation of a Red Panda.
- * Now with a full body and draggable support!
+ * Now with dynamic postures (sit, sleep on back, stretch) and props (laptop, mug).
  */
 export function MockRenderer({ character }: RendererProps) {
   const isSleeping = character.animation === "sleep";
@@ -34,7 +33,7 @@ export function MockRenderer({ character }: RendererProps) {
       aria-label={`Mitra - ${character.animation}`}
       onPointerDown={(e) => {
         if (e.button === 0) {
-          getCurrentWindow().startDragging().catch(console.error);
+          window.dispatchEvent(new CustomEvent("companion:drag:start"));
         }
       }}
     >
@@ -51,25 +50,56 @@ export function MockRenderer({ character }: RendererProps) {
           </radialGradient>
         </defs>
 
-        {/* 
-          Main Panda Group 
-          All children should inherit the drag region so clicking on fur works.
-        */}
+        {/* Shadow underneath */}
+        <ellipse className="panda-shadow" cx="100" cy="225" rx="60" ry="10" fill="rgba(0,0,0,0.15)" />
+
+        {/* Main Panda Group */}
         <g className="panda-group" data-tauri-drag-region>
           
           {/* Tail */}
-          <path className="panda-tail" d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="#C24F1E" strokeWidth="25" strokeLinecap="round" data-tauri-drag-region />
+          <path className="panda-tail" d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="#C24F1E" strokeWidth="28" strokeLinecap="round" data-tauri-drag-region />
 
           {/* Legs */}
           <g className="panda-legs">
-            <ellipse cx="65" cy="215" rx="16" ry="12" fill="#4F3527" className="panda-leg left" data-tauri-drag-region />
-            <ellipse cx="135" cy="215" rx="16" ry="12" fill="#4F3527" className="panda-leg right" data-tauri-drag-region />
+            <ellipse cx="65" cy="215" rx="18" ry="14" fill="#4F3527" className="panda-leg left" data-tauri-drag-region />
+            <ellipse cx="135" cy="215" rx="18" ry="14" fill="#4F3527" className="panda-leg right" data-tauri-drag-region />
           </g>
 
           {/* Torso */}
           <ellipse className="panda-torso" cx="100" cy="160" rx="55" ry="60" fill="#E86A33" data-tauri-drag-region />
+          
           {/* Tummy Fluff */}
           <ellipse className="panda-tummy" cx="100" cy="170" rx="35" ry="40" fill="#FFF9ED" data-tauri-drag-region />
+
+          {/* Props Layer (Behind Arms) */}
+          <g className="panda-props" data-tauri-drag-region>
+            {/* Laptop Prop */}
+            <g className="prop-laptop">
+              <rect x="50" y="150" width="100" height="60" rx="4" fill="#E2E8F0" />
+              <rect x="55" y="155" width="90" height="40" rx="2" fill="#1E293B" />
+              <rect x="45" y="210" width="110" height="5" rx="2" fill="#CBD5E1" />
+              {/* Apple logo or glowing light */}
+              <circle cx="100" cy="175" r="5" fill="#38BDF8" opacity="0.8" />
+            </g>
+
+            {/* Mug Prop */}
+            <g className="prop-mug">
+              <rect x="130" y="140" width="30" height="35" rx="3" fill="#60A5FA" />
+              <path d="M 160,150 Q 175,150 170,165 Q 165,170 160,170" fill="none" stroke="#60A5FA" strokeWidth="5" strokeLinecap="round" />
+              {/* Coffee/Tea surface inside */}
+              <ellipse cx="145" cy="140" rx="15" ry="5" fill="#93C5FD" />
+              {/* Steam */}
+              <path className="steam" d="M 140,135 Q 135,120 145,115" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" />
+            </g>
+
+            {/* Toy / Gamepad Prop */}
+            <g className="prop-toy">
+              <rect x="70" y="160" width="60" height="30" rx="15" fill="#EF4444" />
+              <circle cx="85" cy="175" r="8" fill="#333" />
+              <circle cx="115" cy="175" r="4" fill="#FDE047" />
+              <circle cx="105" cy="175" r="4" fill="#60A5FA" />
+            </g>
+          </g>
 
           {/* Arms */}
           <g className="panda-arms">
@@ -77,6 +107,7 @@ export function MockRenderer({ character }: RendererProps) {
             <path className="panda-arm right" d="M 150,140 Q 170,170 155,190" fill="none" stroke="#4F3527" strokeWidth="18" strokeLinecap="round" data-tauri-drag-region />
           </g>
 
+          {/* Head */}
           <g className="panda-head-group" data-tauri-drag-region>
             {/* Left Ear */}
             <g className="panda-ear left-ear" data-tauri-drag-region>
@@ -95,7 +126,7 @@ export function MockRenderer({ character }: RendererProps) {
             {/* Main Head Shape (Squishy Oval) */}
             <ellipse cx="100" cy="90" rx="70" ry="55" fill="#E86A33" data-tauri-drag-region />
 
-            {/* White Face Markings (Brows/Cheeks) - Combined into one seamless path */}
+            {/* White Face Markings (Brows/Cheeks) */}
             <path d="M 100,60 Q 60,55 45,85 Q 35,105 55,125 Q 80,140 100,110 Q 120,140 145,125 Q 165,105 155,85 Q 140,55 100,60 Z" fill="#FFF9ED" data-tauri-drag-region />
 
             {/* Dark Red/Brown Eye Mask Lines */}
@@ -103,8 +134,8 @@ export function MockRenderer({ character }: RendererProps) {
             <path d="M 155,95 Q 135,125 110,115" fill="none" stroke="#C24F1E" strokeWidth="6" strokeLinecap="round" data-tauri-drag-region />
 
             {/* Blush */}
-            <ellipse cx="65" cy="115" rx="12" ry="7" fill="url(#blush)" data-tauri-drag-region />
-            <ellipse cx="135" cy="115" rx="12" ry="7" fill="url(#blush)" data-tauri-drag-region />
+            <ellipse className="panda-blush" cx="65" cy="115" rx="14" ry="8" fill="url(#blush)" data-tauri-drag-region />
+            <ellipse className="panda-blush" cx="135" cy="115" rx="14" ry="8" fill="url(#blush)" data-tauri-drag-region />
 
             {/* Muzzle */}
             <ellipse cx="100" cy="120" rx="20" ry="14" fill="#FFFFFF" data-tauri-drag-region />
