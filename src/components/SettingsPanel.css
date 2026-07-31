@@ -1,55 +1,66 @@
 .settings-panel {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 300px;
-  height: 300px;
-  background: rgba(255, 249, 237, 0.95); /* #FFF9ED with opacity */
-  border: 1px solid rgba(232, 106, 51, 0.2);
-  border-radius: 12px;
-  backdrop-filter: blur(8px);
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  font-family: 'Nunito', sans-serif;
-  color: #331A10;
+  font-family: 'Inter', 'Nunito', sans-serif;
+  color: #1A1A1A;
   animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 2000;
+  overflow: hidden;
 }
 
 @keyframes slideIn {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: scale(0.95) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .settings-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(232, 106, 51, 0.2);
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .settings-header h2 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 700;
   color: #C24F1E;
+  letter-spacing: -0.5px;
 }
 
 .close-btn {
-  background: none;
+  background: rgba(0, 0, 0, 0.05);
   border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   font-size: 14px;
-  color: #331A10;
+  color: #333;
   cursor: pointer;
-  padding: 4px;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .close-btn:hover {
-  opacity: 1;
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  transform: rotate(90deg);
 }
 
 .settings-content {
@@ -58,84 +69,152 @@
   padding: 16px;
 }
 
+/* Custom Scrollbar */
+.settings-content::-webkit-scrollbar {
+  width: 6px;
+}
+.settings-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.settings-content::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 3px;
+}
+
 .settings-section {
-  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .settings-section h3 {
-  margin: 0 0 10px 0;
-  font-size: 13px;
+  margin: 0 0 12px 0;
+  font-size: 12px;
   text-transform: uppercase;
-  color: #E86A33;
-  letter-spacing: 0.5px;
+  color: #C24F1E;
+  letter-spacing: 1px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .setting-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
-  font-size: 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
   font-weight: 600;
+  color: #444;
+}
+.setting-row:last-child {
+  margin-bottom: 0;
 }
 
-.setting-row input[type="number"] {
-  width: 60px;
-  padding: 4px;
-  border: 1px solid #E86A33;
-  border-radius: 4px;
+.setting-row input[type="number"],
+.setting-row input[type="text"] {
+  width: 80px;
+  padding: 6px 10px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.8);
-  font-family: 'Nunito', sans-serif;
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.2s;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.setting-row input:focus {
+  outline: none;
+  border-color: #E86A33;
+  box-shadow: 0 0 0 2px rgba(232, 106, 51, 0.2);
 }
 
 .setting-row label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
+  width: 100%;
 }
 
-.plugin-list {
+/* Custom Toggle Switch for Checkboxes */
+.setting-row input[type="checkbox"] {
+  appearance: none;
+  width: 36px;
+  height: 20px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.setting-row input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.setting-row input[type="checkbox"]:checked {
+  background: #E86A33;
+}
+
+.setting-row input[type="checkbox"]:checked::after {
+  transform: translateX(16px);
+}
+
+.settings-footer {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.plugin-item {
-  display: flex;
-  justify-content: space-between;
-  background: rgba(255, 255, 255, 0.6);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  border: 1px solid rgba(232, 106, 51, 0.2);
-}
-
-.plugin-status.active {
-  color: #10B981;
-}
-
-.settings-footer {
-  padding: 12px 16px;
-  border-top: 1px solid rgba(232, 106, 51, 0.2);
-  display: flex;
-  justify-content: flex-end;
-}
-
 .save-btn {
-  background: #E86A33;
+  background: linear-gradient(135deg, #E86A33 0%, #C24F1E 100%);
   color: white;
   border: none;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-family: 'Nunito', sans-serif;
-  font-weight: 700;
+  padding: 10px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.1s, background 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(232, 106, 51, 0.3);
 }
 
 .save-btn:hover {
-  background: #C24F1E;
-  transform: scale(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(232, 106, 51, 0.4);
+}
+
+.exit-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exit-btn:hover {
+  background: #EF4444;
+  color: white;
 }

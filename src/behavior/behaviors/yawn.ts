@@ -4,9 +4,9 @@ import type { RegisteredBehavior } from "../behavior-engine";
 
 const definition: BehaviorDefinition = {
   id: "ambient.yawn",
-  priority: 40,          // Just below sleep (5)
+  priority: 35,          // Between lie-down (30) and sleep (40)
   weight: 5,
-  cooldownMs: 45_000,
+  cooldownMs: 0,
   action: "yawn",
   canInterrupt: false,
 };
@@ -18,7 +18,7 @@ const definition: BehaviorDefinition = {
 export const YawnBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    return context.world.character.emotion === "sleepy" && context.world.character.animation !== "sleep";
+    return context.world.presence === "Yawning";
   },
   execute: (context: BehaviorContext) => {
     context.emit({ type: "PlayAnimation", animation: "yawn" });

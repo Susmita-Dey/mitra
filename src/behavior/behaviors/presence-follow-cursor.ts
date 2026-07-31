@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "presence.follow-cursor",
   priority: 70,
   weight: 8,
-  cooldownMs: 0,
+  cooldownMs: 45_000,
   action: "walk",
   canInterrupt: true,
 };

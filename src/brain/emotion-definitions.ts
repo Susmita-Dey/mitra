@@ -136,4 +136,12 @@ export const EMOTION_DEFINITIONS: Readonly<Record<Emotion, EmotionDefinition>> =
       interruptible: true,
       allowedFrom: "any",
     },
+
+    alert: {
+      id: "alert",
+      priority: 4,
+      decayMs: 5_000,
+      interruptible: true,
+      allowedFrom: "any",
+    },
   };

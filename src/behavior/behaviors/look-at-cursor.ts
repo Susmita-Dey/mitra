@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "reactive.look-at-cursor",
   priority: 70,         // Below observe (20), but above ambient
   weight: 8,
-  cooldownMs: 3000,
+  cooldownMs: 45_000,
   action: "look-around",
   canInterrupt: true,
 };

@@ -58,7 +58,12 @@ export function MockRenderer({ character }: RendererProps) {
         <g className="panda-group">
           
           {/* Tail with Thick Rings */}
-          <g className="panda-tail-group">
+          <g className="panda-tail-group"
+             style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+             onPointerDown={(e) => {
+               e.stopPropagation();
+               window.dispatchEvent(new CustomEvent("companion:interaction:tail"));
+             }}>
             {/* Orange Base */}
             <path className="panda-tail-base" d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="#E86A33" strokeWidth="36" strokeLinecap="round" />
             
@@ -151,20 +156,39 @@ export function MockRenderer({ character }: RendererProps) {
 
           {/* Arms with Paws */}
           <g className="panda-arms">
-            <g className="panda-arm left">
+            <g className="panda-arm left"
+               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+               onPointerDown={(e) => {
+                 e.stopPropagation();
+                 window.dispatchEvent(new CustomEvent("companion:interaction:paws"));
+               }}>
               <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
               <ellipse cx="44" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(-20 44 186)" />
             </g>
-            <g className="panda-arm right">
+            <g className="panda-arm right"
+               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+               onPointerDown={(e) => {
+                 e.stopPropagation();
+                 window.dispatchEvent(new CustomEvent("companion:interaction:paws"));
+               }}>
               <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
               <ellipse cx="156" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(20 156 186)" />
             </g>
           </g>
 
           {/* Head */}
-          <g className="panda-head-group">
+          <g className="panda-head-group"
+             style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+             onPointerDown={(e) => {
+               e.stopPropagation();
+               window.dispatchEvent(new CustomEvent("companion:interaction:head"));
+             }}>
             {/* Left Ear */}
-            <g className="panda-ear left-ear">
+            <g className="panda-ear left-ear"
+               onPointerDown={(e) => {
+                 e.stopPropagation();
+                 window.dispatchEvent(new CustomEvent("companion:interaction:ears"));
+               }}>
               <circle cx="55" cy="45" r="22" fill="#E86A33" />
               {/* Extra ear fluff */}
               <path d="M 40,40 Q 25,35 35,50" fill="#E86A33" />
@@ -173,7 +197,11 @@ export function MockRenderer({ character }: RendererProps) {
             </g>
             
             {/* Right Ear */}
-            <g className="panda-ear right-ear">
+            <g className="panda-ear right-ear"
+               onPointerDown={(e) => {
+                 e.stopPropagation();
+                 window.dispatchEvent(new CustomEvent("companion:interaction:ears"));
+               }}>
               <circle cx="145" cy="45" r="22" fill="#E86A33" />
               {/* Extra ear fluff */}
               <path d="M 160,40 Q 175,35 165,50" fill="#E86A33" />

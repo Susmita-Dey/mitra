@@ -40,7 +40,8 @@ export function createPersonalityEngine(): PersonalityEngine {
       return { personality: p };
     },
 
-    adaptToCelebration(event, memory) {
+    adaptToCelebration(_event, memory) {
+      // Small boost to playful and energetic when celebrating
       const p = { ...(memory.personality || { playful: 0.5, curious: 0.5, shy: 0.2, gentle: 0.5, energetic: 0.5, sleepy: 0.3 }) };
       
       p.energetic = clamp(p.energetic + ADAPT_RATE);

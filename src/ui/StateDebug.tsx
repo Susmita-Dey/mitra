@@ -1,8 +1,8 @@
-import type { CharacterState } from "@/types";
+import type { Character } from "@/types";
 import "./StateDebug.css";
 
 export interface StateDebugProps {
-  character: CharacterState;
+  character: Character;
 }
 
 /** Temporary dev readout — removed once animations are visible on the body. */

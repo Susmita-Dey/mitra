@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "presence.watch-cursor",
   priority: 50,
   weight: 6,
-  cooldownMs: 0,
+  cooldownMs: 30_000,
   action: "observe", // Reuse observe animation
   canInterrupt: true,
 };

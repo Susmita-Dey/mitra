@@ -67,7 +67,6 @@ function CompanionView() {
 
 export function App() {
   const engine = useMemo(() => createCompanionEngine(), []);
-  const [isMuted, setIsMuted] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [preferences, setPreferences] = useState<AppPreferences | null>(null);
   const appStorageRef = useRef<any>(null);
@@ -101,13 +100,12 @@ export function App() {
     const _pluginManager = createPluginManager(brain, eventBus);
     
     const gitWatcher    = createGitWatcher(() => {
-      brain.triggerCelebration("git_commit");
+      brain.triggerCelebration("GitCommit");
     });
     gitWatcher.start();
     
     eventBus.subscribe("preferences:updated", (prefs: any) => {
       setPreferences(prefs);
-      setIsMuted(prefs.audio?.muteSounds ?? false);
       if (prefs.behavior?.clickThrough !== undefined) {
         winCtrl.setIgnoreCursorEvents(prefs.behavior.clickThrough).catch(console.error);
       }
@@ -162,8 +160,8 @@ export function App() {
       brain.registerInteraction();
     };
 
-    const handleTummyTickle = () => {
-      brain.registerTickle();
+    const handleInteraction = (interaction: string) => {
+      brain.triggerInteraction(interaction as any);
     };
 
     const handleDragStart = () => {
@@ -177,7 +175,11 @@ export function App() {
 
     window.addEventListener("companion:reminder:ack", handleAck);
     window.addEventListener("companion:drag:start", handleDragStart);
-    window.addEventListener("companion:interaction:tummy", handleTummyTickle);
+    window.addEventListener("companion:interaction:head", () => handleInteraction("pet"));
+    window.addEventListener("companion:interaction:tummy", () => handleInteraction("tickle"));
+    window.addEventListener("companion:interaction:paws", () => handleInteraction("high-five"));
+    window.addEventListener("companion:interaction:tail", () => handleInteraction("tail-flick"));
+    window.addEventListener("companion:interaction:ears", () => handleInteraction("ear-twitch"));
     window.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("contextmenu", handleContextMenu);
 
@@ -185,7 +187,11 @@ export function App() {
       stopBrain();
       window.removeEventListener("companion:reminder:ack", handleAck);
       window.removeEventListener("companion:drag:start", handleDragStart);
-      window.removeEventListener("companion:interaction:tummy", handleTummyTickle);
+      window.removeEventListener("companion:interaction:head", () => handleInteraction("pet"));
+      window.removeEventListener("companion:interaction:tummy", () => handleInteraction("tickle"));
+      window.removeEventListener("companion:interaction:paws", () => handleInteraction("high-five"));
+      window.removeEventListener("companion:interaction:tail", () => handleInteraction("tail-flick"));
+      window.removeEventListener("companion:interaction:ears", () => handleInteraction("ear-twitch"));
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("contextmenu", handleContextMenu);
       // Clean up plugins

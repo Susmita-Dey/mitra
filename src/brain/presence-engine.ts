@@ -32,7 +32,12 @@ export function createPresenceEngine(): PresenceEngine {
         return "Sleep";
       }
 
-      // If user is somewhat idle, lie down
+      // If user is getting very sleepy, yawn first
+      if (environment.idleMs > 4 * 60 * 1000) {
+        return "Yawning";
+      }
+
+      // If user is somewhat idle, lie down (sleepy stage 1)
       if (environment.idleMs > 2 * 60 * 1000) {
         return "LyingDown";
       }

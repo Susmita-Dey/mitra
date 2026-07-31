@@ -1,4 +1,4 @@
-import type { Intent, Emotion } from "@/types";
+import type { Intent } from "@/types";
 import type { CompanionMemory } from "./memory";
 
 export interface DelightEngine {
@@ -17,7 +17,7 @@ export function createDelightEngine(): DelightEngine {
   const DELIGHT_PROBABILITY = 0.005;
 
   return {
-    tick(timeMs, memory) {
+    tick(timeMs, _memory) {
       const intents: Intent[] = [];
       const now = new Date(timeMs);
       
@@ -50,12 +50,7 @@ export function createDelightEngine(): DelightEngine {
         intents.push({ type: "ChangeEmotion", emotion: "curious" });
         intents.push({ type: "PlayAnimation", animation: "look-around" });
         intents.push({ type: "PlaySound", category: "chirps" });
-      } else if (rand < 0.6) {
-        // Waving unexpectedly
-        intents.push({ type: "ChangeEmotion", emotion: "happy" });
-        intents.push({ type: "PlayAnimation", animation: "wave" });
-        intents.push({ type: "PlaySound", category: "happy" });
-      } else if (rand < 0.8) {
+      } else if (rand < 0.7) {
         // Peeking from screen edge
         intents.push({ type: "ChangeEmotion", emotion: "curious" });
         intents.push({ type: "PlayAnimation", animation: "peek" });

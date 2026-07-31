@@ -9,7 +9,9 @@ export type TimelineEventType =
   | "reminder:ignored"
   | "reminder:completed"
   | "emotion:pushed"
-  | "behavior:started";
+  | "behavior:started"
+  | "interaction"
+  | "celebration";
 
 export interface TimelineEvent {
   id: string;

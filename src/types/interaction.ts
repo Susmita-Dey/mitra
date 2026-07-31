@@ -10,6 +10,7 @@ export type Interaction =
   | "drag" 
   | "state:sick"
   | "weather:rain"
+  | "weather:beach"
   | "idle";
 
 export const DEFAULT_INTERACTION: Interaction = "idle";

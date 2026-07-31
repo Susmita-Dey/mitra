@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "reactive.observe",
   priority: 70,         // Reactive bracket — higher than all ambient behaviors.
   weight: 10,           // Always wins its bracket when eligible.
-  cooldownMs: 5_000,    // Can repeat, but not too often.
+  cooldownMs: 30_000,    // Can repeat, but not too often.
   action: "observe",
   canInterrupt: true,   // Can be interrupted by higher-priority events.
 };

@@ -64,7 +64,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   },
   behavior: {
     idleAnimations: true,
-    wanderEnabled: false,
+    wanderEnabled: true,
     interactionLevel: "normal",
     clickThrough: false,
     weatherLocation: "",

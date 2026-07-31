@@ -141,7 +141,7 @@ export function SettingsPanel({ preferences, onUpdatePreferences, onClose }: Set
 
       <div className="settings-footer">
         <button className="save-btn" onClick={handleSave}>Save Changes</button>
-        <button className="exit-btn" onClick={() => getCurrentWindow().close()} style={{ marginTop: '10px', background: '#EF4444', color: 'white', width: '100%', padding: '8px', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Say Goodbye ✖</button>
+        <button className="exit-btn" onClick={() => getCurrentWindow().close()}>Say Goodbye ✖</button>
       </div>
     </div>
   );

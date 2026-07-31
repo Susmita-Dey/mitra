@@ -30,6 +30,14 @@ const INITIAL_MEMORY: CompanionMemory = {
   lastUserInteraction: Date.now(),
   lastTickle: 0,
   timeline: [],
+  personality: {
+    playful: 0.5,
+    curious: 0.5,
+    shy: 0.2,
+    gentle: 0.5,
+    energetic: 0.5,
+    sleepy: 0.3,
+  },
 };
 
 export function createMemoryEngine(): MemoryEngine {

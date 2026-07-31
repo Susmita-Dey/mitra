@@ -8,6 +8,7 @@ export type Emotion =
   | "concerned"
   | "sleepy"
   | "focused"
-  | "bored";
+  | "bored"
+  | "alert";
 
 export const DEFAULT_EMOTION: Emotion = "neutral";

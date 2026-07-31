@@ -12,9 +12,9 @@ import type { RegisteredBehavior } from "../behavior-engine";
  */
 const definition: BehaviorDefinition = {
   id: "ambient.sleep",
-  priority: 30,          // Higher bracket than ambient (0). Sleepy pre-empts idle actions.
-  weight: 10,           // Once eligible, always wins its bracket.
-  cooldownMs: 30_000,   // Don't fall asleep and immediately wake every 30s.
+  priority: 40,          // Highest ambient presence state (overrides yawn and lie-down)
+  weight: 10,
+  cooldownMs: 0,
   action: "sleep",
   canInterrupt: true,   // User interaction should be able to wake Mitra.
 };

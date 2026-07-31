@@ -20,6 +20,8 @@
         "transparent": true,
         "alwaysOnTop": true,
         "resizable": false,
+        "maximizable": false,
+        "fullscreen": false,
         "shadow": false,
         "visible": true
       }

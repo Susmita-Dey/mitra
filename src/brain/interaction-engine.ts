@@ -10,6 +10,9 @@ export type CompanionInteraction =
   | "sleep"
   | "wake"
   | "high-five"
+  | "tail-flick"
+  | "ear-twitch"
+  | "tickle"
   | "gentle-tap";
 
 export interface InteractionEngine {
@@ -30,7 +33,7 @@ export function createInteractionEngine(): InteractionEngine {
   let lastPokeTime = 0;
 
   return {
-    handleInteraction(interaction, memory) {
+    handleInteraction(interaction, _memory) {
       const now = Date.now();
       const intents: Intent[] = [];
       let memoryUpdate: Partial<CompanionMemory> = {
@@ -73,6 +76,15 @@ export function createInteractionEngine(): InteractionEngine {
       } else if (interaction === "high-five") {
         intents.push({ type: "ChangeEmotion", emotion: "happy" });
         intents.push({ type: "PlayAnimation", animation: "wave" });
+        intents.push({ type: "PlaySound", category: "happy" });
+      } else if (interaction === "tail-flick") {
+        intents.push({ type: "ChangeEmotion", emotion: "alert" });
+        intents.push({ type: "PlayAnimation", animation: "look-around" });
+      } else if (interaction === "ear-twitch") {
+        intents.push({ type: "ChangeEmotion", emotion: "curious" });
+        intents.push({ type: "PlayAnimation", animation: "blink" });
+      } else if (interaction === "tickle") {
+        intents.push({ type: "ChangeEmotion", emotion: "happy" });
         intents.push({ type: "PlaySound", category: "happy" });
       } else if (interaction === "sleep") {
         intents.push({ type: "ChangeEmotion", emotion: "sleepy" });

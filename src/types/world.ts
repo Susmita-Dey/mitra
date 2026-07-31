@@ -16,7 +16,8 @@ export type PresenceState =
   | "FollowCursor"
   | "WatchCursor"
   | "Sitting"
-  | "LyingDown";
+  | "LyingDown"
+  | "Yawning";
 
 export interface WorldState {
   time: number;
