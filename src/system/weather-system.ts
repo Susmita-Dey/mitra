@@ -17,12 +17,20 @@ export interface WeatherSystem {
   setLocation(locationStr: string): void;
 }
 
-  export function createWeatherSystem(): WeatherSystem {
+import { TrustManager } from "./trust-manager";
+
+export function createWeatherSystem(trustManager: TrustManager): WeatherSystem {
     let currentState: WeatherState | null = null;
     let hasStarted = false;
     let customLocation = "";
     const fetchWeather = async () => {
       try {
+        const locationTrust = await trustManager.get("location");
+        if (locationTrust === "off") {
+          // Weather explicitly disabled
+          return;
+        }
+
         let lat: number | null = null;
         let lon: number | null = null;
   
@@ -36,16 +44,32 @@ export interface WeatherSystem {
             }
           }
         } else {
-          try {
-            const locRes = await fetch("https://ipapi.co/json/");
-            if (locRes.ok) {
-              const locData = await locRes.json();
-              if (locData.latitude) lat = locData.latitude;
-              if (locData.longitude) lon = locData.longitude;
+            if (locationTrust === "granted" && "geolocation" in navigator) {
+              // Try precise location via HTML5
+              try {
+                const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+                  navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+                });
+                lat = pos.coords.latitude;
+                lon = pos.coords.longitude;
+              } catch (geoErr) {
+                console.warn("[WeatherSystem] Precise location failed. Will not silently fallback to IP.", geoErr);
+              }
             }
-          } catch(e) {
-            console.error("Weather API error:", e);
-           }
+
+            // Use IP-based approximate location ONLY if user authorized "approximate"
+            if (locationTrust === "approximate" && (lat === null || lon === null)) {
+              try {
+                const locRes = await fetch("https://ipapi.co/json/");
+                if (locRes.ok) {
+                  const locData = await locRes.json();
+                  if (locData.latitude) lat = locData.latitude;
+                  if (locData.longitude) lon = locData.longitude;
+                }
+              } catch(e) {
+                console.error("Weather API error:", e);
+              }
+            }
         }
       
       if (lat === null || lon === null) {

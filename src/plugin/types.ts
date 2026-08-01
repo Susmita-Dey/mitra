@@ -11,6 +11,9 @@ export type PluginPermission =
   | "reminders"
   | "widgets"
   | "commands"
+  | "integrations"
+  | "sounds"
+  | "events"
   | "filesystem"
   | "notifications";
 
@@ -37,19 +40,22 @@ export interface MitraPlugin {
   manifest: PluginManifest;
 
   /** Called once when the plugin is first installed (or upgraded) into the system. */
-  onInstall?(): Promise<void>;
+  onInstall?(api: PluginAPI): Promise<void>;
   
   /** Called to bootstrap the plugin (e.g., when the engine starts). Here the plugin receives its API facade. */
-  onInitialize(api: PluginAPI): Promise<void>;
+  onInit(api: PluginAPI): Promise<void>;
   
   /** Called when the user actively enables the plugin. */
-  onEnable?(): Promise<void>;
+  onEnable?(api: PluginAPI): Promise<void>;
   
   /** Called when the user disables the plugin. It should clean up active resources. */
-  onDisable?(): Promise<void>;
+  onDisable?(api: PluginAPI): Promise<void>;
   
+  /** Called when the plugin version changes. */
+  onUpdate?(api: PluginAPI, previousVersion: string): Promise<void>;
+
   /** Called before the plugin is completely removed or the app terminates. */
-  onDestroy?(): Promise<void>;
+  onDestroy?(api: PluginAPI): Promise<void>;
 }
 
 // ── Facades ─────────────────────────────────────────────────────────────
@@ -61,9 +67,9 @@ export interface MitraPlugin {
 export interface PluginBehaviorContext {
   /** Get a read-only snapshot of the world state. */
   getWorldState(): Readonly<import("@/types").WorldState>;
-  /** Emit an intent to the system. */
+  
+  /** Emit a semantic intent to the Brain. Do NOT manipulate animations directly. */
   emit(intent: import("@/types").Intent): void;
-  // scheduleTask(task: any): void; // Stub for future async task scheduling
 }
 
 /**
@@ -100,18 +106,32 @@ export interface ReminderDefinition {
  * Method calls will throw if the plugin lacks the required permission.
  */
 export interface PluginAPI {
-  /** Subscribe to engine events. Safe default capability. */
-  onEvent<K extends EventName>(event: K, handler: EventHandler<SystemEvents[K]>): Unsubscribe;
+  /** The isolated event bus for the plugin to emit Semantic Intents. */
+  events: {
+    /** Emit a semantic intent to the Brain (e.g. { type: "ShowSpeechBubble", text: "..." }) */
+    emit(intent: import("@/types").Intent): void;
+    /** Subscribe to system events. Requires "events" permission. */
+    on<K extends EventName>(event: K, handler: EventHandler<SystemEvents[K]>): Unsubscribe;
+  };
   
-  /** Requires "behaviors" permission. */
-  registerBehavior(behavior: PluginBehavior): void;
+  /** Access to the global Scheduler to register recurring or delayed tasks safely. */
+  scheduler: import("@/system/scheduler").SchedulerService;
   
-  /** Requires "commands" permission. */
-  registerCommand(command: CommandDefinition): void;
-  
-  /** Requires "widgets" permission. */
-  registerWidget(widget: WidgetDefinition): void;
-  
-  /** Requires "reminders" permission. */
-  registerReminder(reminder: ReminderDefinition): void;
+  /** Centralized registry for adding capabilities. */
+  registry: {
+    /** Requires "behaviors" permission. */
+    registerBehavior(behavior: PluginBehavior): void;
+    /** Requires "commands" permission. */
+    registerCommand(command: CommandDefinition): void;
+    /** Requires "widgets" permission. */
+    registerWidget(widget: WidgetDefinition): void;
+    /** Requires "reminders" permission. */
+    registerReminder(reminder: ReminderDefinition): void;
+  };
+
+  /** Interface with the TrustManager to request permissions gracefully. */
+  trust: {
+    request(permission: keyof import("@/types/preferences").TrustPreferences): Promise<boolean>;
+    get(permission: keyof import("@/types/preferences").TrustPreferences): Promise<import("@/types/preferences").TrustState>;
+  };
 }

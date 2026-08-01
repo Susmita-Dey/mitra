@@ -18,3 +18,4 @@ export type {
   AnimationSettings 
 } from "./preferences";
 export { DEFAULT_PREFERENCES } from "./preferences";
+export type { TrustPreferences, TrustState } from "./preferences";

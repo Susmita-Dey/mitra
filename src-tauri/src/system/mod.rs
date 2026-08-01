@@ -8,3 +8,4 @@ pub mod screen;
 pub mod meeting;
 pub mod tray;
 pub mod git;
+pub mod media;

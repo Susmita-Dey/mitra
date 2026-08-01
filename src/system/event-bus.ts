@@ -7,6 +7,9 @@ export interface SystemEvents {
   // "reminder:triggered": { reminderId: string };
   // "character:changed": { newCharacter: string };
   // "window:moved": { x: number, y: number };
+  "media:started": { title: string; artist: string; source: string };
+  "media:paused": void;
+  "media:changed": { title: string; artist: string; source: string };
 }
 
 export type EventName = keyof SystemEvents;

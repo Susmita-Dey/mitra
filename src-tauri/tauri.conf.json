@@ -29,17 +29,34 @@
       {
         "label": "settings",
         "title": "Mitra Settings",
-        "width": 350,
-        "height": 480,
+        "width": 400,
+        "height": 550,
+        "minWidth": 350,
+        "minHeight": 450,
         "decorations": true,
         "transparent": false,
+        "alwaysOnTop": true,
+        "resizable": true,
+        "maximizable": false,
+        "fullscreen": false,
+        "shadow": true,
+        "visible": false,
+        "url": "/?page=settings"
+      },
+      {
+        "label": "onboarding",
+        "title": "Welcome to Mitra",
+        "width": 600,
+        "height": 450,
+        "decorations": false,
+        "transparent": true,
         "alwaysOnTop": true,
         "resizable": false,
         "maximizable": false,
         "fullscreen": false,
         "shadow": true,
         "visible": false,
-        "url": "/?page=settings"
+        "url": "/?page=onboarding"
       }
     ],
     "security": {

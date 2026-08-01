@@ -21,6 +21,14 @@ export type Intent =
   | { type: "LookAround" }
   | { type: "Observe" }
   
+  // "?"? Semantic Plugin Intents "?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?
+  | { type: "RequestGreeting"; context: string }
+  | { type: "GitCommitDetected"; repo: string; message: string }
+  | { type: "LogEvent"; message: string }
+  | { type: "ShowSpeechBubble"; text: string; duration?: number }
+  | { type: "MediaStarted"; source: string; title: string; artist: string; energyLevel: string }
+  | { type: "MediaPaused" }
+  
   // ── Window Intents ─────────────────────────────────────────────────────
   | { type: "MoveToHome" }
   | { type: "MoveToTaskbar" }

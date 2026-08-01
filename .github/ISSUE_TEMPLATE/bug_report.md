@@ -1,38 +1,46 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
+name: 🐛 Bug Report
+about: Something isn't working as expected with Mitra
+title: "[Bug] "
+labels: bug
 assignees: ''
-
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## What happened?
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+<!-- A clear description of the bug. What did you expect vs what actually happened? -->
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Steps to Reproduce
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+1.
+2.
+3.
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+## Expected Behavior
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+<!-- What should have happened? -->
 
-**Additional context**
-Add any other context about the problem here.
+## Actual Behavior
+
+<!-- What actually happened? Screenshots or a screen recording are very helpful here. -->
+
+## Environment
+
+| Field | Value |
+|-------|-------|
+| OS & Version | <!-- e.g. Windows 11 22H2 --> |
+| Mitra version | <!-- e.g. 0.1.0 — shown in the title bar or About panel --> |
+| Display scaling | <!-- e.g. 100%, 125%, 150% --> |
+| Multiple monitors | Yes / No |
+
+## Logs
+
+<!-- Open a terminal and run `bunx tauri dev` to see console output. Paste any relevant errors below. -->
+
+```
+paste logs here
+```
+
+## Additional Context
+
+<!-- Any other context that might help (e.g. specific active window, VPN, antivirus) -->

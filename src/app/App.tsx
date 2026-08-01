@@ -4,15 +4,16 @@
  * Wires the Companion Engine, EnvironmentService, Brain, and rendering layers.
  * Mitra stays a companion surface — no routes, settings, or productivity UI.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { Companion } from "@/body";
 import { createBrain, initializeBrain } from "@/brain";
 import { StateDebug } from "@/ui";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { createEnvironmentService } from "@/system/environment-service";
 import { createSchedulerService } from "@/system/index";
-import { createWindowController, createEventBus } from "@/system/index";
+import { createWindowController, createEventBus, createTrustManager, createNotificationSystem } from "@/system/index";
 import { createBrowserStorage, createAppStorage } from "@/storage/index";
 import { createAudioSystem } from "@/system/audio-system";
 import { createBatterySystem } from "@/system/battery-system";
@@ -23,7 +24,6 @@ import { createPluginManager } from "@/plugin";
 import { HelloWorldPlugin } from "@/plugin/examples/hello-world-plugin";
 import { CompanionProvider } from "./companion-context";
 import { useCharacter } from "./use-character";
-import { Onboarding } from "./Onboarding";
 import "./global.css";
 
 import {
@@ -75,7 +75,6 @@ function CompanionView() {
 export function App() {
   const engine = useMemo(() => createCompanionEngine(), []);
   const appStorageRef = useRef<any>(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const openSettingsWindow = async () => {
     try {
@@ -96,11 +95,12 @@ export function App() {
     const backend       = createBrowserStorage();
     const appStorage    = createAppStorage(backend, eventBus);
     appStorageRef.current = appStorage;
+    const trustManager  = createTrustManager(appStorage);
     const env           = createEnvironmentService();
     const scheduler     = createSchedulerService();
     const audioSystem   = createAudioSystem(eventBus);
     const batterySystem = createBatterySystem();
-    const weatherSystem = createWeatherSystem();
+    const weatherSystem = createWeatherSystem(trustManager);
     const meetingSystem = createMeetingSystem();
     
     batterySystem.start();
@@ -110,6 +110,16 @@ export function App() {
     const winCtrl       = createWindowController(appStorage);
     const brain         = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus);
     const _pluginManager = createPluginManager(brain, eventBus);
+
+    // Notification system: queues reminders when hidden, fires OS toast on resurface
+    const notificationSystem = createNotificationSystem((title, body) => {
+      // Use the Tauri notification plugin when available, otherwise console.log
+      // The Tauri notification plugin is async-invoked by name
+      (window as any).__tauriShowNotification?.({ title, body }).catch?.(() => {
+        console.info(`[Notification] ${title}: ${body}`);
+      });
+    });
+    (window as any).__notificationSystem = notificationSystem;
     
     const gitWatcher    = createGitWatcher(() => {
       brain.triggerCelebration("GitCommit");
@@ -132,13 +142,17 @@ export function App() {
     (window as any).ONBOARDING_ACTIVE = true;
 
     // Load preferences on startup so the Settings Panel can render
-    appStorage.load().then((prefs: any) => {
+    appStorage.load().then(async (prefs: any) => {
       clickThroughPref = !!prefs?.behavior?.clickThrough;
       if (!prefs?.onboardingComplete) {
         (window as any).ONBOARDING_ACTIVE = true;
-        setShowOnboarding(true);
+        // Hide main window, show onboarding window
+        await getCurrentWindow().hide();
+        const onboardWin = await WebviewWindow.getByLabel("onboarding");
+        if (onboardWin) await onboardWin.show();
       } else {
         (window as any).ONBOARDING_ACTIVE = false;
+        await getCurrentWindow().show();
       }
       updateClickThrough();
     }).catch(console.error);
@@ -147,11 +161,34 @@ export function App() {
     (window as any).IS_HIDDEN = false;
     const unlistenHidden = listen("companion:window:hidden", () => {
       (window as any).IS_HIDDEN = true;
+      notificationSystem.setHidden(true);
     });
     const unlistenShown = listen("companion:window:shown", () => {
       (window as any).IS_HIDDEN = false;
+      notificationSystem.setHidden(false);
+      notificationSystem.onResurface(); // flush queued notifications as OS toast summary
       // Trigger a special event to evaluate the CatchUp behavior
       window.dispatchEvent(new CustomEvent("companion:window:shown"));
+    });
+
+    let lastPlaying = false;
+    let lastTrack = "";
+    
+    const unlistenMedia = listen("media-session-update", (event: any) => {
+      const state = event.payload;
+      const trackId = `${state.title}-${state.artist}`;
+      
+      if (state.is_playing && !lastPlaying) {
+        eventBus.publish("media:started", { title: state.title, artist: state.artist, source: state.source });
+        lastPlaying = true;
+        lastTrack = trackId;
+      } else if (!state.is_playing && lastPlaying) {
+        eventBus.publish("media:paused", undefined as any);
+        lastPlaying = false;
+      } else if (state.is_playing && trackId !== lastTrack) {
+        eventBus.publish("media:changed", { title: state.title, artist: state.artist, source: state.source });
+        lastTrack = trackId;
+      }
     });
 
     eventBus.subscribe("preferences:updated", (prefs: any) => {
@@ -256,6 +293,7 @@ export function App() {
       stopBrain();
       unlistenHidden.then((f: any) => f());
       unlistenShown.then((f: any) => f());
+      unlistenMedia.then((f: any) => f());
       window.removeEventListener("companion:debug", handleDebug);
       window.removeEventListener("companion:reminder:ack", handleAck);
       window.removeEventListener("companion:drag:start", handleDragStart);
@@ -277,27 +315,15 @@ export function App() {
   return (
     <CompanionProvider engine={engine}>
       <CompanionView />
-      
-      {showOnboarding && appStorageRef.current && (
-        <Onboarding 
-          storage={appStorageRef.current} 
-          onComplete={() => {
-            (window as any).ONBOARDING_ACTIVE = false;
-            setShowOnboarding(false);
-          }} 
-        />
-      )}
 
       {/* Settings / Menu Gear Icon */}
-      {!showOnboarding && (
-        <button 
-          className="settings-btn"
-          onClick={openSettingsWindow}
-          title="Mitra Options"
-        >
-          ⚙️
-        </button>
-      )}
+      <button 
+        className="settings-btn"
+        onClick={openSettingsWindow}
+        title="Mitra Options"
+      >
+        ⚙️
+      </button>
     </CompanionProvider>
   );
 }

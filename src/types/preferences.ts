@@ -51,6 +51,25 @@ export interface CostumePreferences {
 }
 
 /**
+ * Trust and Privacy preferences.
+ * States can be "unknown", "granted", "denied", "approximate" (for location), or "off".
+ */
+export type TrustState = "unknown" | "granted" | "denied" | "approximate" | "off";
+
+export interface TrustPreferences {
+  location: TrustState;
+  microphone: TrustState;
+  camera: TrustState;
+  notifications: TrustState;
+  accessibility: TrustState;
+  autostart: TrustState;
+  calendar: TrustState;
+  spotify: TrustState;
+  slack: TrustState;
+  discord: TrustState;
+}
+
+/**
  * The consolidated application state that requires persistence.
  */
 export interface AppPreferences {
@@ -62,7 +81,9 @@ export interface AppPreferences {
   animation: AnimationSettings;
   audio: AudioPreferences;
   costumes: CostumePreferences;
+  trust: TrustPreferences;
   onboardingComplete: boolean;
+  userName?: string;
 }
 
 export const DEFAULT_PREFERENCES: AppPreferences = {
@@ -101,5 +122,18 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     towel: false,
     mug: false,
   },
+  trust: {
+    location: "approximate", // "unknown" | "granted" | "denied" | "approximate" | "off"
+    microphone: "unknown",
+    camera: "unknown",
+    notifications: "unknown",
+    accessibility: "unknown",
+    autostart: "unknown",
+    calendar: "unknown",
+    spotify: "unknown",
+    slack: "unknown",
+    discord: "unknown",
+  },
   onboardingComplete: false,
+  userName: "",
 };

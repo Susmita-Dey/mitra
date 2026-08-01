@@ -58,49 +58,64 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
         return;
       }
 
-      // 1. Install lifecycle (if new)
-      if (plugin.onInstall) {
-        await plugin.onInstall();
-      }
-
-      // 2. Build the secure API facade for this specific plugin
+      // Build the secure API facade for this specific plugin
+      
       const api: PluginAPI = {
-        onEvent: (event, handler) => {
-          return eventBus.subscribe(event, handler);
+        events: {
+          emit: (intent) => {
+            (brain as any).evaluateIntent?.(intent);
+          },
+          on: (event: any, handler: any) => {
+            return eventBus.subscribe(event, handler);
+          }
         },
-        registerBehavior: (pluginBehavior: PluginBehavior) => {
-          requirePermission(plugin, "behaviors");
-          
-          const behaviorId = `plugin:${plugin.manifest.id}:${pluginBehavior.definition.id}`;
-          const internalBehavior: RegisteredBehavior = {
-            definition: { ...pluginBehavior.definition, id: behaviorId },
-            canExecute: (context) => pluginBehavior.canExecute(wrapContext(context)),
-            execute: (context) => pluginBehavior.execute(wrapContext(context)),
-          };
-          
-          brain.registerBehavior(internalBehavior);
-          registeredBehaviorIds.add(behaviorId);
+        scheduler: (brain as any).scheduler,
+        trust: {
+          request: async (_perm) => true,
+          get: async (_perm) => "granted",
         },
-        registerCommand: (command: CommandDefinition) => {
-          requirePermission(plugin, "commands");
-          commands.set(command.id, command);
-        },
-        registerWidget: (widget: WidgetDefinition) => {
-          requirePermission(plugin, "widgets");
-          widgets.set(widget.id, widget);
-        },
-        registerReminder: (reminder: ReminderDefinition) => {
-          requirePermission(plugin, "reminders");
-          reminders.set(reminder.id, reminder);
+        registry: {
+          registerBehavior: (pluginBehavior: PluginBehavior) => {
+            requirePermission(plugin, "behaviors");
+            
+            const behaviorId = `plugin:${plugin.manifest.id}:${pluginBehavior.definition.id}`;
+            const internalBehavior: RegisteredBehavior = {
+              definition: { ...pluginBehavior.definition, id: behaviorId },
+              canExecute: (context) => pluginBehavior.canExecute(wrapContext(context)),
+              execute: (context) => pluginBehavior.execute(wrapContext(context)),
+            };
+            
+            brain.registerBehavior(internalBehavior);
+            registeredBehaviorIds.add(behaviorId);
+          },
+          registerCommand: (command: CommandDefinition) => {
+            requirePermission(plugin, "commands");
+            commands.set(command.id, command);
+          },
+          registerWidget: (widget: WidgetDefinition) => {
+            requirePermission(plugin, "widgets");
+            widgets.set(widget.id, widget);
+          },
+          registerReminder: (reminder: ReminderDefinition) => {
+            requirePermission(plugin, "reminders");
+            reminders.set(reminder.id, reminder);
+          }
         }
       };
 
+      // 1. Install lifecycle (if new)
+      if (plugin.onInstall) {
+        await plugin.onInstall(api);
+      }
+
       // 3. Initialize
-      await plugin.onInitialize(api);
+      if (plugin.onInit) {
+        await plugin.onInit(api);
+      }
 
       // 4. Enable
       if (plugin.onEnable) {
-        await plugin.onEnable();
+        await plugin.onEnable(api);
       }
 
       loadedPlugins.set(plugin.manifest.id, plugin);
@@ -110,12 +125,14 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
     async unloadPlugin(pluginId: string) {
       const plugin = loadedPlugins.get(pluginId);
       if (!plugin) return;
+      
+      const dummyApi = {} as PluginAPI;
 
       if (plugin.onDisable) {
-        await plugin.onDisable();
+        await plugin.onDisable(dummyApi);
       }
       if (plugin.onDestroy) {
-        await plugin.onDestroy();
+        await plugin.onDestroy(dummyApi);
       }
 
       loadedPlugins.delete(pluginId);

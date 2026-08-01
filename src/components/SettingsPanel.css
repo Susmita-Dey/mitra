@@ -221,3 +221,39 @@
   background: #EF4444;
   color: white;
 }
+
+.radio-card {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.radio-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.radio-card.active {
+  background: white;
+  border-color: #4ade80;
+  box-shadow: 0 0 0 1px #4ade80, 0 4px 12px rgba(74, 222, 128, 0.15);
+}
+.radio-card-content {
+  display: flex;
+  flex-direction: column;
+}
+.radio-card-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+.radio-card-desc {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+

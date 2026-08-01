@@ -13,6 +13,7 @@ pub fn run() {
         .setup(|app| {
             system::window::configure_main_window(app)?;
             system::tray::setup_tray(app)?;
+            system::media::start_media_listener(app.handle().clone());
             Ok(())
         })
         .run(tauri::generate_context!())

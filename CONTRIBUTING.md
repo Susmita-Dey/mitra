@@ -43,5 +43,34 @@ bunx tauri dev
 - `src-tauri/` - The Rust backend. Manages the transparent window, system tray, and cross-platform compilation.
 - `src/brain/` - The logic center. Controls her memories, behaviors, state machine, and scheduling.
 - `src/body/` - The renderer and physics. `useAnimationRig.ts` manages the mathematical spring physics, which drives the SVG elements in `MockRenderer.tsx`.
+- `src/system/` - Platform services: scheduler, event bus, weather, notifications, window controller.
+- `src/plugin/` - The compiled plugin SDK and bundled example plugins.
+
+---
+
+## 🔌 Building a Plugin
+
+Mitra has a **compiled, sandboxed plugin system** that lets you extend her behavior without touching her internals.
+
+Plugins:
+- Are written in **TypeScript** and compiled with the project (no `eval`, no dynamic loading)
+- Emit **semantic Intents** — they never render or animate directly
+- Use the **SDK Scheduler** instead of `setTimeout`/`setInterval`
+- Declare a **Manifest** with exactly the permissions they need
+
+**→ Read the full guide: [PLUGIN_CONTRIBUTING.md](./PLUGIN_CONTRIBUTING.md)**
+
+To submit a plugin, open a **Plugin Submission** issue using the issue template.
+
+---
+
+## 📋 Submitting Changes
+
+1. Fork the repository and create a feature branch.
+2. Make your changes. Run `bunx tsc --noEmit` and `bun run build` to verify nothing is broken.
+3. Open a Pull Request using the PR template. Screenshots or recordings of visual changes are required.
+4. CI will automatically run TypeScript checks, plugin security scans, dependency audits, and a Rust Clippy lint.
+
+---
 
 Thank you for helping build Mitra!
