@@ -33,11 +33,11 @@ export interface EmotionState {
 }
 
 export interface ProceduralAnimationState {
-  eyes: "open" | "closed" | "squint" | "wide" | "sparkle";
-  mouth: "neutral" | "smile" | "grin" | "sad" | "open";
+  eyes: "open" | "closed" | "squint" | "wide" | "sparkle" | "happy-closed" | "sad";
+  mouth: "neutral" | "smile" | "grin" | "sad" | "open" | "yawn" | "smirk";
   ears: "up" | "down" | "twitch";
   tail: "still" | "wag" | "flick" | "droop" | "curl";
-  posture: "stand" | "sit" | "lie-down" | "stretch" | "sleep" | "slump" | "high-five";
+  posture: "stand" | "sit" | "lie-down" | "stretch" | "sleep" | "slump" | "high-five" | "thinking" | "shy" | "concerned" | "cheer";
   bodyMotion: "still" | "breathe" | "bounce" | "sway" | "shiver" | "dance" | "look-around";
   rootScale: number;
   /** Active visual props (e.g., "laptop", "umbrella", "sunglasses") */

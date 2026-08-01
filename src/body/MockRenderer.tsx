@@ -332,38 +332,58 @@ export function MockRenderer({ character }: RendererProps) {
 
             {/* Mouth */}
             <g className="panda-mouth-group">
-              {mouth === "grin" || mouth === "smile" ? (
+              {mouth === "grin" ? (
+                <path className="panda-mouth-happy" d="M 90,125 Q 100,145 110,125 Z" fill="#2E1C12" />
+              ) : mouth === "yawn" || mouth === "open" ? (
+                <circle cx="100" cy="130" r="5" fill="#2E1C12" />
+              ) : mouth === "smirk" ? (
+                <path className="panda-mouth-smirk" d="M 94,127 Q 100,127 108,124" fill="none" stroke="#2E1C12" strokeWidth="2.5" strokeLinecap="round" />
+              ) : mouth === "smile" ? (
                 <path className="panda-mouth-happy" d="M 90,125 Q 100,138 110,125" fill="none" stroke="#2E1C12" strokeWidth="3" strokeLinecap="round" />
               ) : mouth === "sad" ? (
                 <path className="panda-mouth-sad" d="M 94,130 Q 100,126 106,130" fill="none" stroke="#2E1C12" strokeWidth="2.5" strokeLinecap="round" />
               ) : (
                 <path className="panda-mouth" d="M 90,127 Q 95,133 100,127 Q 105,133 110,127" fill="none" stroke="#2E1C12" strokeWidth="2.5" strokeLinecap="round" />
               )}
-              
-              <path className="panda-mouth-open" d="M 94,126 Q 100,140 106,126 Z" fill="#2E1C12" />
             </g>
 
             {/* Eyes */}
             <g className="panda-eyes">
               {/* Left Eye */}
               <g className="panda-eye-wrapper" style={{ transformOrigin: '70px 100px' }}>
-                <circle cx="70" cy="100" r="11" fill="#2E1C12" className="panda-eye" />
-                {eyes === "sparkle" && <circle cx="70" cy="100" r="11" fill="#ffeb3b" opacity="0.3" />}
-                <circle cx="66" cy="96" r="4" fill="#FFFFFF" className="panda-eye-glint" />
-                <circle cx="74" cy="104" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />
-                {(eyes === "closed" || eyes === "squint") && (
+                {(eyes === "closed" || eyes === "squint") ? (
                    <path className="panda-sleep-eye left" d="M 58,103 Q 70,110 82,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
+                ) : eyes === "happy-closed" ? (
+                   <path className="panda-happy-eye left" d="M 60,103 Q 70,93 80,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
+                ) : (
+                  <>
+                    <circle cx="70" cy="100" r={eyes === "wide" ? 12 : 11} fill="#2E1C12" className="panda-eye" />
+                    {eyes === "sparkle" && <circle cx="70" cy="100" r="11" fill="#ffeb3b" opacity="0.3" />}
+                    <circle cx={eyes === "wide" ? 70 : 66} cy={eyes === "wide" ? 100 : 96} r={eyes === "wide" ? 2 : 4} fill="#FFFFFF" className="panda-eye-glint" />
+                    {eyes !== "wide" && <circle cx="74" cy="104" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />}
+                    {eyes === "sad" && (
+                       <path d="M 57,103 Q 70,95 83,92 L 83,85 L 57,85 Z" fill="#FFF9ED" />
+                    )}
+                  </>
                 )}
               </g>
               
               {/* Right Eye */}
               <g className="panda-eye-wrapper" style={{ transformOrigin: '130px 100px' }}>
-                <circle cx="130" cy="100" r="11" fill="#2E1C12" className="panda-eye" />
-                {eyes === "sparkle" && <circle cx="130" cy="100" r="11" fill="#ffeb3b" opacity="0.3" />}
-                <circle cx="126" cy="96" r="4" fill="#FFFFFF" className="panda-eye-glint" />
-                <circle cx="134" cy="104" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />
-                {(eyes === "closed" || eyes === "squint") && (
+                {(eyes === "closed" || eyes === "squint") ? (
                    <path className="panda-sleep-eye right" d="M 118,103 Q 130,110 142,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
+                ) : eyes === "happy-closed" ? (
+                   <path className="panda-happy-eye right" d="M 120,103 Q 130,93 140,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
+                ) : (
+                  <>
+                    <circle cx="130" cy="100" r={eyes === "wide" ? 12 : 11} fill="#2E1C12" className="panda-eye" />
+                    {eyes === "sparkle" && <circle cx="130" cy="100" r="11" fill="#ffeb3b" opacity="0.3" />}
+                    <circle cx={eyes === "wide" ? 130 : 126} cy={eyes === "wide" ? 100 : 96} r={eyes === "wide" ? 2 : 4} fill="#FFFFFF" className="panda-eye-glint" />
+                    {eyes !== "wide" && <circle cx="134" cy="104" r="1.5" fill="#FFFFFF" className="panda-eye-glint" />}
+                    {eyes === "sad" && (
+                       <path d="M 117,92 Q 130,95 143,103 L 143,85 L 117,85 Z" fill="#FFF9ED" />
+                    )}
+                  </>
                 )}
               </g>
             </g>

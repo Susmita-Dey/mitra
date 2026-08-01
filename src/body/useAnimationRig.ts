@@ -81,18 +81,20 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
       };
 
       if (state.posture === "sit") {
-        target.rootY = 30; // Sit lower
-        target.bodyScaleY = 0.85; // Squat down
-        target.bodyScaleX = 1.1; // Wider base
+        target.rootY = 15; // Sit slightly lower
+        target.bodyScaleY = 0.98; // Natural squish, not flat
+        target.bodyScaleX = 1.02; // Very slight widening
         target.bodyRot = 0; // Upright
-        target.headY = 15; // Head tucked slightly down
+        target.headY = 5; // Head relaxed
         target.headRot = 0;
-        // Legs splayed forward
-        target.leftLegRot = -80;
-        target.rightLegRot = 80;
-        // Arms resting on belly
-        target.leftArmRot = 45;
-        target.rightArmRot = -45;
+        // Legs tucked neatly under the body (pointing forward, soles on the ground)
+        target.leftLegRot = -10;
+        target.rightLegRot = 10;
+        // Arms coming down to support weight in front
+        target.leftArmRot = -20;
+        target.rightArmRot = 20;
+        // Tail wrapping around the side naturally
+        target.tailRot = -60;
       } else if (state.posture === "lie-down") {
         target.rootY = 25;
         target.bodyScaleY = 0.85;
@@ -134,6 +136,41 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         target.leftLegRot = 5;
         target.rightLegRot = -5;
         target.tailRot = 30;
+      } else if (state.posture === "thinking") {
+        target.headRot = -10; // Tilted slightly up/right
+        target.headY = -5;
+        target.rightArmRot = -130; // Right paw to chin
+        target.leftArmRot = -10;   // Left arm resting naturally
+        target.bodyRot = 5;        // Slight body tilt
+        target.leftLegRot = 5;
+        target.rightLegRot = -5;
+      } else if (state.posture === "shy") {
+        target.headRot = 15;       // Tilted down shyly
+        target.headY = 10;
+        target.rightArmRot = -140; // Right paw covering mouth
+        target.leftArmRot = -10;
+        target.bodyRot = -5;
+        target.leftLegRot = 15;    // Legs slightly inward
+        target.rightLegRot = -15;
+      } else if (state.posture === "concerned") {
+        target.headRot = 5;
+        target.headY = 15;         // Head lowered
+        target.bodyScaleY = 0.95;  // Shoulders slumped
+        target.leftArmRot = -45;   // Paws clasped low
+        target.rightArmRot = 45;
+        target.leftLegRot = 0;
+        target.rightLegRot = 0;
+        target.tailRot = -30;      // Tail tucked slightly
+      } else if (state.posture === "cheer") {
+        target.rootY = -15;        // Standing tall
+        target.bodyScaleY = 1.1;
+        target.bodyScaleX = 0.95;
+        target.headRot = -15;      // Looking up happily
+        target.leftArmRot = 160;   // Both arms up
+        target.rightArmRot = -160;
+        target.leftLegRot = 5;
+        target.rightLegRot = -5;
+        target.tailRot = 40;       // Tail up
       }
 
       // 2. Add Oscillation layers based on bodyMotion
