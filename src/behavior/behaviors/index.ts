@@ -28,5 +28,3 @@ export { FollowCursorBehavior } from "./presence-follow-cursor";
 export { PeekBehavior } from "./presence-peek";
 export { WanderBehavior } from "./presence-wander";
 export { TaskbarBehavior } from "./presence-taskbar";
-export { InteractionBehavior } from "./interaction";
-

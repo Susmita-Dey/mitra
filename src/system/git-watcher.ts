@@ -10,17 +10,13 @@ export function createGitWatcher(onCommit: () => void): GitWatcher {
 
   const checkGitLog = async () => {
     try {
-      // In development mode, we fetch from the local Vite dev server API
-      // In production, you would use Tauri's Rust command to read the git log
-      const res = await fetch('/api/git-hash');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.hash) {
-          if (lastCommitHash && data.hash !== lastCommitHash) {
-            onCommit();
-          }
-          lastCommitHash = data.hash;
+      const { invoke } = await import("@tauri-apps/api/core");
+      const hash = await invoke<string | null>("get_git_hash");
+      if (hash) {
+        if (lastCommitHash && hash !== lastCommitHash) {
+          onCommit();
         }
+        lastCommitHash = hash;
       }
     } catch (e) {
       // API might not be available in production or if Vite server is offline

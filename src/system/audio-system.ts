@@ -25,15 +25,36 @@ const soundMap: Record<string, string[]> = {
   idle: ["/sounds/soft-ambient-breath.mp3"],
 };
 
-// Pre-load all Audio objects into memory to prevent play delays
-const audioCache: Record<string, HTMLAudioElement> = {};
-for (const cat in soundMap) {
-  soundMap[cat].forEach(file => {
-    const audio = new Audio(file);
-    audio.preload = "auto";
-    audioCache[file] = audio;
-  });
+// Web Audio API Context
+let audioCtx: AudioContext | null = null;
+const getAudioContext = () => {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  return audioCtx;
+};
+
+// Pre-load all Audio objects into memory as decoded AudioBuffers to prevent play delays
+const audioCache: Record<string, AudioBuffer> = {};
+
+async function preloadSounds() {
+  const ctx = getAudioContext();
+  for (const cat in soundMap) {
+    for (const file of soundMap[cat]) {
+      try {
+        const response = await fetch(file);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        audioCache[file] = audioBuffer;
+      } catch (err) {
+        console.warn(`[AudioSystem] Failed to preload sound: ${file}`, err);
+      }
+    }
+  }
 }
+
+// Start preloading immediately in the background
+preloadSounds();
 
 export function createAudioSystem(eventBus?: EventBus): AudioSystem {
   let isMuted = false;
@@ -100,36 +121,41 @@ export function createAudioSystem(eventBus?: EventBus): AudioSystem {
       }
       
       const file = options[Math.floor(Math.random() * options.length)];
+      const buffer = audioCache[file];
+      
+      if (!buffer) {
+        console.warn(`[AudioSystem] Sound not yet preloaded or failed: ${file}`);
+        return;
+      }
       
       // Apply emotional modifier to volume if applicable
       let effectiveVolume = volume;
       if (emotion === "sleepy") effectiveVolume *= 0.5;
       if (emotion === "alert") effectiveVolume = Math.min(1.0, effectiveVolume * 1.2);
 
-      
-      
       lastPlayed[category] = now;
       
-      const audio = audioCache[file] || new Audio(file);
-      
-      // Clone the node so we can play overlapping sounds if needed
-      const clone = audio.cloneNode() as HTMLAudioElement;
-      clone.volume = effectiveVolume;
-      
-      // Handle the baked in silence for yawns/sleepy by seeking forward
-      if (category === "sleepy" || category === "yawns" || file.includes("yawn")) {
-        clone.addEventListener("loadedmetadata", () => {
-          clone.currentTime = 1.5;
-        });
-        // If it's already loaded (because of cache), set it directly
-        if (clone.readyState >= 1) {
-           clone.currentTime = 1.5;
-        }
+      const ctx = getAudioContext();
+      if (ctx.state === "suspended") {
+        ctx.resume();
       }
-      
-      clone.play().catch(err => {
-        console.warn("[AudioSystem] Could not play sound (autoplay blocked?):", err);
-      });
+
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+
+      const gainNode = ctx.createGain();
+      gainNode.gain.value = effectiveVolume;
+
+      source.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      // Handle the baked in silence for yawns/sleepy by seeking forward
+      let offset = 0;
+      if (category === "sleepy" || category === "yawns" || file.includes("yawn")) {
+         offset = 1.5;
+      }
+
+      source.start(0, offset);
     }
   };
 }

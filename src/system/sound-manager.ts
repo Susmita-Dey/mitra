@@ -9,9 +9,16 @@ export interface SoundManager {
 export function createSoundManager(): SoundManager {
   const baseAudio = createAudioSystem();
   let lastPlayedAnim: string | null = null;
+  let wasCoding = false;
   
   return {
     tick(context, emotion, activeAnimation) {
+      // 0. Environment Transitions
+      if (context.isCoding && !wasCoding) {
+         baseAudio.playSound("alert", "curious");
+      }
+      wasCoding = context.isCoding;
+
       // 1. Context Awareness - Do not play ambient sounds if busy/meeting
       const isBusy = context.userState === "Meeting" || context.userState === "Focused";
       if (isBusy) return;
@@ -38,7 +45,8 @@ export function createSoundManager(): SoundManager {
     playFoley(type) {
       if (type === "footsteps") baseAudio.playSound("footsteps");
       if (type === "chirp") baseAudio.playSound("chirps");
-      // "pop" and "swish" could be mapped to UI/bubble sounds later
+      if (type === "pop") baseAudio.playSound("alert");
+      if (type === "swish") baseAudio.playSound("idle");
     }
   };
 }

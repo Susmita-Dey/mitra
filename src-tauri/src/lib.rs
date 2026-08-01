@@ -8,6 +8,7 @@ pub fn run() {
             system::screen::get_screen_info,
             system::meeting::check_meeting_status,
             system::meeting::check_coding_status,
+            system::git::get_git_hash,
         ])
         .setup(|app| {
             system::window::configure_main_window(app)?;

@@ -55,7 +55,6 @@ import {
   PeekBehavior,
   WanderBehavior,
   TaskbarBehavior,
-  InteractionBehavior,
   BioReminderBehavior,
 } from "@/behavior/behaviors";
 import { createCompanionEngine } from "./companion-engine";
@@ -182,7 +181,6 @@ export function App() {
     brain.registerBehavior(PeekBehavior);
     brain.registerBehavior(WanderBehavior);
     brain.registerBehavior(TaskbarBehavior);
-    brain.registerBehavior(InteractionBehavior);
 
     const stopBrain = initializeBrain(brain, scheduler);
 
