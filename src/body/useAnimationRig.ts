@@ -102,18 +102,18 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         target.rightLegRot = 20;
         target.tailRot = -100;
       } else if (state.posture === "sleep") {
-        // Curled up sleeping pose like a real red panda
-        target.rootY = 50; // Very low
-        target.bodyScaleY = 0.65; // Squished into a ball
-        target.bodyScaleX = 1.15; // Wide ball
-        target.bodyRot = 90; // Curled sideways
-        target.headRot = 50; // Head tucked deeply
-        target.headY = 25; // Head lowered
-        target.leftLegRot = -90; // Legs tucked flat
-        target.rightLegRot = 90;
-        target.leftArmRot = 90; // Arms tucked flat
-        target.rightArmRot = -90;
-        target.tailRot = -160; // Tail wrapped entirely around the body
+        // Curled up sleeping pose perfectly matching reference
+        target.rootY = 65; // Very low
+        target.bodyScaleY = 0.8;
+        target.bodyScaleX = 1.1; 
+        target.bodyRot = 85; // Torso curled sideways
+        target.headRot = 65; // Head tucked deeply
+        target.headY = 55; // Head lowered into chest
+        target.leftLegRot = -80; // Legs tucked flat
+        target.rightLegRot = 80;
+        target.leftArmRot = 75; // Arms tucked flat
+        target.rightArmRot = -75;
+        target.tailRot = -210; // Tail wraps completely over the head/body
       } else if (state.posture === "stretch") {
         target.rootY = -25;
         target.bodyScaleY = 1.25;

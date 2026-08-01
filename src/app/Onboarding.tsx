@@ -27,6 +27,7 @@ export function Onboarding({ storage, onComplete }: OnboardingProps) {
             </p>
             <ul className="onboarding-features">
               <li>💧 He'll remind you to drink water and stretch.</li>
+              <li>🌤️ He fetches local weather (requires internet, but no OS tracking!)</li>
               <li>🖱️ You can drag him anywhere on your screen.</li>
               <li>💖 Pet him, tickle his tummy, and give him high-fives!</li>
             </ul>

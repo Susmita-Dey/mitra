@@ -123,25 +123,28 @@ export function MockRenderer({ character }: RendererProps) {
             </g>
           </g>
 
-          {/* Torso */}
-          <ellipse className="panda-torso" cx="100" cy="160" rx="55" ry="60" fill="#E86A33" />
-          {/* Soft Tummy Fur Fluffs (Orange curves) */}
-          <path d="M 45,150 Q 35,152 47,160 Z" fill="#E86A33" />
-          <path d="M 44,170 Q 32,172 46,180 Z" fill="#E86A33" />
-          <path d="M 155,150 Q 165,152 153,160 Z" fill="#E86A33" />
-          <path d="M 156,170 Q 168,172 154,180 Z" fill="#E86A33" />
-          
-          {/* Tummy Fluff (Ticklish!) */}
-          <ellipse 
-            className="panda-tummy" 
-            cx="100" cy="170" rx="35" ry="40" 
-            fill="#FFF9ED" 
-            style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              window.dispatchEvent(new CustomEvent("companion:interaction:tummy"));
-            }}
-          />
+          {/* Torso & Tummy Group */}
+          <g style={{ transform: `rotate(${rig.bodyRot}deg)`, transformOrigin: '100px 160px' }}>
+            {/* Torso */}
+            <ellipse className="panda-torso" cx="100" cy="160" rx="55" ry="60" fill="#E86A33" />
+            {/* Soft Tummy Fur Fluffs (Orange curves) */}
+            <path d="M 45,150 Q 35,152 47,160 Z" fill="#E86A33" />
+            <path d="M 44,170 Q 32,172 46,180 Z" fill="#E86A33" />
+            <path d="M 155,150 Q 165,152 153,160 Z" fill="#E86A33" />
+            <path d="M 156,170 Q 168,172 154,180 Z" fill="#E86A33" />
+            
+            {/* Tummy Fluff (Ticklish!) */}
+            <ellipse 
+              className="panda-tummy" 
+              cx="100" cy="170" rx="35" ry="40" 
+              fill="#FFF9ED" 
+              style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(new CustomEvent("companion:interaction:tummy"));
+              }}
+            />
+          </g>
 
           {/* Props Layer (Behind Arms) */}
           <g className="panda-props">
@@ -408,7 +411,7 @@ export function MockRenderer({ character }: RendererProps) {
         )}
       </svg>
 
-      {eyes === "closed" && (
+      {posture === "sleep" && (
         <div className="mock-zzz-container">
           <span className="mock-zzz z1">Z</span>
           <span className="mock-zzz z2">z</span>
