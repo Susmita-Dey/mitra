@@ -1,9 +1,9 @@
 mod system;
-
+// .manage(system::meeting::SystemState(std::sync::Mutex::new(sysinfo::System::new_all())))
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(system::meeting::SystemState(std::sync::Mutex::new(sysinfo::System::new_all())))
+        .manage(system::meeting::SystemState::new())
         .invoke_handler(tauri::generate_handler![
             system::screen::get_screen_info,
             system::meeting::check_meeting_status,

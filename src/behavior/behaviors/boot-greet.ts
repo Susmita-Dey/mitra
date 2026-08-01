@@ -36,8 +36,12 @@ export const BootGreetBehavior: RegisteredBehavior = {
       state: { posture: "cheer", eyes: "happy-closed", mouth: "open", ears: "up", tail: "wag", bodyMotion: "bounce" } 
     });
     
-    // Friend greeting bubble
-    context.emit({ type: "SetBubble", text: "Hi! I'm Mitra, your new desktop buddy! ✨", duration: 6000 });
+    // Personalised greeting using the user's name if they set it during onboarding
+    const name = context.world.settings?.userName?.trim();
+    const greeting = name
+      ? `Hi ${name}! I missed you! 🦊`
+      : `Hi! I'm Mitra, your new desktop buddy! 🐾`;
+    context.emit({ type: "SetBubble", text: greeting, duration: 6000 });
     context.emit({ type: "SetInteraction", interaction: "none" });
     
     // Play happy sound

@@ -105,7 +105,8 @@ export function App() {
     
     batterySystem.start();
     weatherSystem.start();
-    meetingSystem.start();
+    // MeetingSystem uses the central Scheduler — no raw setInterval
+    meetingSystem.start(scheduler);
     
     const winCtrl       = createWindowController(appStorage);
     const brain         = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus);
@@ -291,9 +292,11 @@ export function App() {
 
     return () => {
       stopBrain();
+      meetingSystem.dispose();
       unlistenHidden.then((f: any) => f());
       unlistenShown.then((f: any) => f());
       unlistenMedia.then((f: any) => f());
+      unsubscribeEngine();
       window.removeEventListener("companion:debug", handleDebug);
       window.removeEventListener("companion:reminder:ack", handleAck);
       window.removeEventListener("companion:drag:start", handleDragStart);
