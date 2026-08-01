@@ -6,6 +6,7 @@ import type { Interaction } from "./interaction";
 import { DEFAULT_INTERACTION } from "./interaction";
 import type { Position } from "./position";
 import { DEFAULT_POSITION } from "./position";
+import type { ProceduralAnimationState } from "../brain/core/types";
 
 /**
  * Aggregate companion state. Each axis is independent so animation, mood,
@@ -16,6 +17,8 @@ export interface Character {
   animation: Animation;
   emotion: Emotion;
   interaction: Interaction;
+  proceduralState?: ProceduralAnimationState;
+  bubbleText?: string | null;
 }
 
 export function createCharacter(overrides?: Partial<Character>): Character {

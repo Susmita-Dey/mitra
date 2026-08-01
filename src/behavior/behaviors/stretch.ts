@@ -29,7 +29,7 @@ export const StretchBehavior: RegisteredBehavior = {
   },
   execute: (context: BehaviorContext) => {
     context.emit({ type: "PlayAnimation", animation: "stretch" });
-    context.emit({ type: "PlaySound", category: "sleepy" });
+    context.emit({ type: "PlaySound", category: "stretch" });
     context.emit({ type: "ChangeEmotion", emotion: "relaxed" });
   },
 };

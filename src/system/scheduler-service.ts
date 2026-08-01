@@ -75,11 +75,17 @@ export function createSchedulerService(): SchedulerService {
       // It's possible a task was cancelled by a previous task in this same tick
       if (!tasks.has(task.id)) continue;
 
-      task.action();
+      try {
+        task.action();
+      } catch (err) {
+        console.error(`[SchedulerService] Task ${task.id} threw an exception:`, err);
+      }
 
       // If it's recurring, schedule the next interval
       if (task.intervalMs !== undefined && tasks.has(task.id)) {
-        task.nextExecutionMs = Date.now() + resolveDuration(task.intervalMs);
+        const interval = resolveDuration(task.intervalMs);
+        // Maintain cadence without drift, but prevent stampedes if it fell too far behind
+        task.nextExecutionMs = Math.max(Date.now(), task.nextExecutionMs + interval);
       } else {
         // One-off task, remove it
         tasks.delete(task.id);

@@ -10,11 +10,20 @@ export type Interaction =
   | "reminder:dinner"
   | "reminder:snack"
   | "reminder:meal"
+  | "reminder:bio"
   | "drag" 
   | "state:sick"
   | "weather:rain"
   | "weather:beach"
   | "weather:cloudy"
+  | "ear-twitch"
+  | "tail-flick"
+  | "pet"
+  | "tickle"
+  | "high-five"
+  | "poke-annoyed"
+  | "poke-alert"
+  | "gentle-tap"
   | "idle";
 
 export const DEFAULT_INTERACTION: Interaction = "idle";

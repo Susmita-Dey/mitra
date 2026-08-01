@@ -106,7 +106,7 @@ export function createAudioSystem(eventBus?: EventBus): AudioSystem {
       if (emotion === "sleepy") effectiveVolume *= 0.5;
       if (emotion === "alert") effectiveVolume = Math.min(1.0, effectiveVolume * 1.2);
 
-      console.log(`[AudioSystem] Playing ${file} (Category: ${category}, Emotion: ${emotion}, Volume: ${effectiveVolume})`);
+      
       
       lastPlayed[category] = now;
       

@@ -4,7 +4,7 @@
  * Wires the Companion Engine, EnvironmentService, Brain, and rendering layers.
  * Mitra stays a companion surface — no routes, settings, or productivity UI.
  */
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Companion } from "@/body";
 import { createBrain, initializeBrain } from "@/brain";
 import { StateDebug } from "@/ui";
@@ -22,6 +22,7 @@ import { createPluginManager } from "@/plugin";
 import { HelloWorldPlugin } from "@/plugin/examples/hello-world-plugin";
 import { CompanionProvider } from "./companion-context";
 import { useCharacter } from "./use-character";
+import { Onboarding } from "./Onboarding";
 import "./global.css";
 
 import {
@@ -44,6 +45,7 @@ import {
   BootGreetBehavior,
   SitBehavior,
   BatteryBehavior,
+  BatteryFullBehavior,
   TimeRoutineBehavior,
   WeatherBehavior,
   MeetingHideBehavior,
@@ -54,6 +56,7 @@ import {
   WanderBehavior,
   TaskbarBehavior,
   InteractionBehavior,
+  BioReminderBehavior,
 } from "@/behavior/behaviors";
 import { createCompanionEngine } from "./companion-engine";
 
@@ -71,6 +74,7 @@ function CompanionView() {
 export function App() {
   const engine = useMemo(() => createCompanionEngine(), []);
   const appStorageRef = useRef<any>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const openSettingsWindow = async () => {
     try {
@@ -79,17 +83,7 @@ export function App() {
         await win.show();
         await win.setFocus();
       } else {
-        // Fallback if window needs to be created
-        const newWin = new WebviewWindow("settings", {
-          url: "/?page=settings",
-          title: "Mitra Settings",
-          width: 350,
-          height: 480,
-          decorations: true,
-          transparent: false,
-          alwaysOnTop: true,
-        });
-        await newWin.once("tauri://error", (e) => console.error(e));
+        console.error("Settings window not found. Ensure it is defined in tauri.conf.json.");
       }
     } catch (err) {
       console.error("Failed to open settings window", err);
@@ -101,14 +95,6 @@ export function App() {
     const backend       = createBrowserStorage();
     const appStorage    = createAppStorage(backend, eventBus);
     appStorageRef.current = appStorage;
-    
-    // Load preferences on startup so the Settings Panel can render
-    appStorage.load().then((prefs: any) => {
-      if (prefs?.behavior?.clickThrough) {
-        winCtrl.setIgnoreCursorEvents(true).catch(console.error);
-      }
-    }).catch(console.error);
-
     const env           = createEnvironmentService();
     const scheduler     = createSchedulerService();
     const audioSystem   = createAudioSystem(eventBus);
@@ -129,9 +115,31 @@ export function App() {
     });
     gitWatcher.start();
     
+    let clickThroughPref = false;
+
+    const updateClickThrough = () => {
+      const char = engine.getCharacter();
+      const isIdleOrSleeping = char.animation === "idle" || char.animation === "sleep" || char.animation === "wander";
+      const hasBubble = !!char.bubbleText;
+      const shouldIgnore = clickThroughPref && isIdleOrSleeping && !hasBubble;
+      winCtrl.setIgnoreCursorEvents(shouldIgnore).catch(console.error);
+    };
+
+    const unsubscribeEngine = engine.subscribe(updateClickThrough);
+
+    // Load preferences on startup so the Settings Panel can render
+    appStorage.load().then((prefs: any) => {
+      clickThroughPref = !!prefs?.behavior?.clickThrough;
+      if (!prefs?.onboardingComplete) {
+        setShowOnboarding(true);
+      }
+      updateClickThrough();
+    }).catch(console.error);
+
     eventBus.subscribe("preferences:updated", (prefs: any) => {
       if (prefs.behavior?.clickThrough !== undefined) {
-        winCtrl.setIgnoreCursorEvents(prefs.behavior.clickThrough).catch(console.error);
+        clickThroughPref = prefs.behavior.clickThrough;
+        updateClickThrough();
       }
       if (prefs.behavior?.weatherLocation !== undefined) {
         weatherSystem.setLocation(prefs.behavior.weatherLocation);
@@ -158,10 +166,12 @@ export function App() {
     brain.registerBehavior(LunchReminderBehavior);
     brain.registerBehavior(DinnerReminderBehavior);
     brain.registerBehavior(SnackReminderBehavior);
+    brain.registerBehavior(BioReminderBehavior);
     brain.registerBehavior(StretchReminderBehavior);
     brain.registerBehavior(EyesReminderBehavior);
     brain.registerBehavior(SitBehavior);
     brain.registerBehavior(BatteryBehavior);
+    brain.registerBehavior(BatteryFullBehavior);
     brain.registerBehavior(TimeRoutineBehavior);
     brain.registerBehavior(WeatherBehavior);
     brain.registerBehavior(MeetingHideBehavior);
@@ -222,12 +232,11 @@ export function App() {
       window.removeEventListener("companion:interaction:ears", () => handleInteraction("ear-twitch"));
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("contextmenu", handleContextMenu);
-      // Clean up plugins
-      // TODO: _pluginManager.unloadAll();
       scheduler.dispose();
       env.dispose();
       eventBus.clear();
       gitWatcher.stop();
+      unsubscribeEngine();
     };
   }, [engine]);
 
@@ -235,14 +244,23 @@ export function App() {
     <CompanionProvider engine={engine}>
       <CompanionView />
       
+      {showOnboarding && appStorageRef.current && (
+        <Onboarding 
+          storage={appStorageRef.current} 
+          onComplete={() => setShowOnboarding(false)} 
+        />
+      )}
+
       {/* Settings / Menu Gear Icon */}
-      <button 
-        className="settings-btn"
-        onClick={openSettingsWindow}
-        title="Mitra Options"
-      >
-        ⚙️
-      </button>
+      {!showOnboarding && (
+        <button 
+          className="settings-btn"
+          onClick={openSettingsWindow}
+          title="Mitra Options"
+        >
+          ⚙️
+        </button>
+      )}
     </CompanionProvider>
   );
 }

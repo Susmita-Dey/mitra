@@ -21,11 +21,10 @@ export interface WeatherSystem {
     let currentState: WeatherState | null = null;
     let hasStarted = false;
     let customLocation = "";
-  
     const fetchWeather = async () => {
       try {
-        let lat = 23.1764; // Default to Ranaghat, WB if all else fails
-        let lon = 88.5830;
+        let lat: number | null = null;
+        let lon: number | null = null;
   
         if (customLocation && customLocation.trim() !== "") {
           const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(customLocation)}&count=1`);
@@ -34,7 +33,6 @@ export interface WeatherSystem {
             if (geoData.results && geoData.results.length > 0) {
               lat = geoData.results[0].latitude;
               lon = geoData.results[0].longitude;
-              console.log(`[WeatherSystem] Geocoded '${customLocation}' to ${lat}, ${lon}`);
             }
           }
         } else {
@@ -50,13 +48,18 @@ export interface WeatherSystem {
            }
         }
       
+      if (lat === null || lon === null) {
+          throw new Error("Could not determine location for weather.");
+      }
+      
       const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
       if (!weatherRes.ok) throw new Error("Weather fetch failed");
       const weatherData = await weatherRes.json();
       
       const code = weatherData.current.weather_code;
       // WMO Weather interpretation codes (WW)
-      const rainCodes = [51, 53, 55, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99];
+      // Only treat actual rain (61+) or showers (80+) as raining, exclude light drizzle (51, 53, 55).
+      const rainCodes = [61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99];
       const sunnyCodes = [0, 1]; // Clear sky, mainly clear
       const cloudyCodes = [2, 3]; // Partly cloudy, overcast
       
@@ -69,7 +72,7 @@ export interface WeatherSystem {
         lastUpdated: Date.now()
       };
       
-      console.log(`[WeatherSystem] Weather updated: Temp ${currentState.temperature}°C, Raining: ${currentState.isRaining}, Sunny: ${currentState.isSunny}, Cloudy: ${currentState.isCloudy}`);
+      // Weather updated silently
     } catch (err) {
       // Fail silently to treat weather as an optional context, not a strict dependency.
       console.warn("[WeatherSystem] Could not update weather:", err);

@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "reminder.stretch",
   priority: 80,
   weight: 5,
-  cooldownMs: 0,
+  cooldownMs: 300000,
   action: "stretch",
   canInterrupt: true,
 };

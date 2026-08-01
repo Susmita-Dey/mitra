@@ -37,7 +37,7 @@ export function createGitWatcher(onCommit: () => void): GitWatcher {
       hasStarted = true;
       // Check every 10 seconds
       intervalId = setInterval(checkGitLog, 10000);
-      console.log("[GitWatcher] Started monitoring real git commits.");
+      // Started monitoring
     },
     stop() {
       if (intervalId) {

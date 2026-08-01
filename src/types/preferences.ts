@@ -19,6 +19,7 @@ export interface ReminderPreferences {
   lunch: ReminderConfig;
   dinner: ReminderConfig;
   snack: ReminderConfig;
+  bio: ReminderConfig;
 }
 
 export interface BehaviorPreferences {
@@ -27,6 +28,7 @@ export interface BehaviorPreferences {
   interactionLevel: "minimal" | "normal" | "active";
   clickThrough: boolean;
   weatherLocation?: string;
+  hideDuringMeetings?: boolean;
 }
 
 export interface AnimationSettings {
@@ -40,6 +42,15 @@ export interface AudioPreferences {
 }
 
 /**
+ * Costume/Prop state toggle preferences.
+ */
+export interface CostumePreferences {
+  sunglasses: boolean;
+  towel: boolean;
+  mug: boolean;
+}
+
+/**
  * The consolidated application state that requires persistence.
  */
 export interface AppPreferences {
@@ -50,6 +61,8 @@ export interface AppPreferences {
   behavior: BehaviorPreferences;
   animation: AnimationSettings;
   audio: AudioPreferences;
+  costumes: CostumePreferences;
+  onboardingComplete: boolean;
 }
 
 export const DEFAULT_PREFERENCES: AppPreferences = {
@@ -66,6 +79,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     lunch: { intervalMs: 0, jitterMs: 5 * 60 * 1000, time: "13:00" },
     dinner: { intervalMs: 0, jitterMs: 5 * 60 * 1000, time: "20:00" },
     snack: { intervalMs: 0, jitterMs: 5 * 60 * 1000, time: "17:00" },
+    bio: { intervalMs: 2 * 60 * 60 * 1000, jitterMs: 15 * 60 * 1000 },
   },
   behavior: {
     idleAnimations: true,
@@ -82,4 +96,10 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     muteSounds: false,
     volume: 0.5,
   },
+  costumes: {
+    sunglasses: false,
+    towel: false,
+    mug: false,
+  },
+  onboardingComplete: false,
 };

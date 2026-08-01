@@ -1,7 +1,4 @@
-export type { Battery } from "./battery";
-export type { Clock } from "./clock";
 export type { IdleDetection } from "./idle-detection";
-export type { WindowSystem } from "./window";
 export type { EnvironmentSnapshot, EnvironmentService } from "./environment";
 export { createEnvironmentService } from "./environment-service";
 export type { SchedulerService, ScheduleOptions, TaskHandle, TimeRange } from "./scheduler";

@@ -446,3 +446,5 @@ If NO,
 list every blocking issue.
 
 Do not stop until the entire project has been audited. Also list if any unnecessary or unused code or file is present and not needed for future use which can be deleted.
+
+go through each and every files folders and check if we are ready for launch - will you being a user use it for days - will you being the founder launch it now - how does mitrs feel currently where are we in what stage - any race conditions or blockers anywhere just document everything after this

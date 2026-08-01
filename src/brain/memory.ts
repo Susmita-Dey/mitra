@@ -3,7 +3,7 @@ import type { TimelineEvent } from "./timeline";
 export type ReminderState = "idle" | "scheduled" | "triggered" | "acknowledged" | "snoozed" | "ignored" | "completed";
 
 export interface ReminderItem {
-  id: "water" | "stretch" | "eyes" | "lunch" | "dinner" | "snack";
+  id: "water" | "stretch" | "eyes" | "lunch" | "dinner" | "snack" | "bio";
   state: ReminderState;
   scheduledFor: number | null;
 }
@@ -38,6 +38,7 @@ export interface CompanionMemory {
     lunch: ReminderItem;
     dinner: ReminderItem;
     snack: ReminderItem;
+    bio: ReminderItem;
   };
 
   /** History of events for debugging and organic state evaluation */
@@ -77,6 +78,7 @@ export const DEFAULT_MEMORY: CompanionMemory = {
     lunch: { id: "lunch", state: "idle", scheduledFor: null },
     dinner: { id: "dinner", state: "idle", scheduledFor: null },
     snack: { id: "snack", state: "idle", scheduledFor: null },
+    bio: { id: "bio", state: "idle", scheduledFor: null },
   },
   timeline: [],
   activeInteraction: null,

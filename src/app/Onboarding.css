@@ -1,0 +1,110 @@
+.onboarding-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.onboarding-modal {
+  width: 90%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255,255,255,0.5);
+  text-align: center;
+  color: #334155;
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.onboarding-step h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1E293B;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #E86A33, #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.onboarding-step p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.onboarding-features {
+  text-align: left;
+  list-style: none;
+  padding: 0;
+  margin-bottom: 28px;
+}
+
+.onboarding-features li {
+  font-size: 15px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.highlight-text {
+  background: #F1F5F9;
+  padding: 12px;
+  border-radius: 12px;
+  border-left: 4px solid #E86A33;
+}
+
+.onboarding-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(232, 106, 51, 0.3);
+}
+
+.onboarding-btn.primary {
+  background: #E86A33;
+  color: white;
+}
+
+.onboarding-btn.primary:hover {
+  background: #d65a22;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(232, 106, 51, 0.4);
+}
+
+.onboarding-btn.success {
+  background: #10B981;
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.onboarding-btn.success:hover {
+  background: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

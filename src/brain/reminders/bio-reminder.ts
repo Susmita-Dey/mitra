@@ -3,7 +3,7 @@ import type { BehaviorDefinition } from "@/behavior/behavior-definition";
 import type { RegisteredBehavior } from "@/behavior/behavior-engine";
 
 const definition: BehaviorDefinition = {
-  id: "reminder.dinner",
+  id: "reminder.bio",
   priority: 80,
   weight: 5,
   cooldownMs: 300000,
@@ -11,14 +11,14 @@ const definition: BehaviorDefinition = {
   canInterrupt: true,
 };
 
-export const DinnerReminderBehavior: RegisteredBehavior = {
+export const BioReminderBehavior: RegisteredBehavior = {
   definition,
   canExecute: (context: BehaviorContext) => {
-    return context.world.memory.activeReminders.dinner?.state === "triggered";
+    return context.world.memory.activeReminders.bio?.state === "triggered";
   },
   execute: (context: BehaviorContext) => {
     context.emit({ type: "PlayAnimation", animation: "sit" });
-    context.emit({ type: "SetInteraction", interaction: "reminder:dinner" });
+    context.emit({ type: "SetInteraction", interaction: "reminder:bio" });
     context.emit({ type: "PlaySound", category: "alert" });
   },
 };

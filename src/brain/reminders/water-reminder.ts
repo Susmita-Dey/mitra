@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "reminder.water",
   priority: 80,         // Higher than ambient, lower than reactive
   weight: 5,
-  cooldownMs: 0,
+  cooldownMs: 300000,   // Wait 5 mins (matches engine timeout) before re-triggering sound
   action: "idle",       // Uses idle animation, but we render a bubble
   canInterrupt: true,
 };

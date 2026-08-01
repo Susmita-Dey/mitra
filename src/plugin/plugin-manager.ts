@@ -104,7 +104,7 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
       }
 
       loadedPlugins.set(plugin.manifest.id, plugin);
-      console.log(`[PluginManager] Loaded plugin: ${plugin.manifest.name} v${plugin.manifest.version}`);
+      // Silently loaded
     },
 
     async unloadPlugin(pluginId: string) {
@@ -131,7 +131,7 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
       }
       
       // Also clean up commands, widgets, etc. here if needed.
-      console.log(`[PluginManager] Unloaded plugin: ${plugin.manifest.id}`);
+      // Silently unloaded
     },
 
     async unloadAll() {

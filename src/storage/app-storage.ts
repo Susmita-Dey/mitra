@@ -101,8 +101,8 @@ export function createAppStorage(backend: Storage, eventBus?: EventBus): AppStor
   window.addEventListener('storage', async (e) => {
     if (e.key === PREFS_KEY) {
       // Reload from storage and publish event to update memory
-      const freshPrefs = await storageInstance.load();
-      console.log("[AppStorage] Cross-window sync complete", freshPrefs);
+      await storageInstance.load();
+      
     }
   });
 

@@ -11,7 +11,9 @@ export type TimelineEventType =
   | "emotion:pushed"
   | "behavior:started"
   | "interaction"
-  | "celebration";
+  | "celebration"
+  | "reminder:deferred"
+  | "reminder:summary";
 
 export interface TimelineEvent {
   id: string;

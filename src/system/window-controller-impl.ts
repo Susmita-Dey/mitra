@@ -7,11 +7,17 @@ const EDGE_MARGIN_PX = 16;
 export function createWindowController(storage: AppStorage): WindowController {
   const win = getCurrentWindow();
   
+  let moveTimeout: ReturnType<typeof setTimeout>;
   // Track position automatically on move to persist it
-  win.onMoved(async ({ payload }) => {
-    // Debounce or just save directly since onMoved isn't insanely spammy in Tauri usually,
-    // but better to debounce if performance becomes an issue.
-    await storage.update({ windowPosition: { x: payload.x, y: payload.y } });
+  win.onMoved(({ payload }) => {
+    // Tauri often fires (0,0) or spurious moves during initialization.
+    // Also debounce to avoid spamming storage.
+    clearTimeout(moveTimeout);
+    moveTimeout = setTimeout(async () => {
+      // Ignore exact 0,0 which is the default spawn point before restorePosition hits
+      if (payload.x === 0 && payload.y === 0) return;
+      await storage.update({ windowPosition: { x: payload.x, y: payload.y } });
+    }, 500);
   });
 
   return {
@@ -77,6 +83,9 @@ export function createWindowController(storage: AppStorage): WindowController {
 
       if (savedPos) {
         const winSize = await win.outerSize();
+        const w = winSize.width > 0 ? winSize.width : 200;
+        const h = winSize.height > 0 ? winSize.height : 200;
+        
         // Verify the saved position is inside at least one connected monitor
         const isVisible = monitors.some((m: import("@tauri-apps/api/window").Monitor) => {
           const mLeft = m.position.x;
@@ -85,9 +94,9 @@ export function createWindowController(storage: AppStorage): WindowController {
           const mBottom = m.position.y + m.size.height;
           
           return (
-            savedPos.x + winSize.width > mLeft &&
+            savedPos.x + w > mLeft &&
             savedPos.x < mRight &&
-            savedPos.y + winSize.height > mTop &&
+            savedPos.y + h > mTop &&
             savedPos.y < mBottom
           );
         });

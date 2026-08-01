@@ -8,11 +8,13 @@ import "./global.css"; // Ensure global styles are applied
 
 export function SettingsPage() {
   const [preferences, setPreferences] = useState<AppPreferences | null>(null);
+  const [errorMsg] = useState<string | null>(null);
   
   const [remindersEnabled, setRemindersEnabled] = useState(true);
   const [waterInterval, setWaterInterval] = useState(120);
   const [stretchInterval, setStretchInterval] = useState(60);
   const [eyesInterval, setEyesInterval] = useState(30);
+  const [bioInterval, setBioInterval] = useState(120);
 
   const [lunchTime, setLunchTime] = useState("13:00");
   const [dinnerTime, setDinnerTime] = useState("20:00");
@@ -24,16 +26,37 @@ export function SettingsPage() {
   const [clickThrough, setClickThrough] = useState(false);
   const [wanderEnabled, setWanderEnabled] = useState(false);
   const [weatherLocation, setWeatherLocation] = useState("");
+  const [hideDuringMeetings, setHideDuringMeetings] = useState(false);
+  
+  const [sunglasses, setSunglasses] = useState(false);
+  const [towel, setTowel] = useState(false);
+  const [mug, setMug] = useState(false);
 
   const appStorage = createAppStorage(createBrowserStorage());
 
   useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    const setupCloseHandler = async () => {
+      try {
+        const win = getCurrentWindow();
+        unlisten = await win.onCloseRequested((event) => {
+          event.preventDefault();
+          win.hide();
+        });
+      } catch (err) {
+        console.error("Failed to setup close handler", err);
+      }
+    };
+    setupCloseHandler();
+
     appStorage.load().then(prefs => {
       setPreferences(prefs);
       setRemindersEnabled(prefs.reminders?.enabled ?? true);
-      setWaterInterval((prefs.reminders?.water?.intervalMs ?? 7200000) / 1000 / 60);
-      setStretchInterval((prefs.reminders?.stretch?.intervalMs ?? 3600000) / 1000 / 60);
-      setEyesInterval((prefs.reminders?.eyes?.intervalMs ?? 1800000) / 1000 / 60);
+      setWaterInterval((prefs.reminders?.water?.intervalMs ?? 7200000) / (60 * 1000));
+      setStretchInterval((prefs.reminders?.stretch?.intervalMs ?? 3600000) / (60 * 1000));
+      setEyesInterval((prefs.reminders?.eyes?.intervalMs ?? 1800000) / (60 * 1000));
+      setBioInterval((prefs.reminders?.bio?.intervalMs ?? 7200000) / (60 * 1000));
+
       setLunchTime(prefs.reminders?.lunch?.time ?? "13:00");
       setDinnerTime(prefs.reminders?.dinner?.time ?? "20:00");
       setSnackTime(prefs.reminders?.snack?.time ?? "17:00");
@@ -42,7 +65,16 @@ export function SettingsPage() {
       setClickThrough(prefs.behavior?.clickThrough ?? false);
       setWanderEnabled(prefs.behavior?.wanderEnabled ?? false);
       setWeatherLocation(prefs.behavior?.weatherLocation ?? "");
+      setHideDuringMeetings(prefs.behavior?.hideDuringMeetings ?? false);
+      
+      setSunglasses(prefs.costumes?.sunglasses ?? false);
+      setTowel(prefs.costumes?.towel ?? false);
+      setMug(prefs.costumes?.mug ?? false);
     });
+
+    return () => {
+      if (unlisten) unlisten();
+    };
   }, []);
 
   const handleSave = async () => {
@@ -58,6 +90,7 @@ export function SettingsPage() {
         water: { ...(preferences?.reminders?.water || { jitterMs: 600000 }), intervalMs: waterInterval * 60 * 1000 },
         stretch: { ...(preferences?.reminders?.stretch || { jitterMs: 300000 }), intervalMs: stretchInterval * 60 * 1000 },
         eyes: { ...(preferences?.reminders?.eyes || { jitterMs: 120000 }), intervalMs: eyesInterval * 60 * 1000 },
+        bio: { ...(preferences?.reminders?.bio || { jitterMs: 900000 }), intervalMs: bioInterval * 60 * 1000 },
       },
       audio: {
         ...(preferences?.audio || {}),
@@ -65,19 +98,30 @@ export function SettingsPage() {
         volume,
       },
       behavior: {
-        ...(preferences?.behavior || { idleAnimations: true, interactionLevel: "normal" }),
+        ...(preferences?.behavior || { idleAnimations: true, interactionLevel: "normal", clickThrough: false, wanderEnabled: false }),
         clickThrough,
         wanderEnabled,
         weatherLocation,
+        hideDuringMeetings,
+      },
+      costumes: {
+        sunglasses,
+        towel,
+        mug,
       }
     });
-    getCurrentWindow().hide();
+    try {
+      await getCurrentWindow().hide();
+    } catch (err) {
+      console.error("Failed to hide window", err);
+    }
   };
 
   if (!preferences) return <div>Loading...</div>;
 
   return (
     <div className="settings-panel" style={{ position: 'relative', width: '100%', height: '100vh', borderRadius: 0 }}>
+      {errorMsg && <div className="error-banner">{errorMsg}</div>}
       <div className="settings-header">
         <h2>Mitra Settings</h2>
       </div>
@@ -103,6 +147,16 @@ export function SettingsPage() {
           </div>
           <div className="setting-row">
             <label>
+              <input 
+                type="checkbox" 
+                checked={hideDuringMeetings}
+                onChange={e => setHideDuringMeetings(e.target.checked)}
+              />
+              Hide During Busy Timings (Meetings)
+            </label>
+          </div>
+          <div className="setting-row">
+            <label>
               Weather Location
               <input 
                 type="text" 
@@ -110,6 +164,28 @@ export function SettingsPage() {
                 value={weatherLocation}
                 onChange={e => setWeatherLocation(e.target.value)}
               />
+            </label>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>Costumes & Props</h3>
+          <div className="setting-row">
+            <label>
+              <input type="checkbox" checked={sunglasses} onChange={(e) => setSunglasses(e.target.checked)} />
+              😎 Sunglasses
+            </label>
+          </div>
+          <div className="setting-row">
+            <label>
+              <input type="checkbox" checked={towel} onChange={(e) => setTowel(e.target.checked)} />
+              🏖️ Beach Towel
+            </label>
+          </div>
+          <div className="setting-row">
+            <label>
+              <input type="checkbox" checked={mug} onChange={(e) => setMug(e.target.checked)} />
+              ☕ Coffee Mug
             </label>
           </div>
         </section>
@@ -144,11 +220,18 @@ export function SettingsPage() {
             <label>Stretch Interval (mins)</label>
             <input type="number" value={stretchInterval} disabled={!remindersEnabled} onChange={(e) => setStretchInterval(Number(e.target.value))} />
           </div>
-          <div className="setting-row">
-            <label>Eyes Interval (mins)</label>
-            <input type="number" value={eyesInterval} disabled={!remindersEnabled} onChange={(e) => setEyesInterval(Number(e.target.value))} />
+          <div className="setting-row inline">
+            <label>Rest Eyes every</label>
+            <input type="number" min="10" value={eyesInterval} onChange={e => setEyesInterval(Number(e.target.value))} />
+            <span>mins</span>
           </div>
-          <div className="setting-row">
+          <div className="setting-row inline">
+            <label>Bio Break every</label>
+            <input type="number" min="30" value={bioInterval} onChange={e => setBioInterval(Number(e.target.value))} />
+            <span>mins</span>
+          </div>
+
+          <div className="setting-row inline">
             <label>Lunch Time</label>
             <input type="time" value={lunchTime} disabled={!remindersEnabled} onChange={(e) => setLunchTime(e.target.value)} />
           </div>
@@ -165,7 +248,13 @@ export function SettingsPage() {
 
       <div className="settings-footer">
         <button className="save-btn" onClick={handleSave}>Save Changes</button>
-        <button className="exit-btn" onClick={() => getCurrentWindow().hide()}>Cancel</button>
+        <button className="exit-btn" onClick={async () => {
+          try {
+            await getCurrentWindow().hide();
+          } catch(e) {
+             console.error(e);
+          }
+        }}>Cancel</button>
       </div>
     </div>
   );

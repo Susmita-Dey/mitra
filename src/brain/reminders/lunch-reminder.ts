@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "reminder.lunch",
   priority: 80,
   weight: 5,
-  cooldownMs: 0,
+  cooldownMs: 300000,
   action: "idle",
   canInterrupt: true,
 };
