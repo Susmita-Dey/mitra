@@ -10,8 +10,7 @@ import type { BatterySystem } from "@/system/battery-system";
 import type { WeatherSystem } from "@/system/weather-system";
 import type { MeetingSystem } from "@/system/meeting-system";
 import type { Intent, WorldState, PresenceState } from "@/types";
-import { createEmotionEngine as createCoreEmotionEngine } from "./core/emotion-engine";
-import { createEmotionEngine } from "./emotion-engine";
+import { createEmotionEngine } from "./core/emotion-engine";
 import { createMemoryEngine } from "./memory-engine";
 import { createReminderEngine } from "./reminders/reminder-engine";
 import { createContextEngine } from "./core/context-engine";
@@ -87,7 +86,7 @@ export function createBrain(
   eventBus?: EventBus,
 ): Brain {
   const behaviorEngine = createBehaviorEngine();
-  const emotionEngine  = createEmotionEngine();
+  const emotionEngine = createEmotionEngine();
   const memoryEngine   = createMemoryEngine();
   const reminderEngine = createReminderEngine();
   const timelineEngine = createTimelineEngine();
@@ -99,11 +98,10 @@ export function createBrain(
   const contextEngine = createContextEngine();
   const animationDirector = createAnimationDirector();
   const soundManager = createSoundManager();
-  
-  // V3 Emotion Engine (Procedural) alongside V2 (String-based)
-  const coreEmotionEngine = createCoreEmotionEngine();
+
   let currentEmotionState: import("./core/types").EmotionState = {
      mood: "neutral",
+     moodDecaysAt: null,
      energy: 50,
      attention: 50,
      reason: "init"
@@ -145,7 +143,10 @@ export function createBrain(
 
   return {
     pushEmotion(emotion: import("@/types").Emotion) {
-      emotionEngine.push(emotion);
+      const updates = emotionEngine.push(emotion, currentEmotionState);
+      if (updates) {
+         currentEmotionState = { ...currentEmotionState, ...updates };
+      }
     },
 
     registerBehavior(behavior: RegisteredBehavior) {
@@ -165,7 +166,7 @@ export function createBrain(
         lastUserInteraction: Date.now(),
         lastTickle: Date.now()
       });
-      emotionEngine.push("happy");
+      this.pushEmotion("happy");
       soundManager.playFoley("chirp"); // Play a happy purr sound
       // Force immediate tick
       this.observe();
@@ -193,8 +194,8 @@ export function createBrain(
           timeline: newTimeline
         });
         
-        
-        emotionEngine.push("happy");
+        const updates = emotionEngine.push("happy", currentEmotionState);
+        if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
         animationDirector.clearSequence(`reminder:${type}`);
         
         // Force an immediate tick to clear the interaction state and push emotion
@@ -249,8 +250,9 @@ export function createBrain(
       // Wake up immediately if there's user activity (mouse movement/typing)
       if (memoryEngine.get().wasAsleep && currentSnapshot.idleMs < 1000) {
         memoryEngine.update({ wasAsleep: false });
-        if (emotionEngine.getCurrent() === "sleepy") {
-           emotionEngine.clear();
+        if (currentEmotionState.mood === "sleepy") {
+           const updates = emotionEngine.clear();
+           currentEmotionState = { ...currentEmotionState, ...updates };
         }
       }
       
@@ -279,13 +281,9 @@ export function createBrain(
       });
       
       // Step 1 — advance emotion decay timers and reminder timers.
-      emotionEngine.tick(); // V2
-      coreEmotionEngine.tick(currentEmotionState, (updates) => {
+      emotionEngine.tick(currentEmotionState, (updates) => {
          currentEmotionState = { ...currentEmotionState, ...updates };
       });
-      
-      // Sync V2 emotion mood into V3 state so AnimationDirector generates the right posture (e.g. lie-down for sleepy)
-      currentEmotionState.mood = emotionEngine.getCurrent() as any;
       
       reminderEngine.tick(
         memoryEngine.get(), 
@@ -417,7 +415,7 @@ export function createBrain(
       animationDirector.tick(
          Date.now(),
          currentEmotionState,
-         coreEmotionEngine,
+         emotionEngine,
          (animState, bubbleText, interactionId) => {
              // Merge procedural props with contextual props
              const activeProps = new Set([...(animState.props || []), ...props]);
@@ -444,7 +442,8 @@ export function createBrain(
       // Look for ChangeEmotion intents to feed to EmotionEngine, and SetProceduralState / SetBubble
       for (const intent of currentIntents) {
         if (intent.type === "ChangeEmotion") {
-          emotionEngine.push(intent.emotion);
+          const updates = emotionEngine.push(intent.emotion, currentEmotionState);
+          if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
         } else if (intent.type === "SetProceduralState") {
           currentProceduralState = { ...currentProceduralState, ...intent.state } as ProceduralAnimationState;
         } else if (intent.type === "SetBubble") {
@@ -464,7 +463,7 @@ export function createBrain(
       });
 
       // Commit resolved emotion and procedural states to the CompanionEngine store.
-      engine.setEmotion(emotionEngine.getCurrent());
+      engine.setEmotion(currentEmotionState.mood);
       
       if (currentProceduralState) {
          engine.setProceduralState(currentProceduralState);

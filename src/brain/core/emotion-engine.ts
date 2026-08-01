@@ -1,7 +1,11 @@
 import { EmotionState, ProceduralAnimationState } from "./types";
+import { EMOTION_DEFINITIONS } from "../emotion-definitions";
+import type { Emotion } from "@/types";
 
 export interface EmotionEngine {
   tick(currentEmotion: EmotionState, setEmotion: (e: Partial<EmotionState>) => void): void;
+  push(incoming: Emotion, currentEmotion: EmotionState): Partial<EmotionState> | null;
+  clear(): Partial<EmotionState>;
   // Transforms high-level emotion into specific procedural joints
   deriveAnimation(emotion: EmotionState, isInteracting: boolean): ProceduralAnimationState;
 }
@@ -9,11 +13,18 @@ export interface EmotionEngine {
 export function createEmotionEngine(): EmotionEngine {
   return {
     tick(currentEmotion, setEmotion) {
-      // Over time, energy and attention naturally decay towards neutral
-      // This is a simple decay loop. BehaviorEngine will pump these values back up.
-      
       let changed = false;
       const updates: Partial<EmotionState> = {};
+      
+      // Decay mood if timer expired
+      if (currentEmotion.moodDecaysAt !== null && Date.now() >= currentEmotion.moodDecaysAt) {
+        updates.mood = "neutral";
+        updates.moodDecaysAt = null;
+        changed = true;
+      }
+
+      // Over time, energy and attention naturally decay towards neutral
+      // This is a simple decay loop. BehaviorEngine will pump these values back up.
       
       if (currentEmotion.energy > 50) {
         updates.energy = Math.max(50, currentEmotion.energy - 1);
@@ -31,6 +42,47 @@ export function createEmotionEngine(): EmotionEngine {
       if (changed) {
         setEmotion(updates);
       }
+    },
+
+    push(emotion: Emotion, currentEmotion: EmotionState): Partial<EmotionState> | null {
+      const incoming = EMOTION_DEFINITIONS[emotion];
+      const current = EMOTION_DEFINITIONS[currentEmotion.mood];
+
+      // Rule 1: Transition guard — is the incoming state reachable from the current one?
+      if (
+        incoming.allowedFrom !== "any" &&
+        !incoming.allowedFrom.includes(currentEmotion.mood)
+      ) {
+        return null;
+      }
+
+      // Rule 2: Interruptibility — can the current emotion be displaced?
+      if (!current.interruptible && incoming.priority <= current.priority) {
+        return null;
+      }
+
+      // Update procedural parameters based on incoming emotion
+      let energy = currentEmotion.energy;
+      let attention = currentEmotion.attention;
+      if (emotion === "sleepy") energy = 10;
+      else if (emotion === "energetic") energy = 95;
+      else if (emotion === "happy") energy = Math.max(60, energy + 20);
+      else if (emotion === "focused") attention = 95;
+      else if (emotion === "alert") attention = 90;
+
+      return {
+        mood: emotion,
+        moodDecaysAt: incoming.decayMs !== null ? Date.now() + incoming.decayMs : null,
+        energy,
+        attention
+      };
+    },
+
+    clear(): Partial<EmotionState> {
+      return {
+        mood: "neutral",
+        moodDecaysAt: null
+      };
     },
 
     deriveAnimation(emotion, isInteracting) {

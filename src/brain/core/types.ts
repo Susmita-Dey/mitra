@@ -23,10 +23,9 @@ export interface ContextState {
   isCoding: boolean;
 }
 
-export type EmotionMood = "happy" | "curious" | "sleepy" | "concerned" | "proud" | "neutral";
-
 export interface EmotionState {
-  mood: EmotionMood;
+  mood: import("@/types").Emotion;
+  moodDecaysAt: number | null;
   energy: number;      // 0-100 (speed, bounciness)
   attention: number;   // 0-100 (alertness, tracking)
   reason: string;
