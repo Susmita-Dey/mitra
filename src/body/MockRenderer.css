@@ -93,7 +93,7 @@
 .panda-eye-wrapper { transition: transform 0.15s ease; }
 
 /* Props Visibility */
-.prop-laptop, .prop-mug, .prop-toy, .prop-umbrella, .prop-thermometer, .prop-towel, .prop-sunglasses {
+.prop-laptop, .prop-mug, .prop-toy, .prop-umbrella, .prop-thermometer, .prop-towel, .prop-sunglasses, .prop-food {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -325,16 +325,73 @@
 .mock-renderer[data-interaction="reminder:water"] .prop-mug {
   opacity: 1;
   transform: translateY(0) scale(1);
+  animation: tiltMug 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 .mock-renderer[data-interaction="reminder:water"] .panda-arm.right {
-  transform: rotate(-100deg) translate(-20px, -20px);
+  animation: drinkArm 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 .mock-renderer[data-interaction="reminder:water"] .steam {
   animation: steamRise 2s infinite ease-out;
 }
+@keyframes tiltMug {
+  0%, 20%, 80%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  40%, 60% { transform: translateY(-35px) translateX(-15px) scale(1) rotate(-45deg); }
+}
+@keyframes drinkArm {
+  0%, 20%, 80%, 100% { transform: rotate(-100deg) translate(-20px, -20px); }
+  40%, 60% { transform: rotate(-130deg) translate(-25px, -35px); }
+}
 @keyframes steamRise {
   0% { transform: translateY(0) scale(1); opacity: 0.8; }
   100% { transform: translateY(-15px) scale(1.5); opacity: 0; }
+}
+
+/* Eating Meal (Food Prop) */
+.mock-renderer[data-interaction="reminder:lunch"] .prop-food,
+.mock-renderer[data-interaction="reminder:dinner"] .prop-food,
+.mock-renderer[data-interaction="reminder:snack"] .prop-food {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: eatFood 4s ease-in-out infinite;
+}
+.mock-renderer[data-interaction="reminder:lunch"] .panda-arm.right,
+.mock-renderer[data-interaction="reminder:dinner"] .panda-arm.right,
+.mock-renderer[data-interaction="reminder:snack"] .panda-arm.right {
+  animation: eatArm 4s ease-in-out infinite;
+}
+.mock-renderer[data-interaction="reminder:lunch"] .panda-head-group,
+.mock-renderer[data-interaction="reminder:dinner"] .panda-head-group,
+.mock-renderer[data-interaction="reminder:snack"] .panda-head-group {
+  animation: headChewBob 4s ease-in-out infinite;
+}
+.mock-renderer[data-interaction="reminder:lunch"] .panda-mouth-open,
+.mock-renderer[data-interaction="reminder:dinner"] .panda-mouth-open,
+.mock-renderer[data-interaction="reminder:snack"] .panda-mouth-open {
+  animation: chewMouth 4s ease-in-out infinite;
+}
+.mock-renderer[data-interaction="reminder:lunch"] .panda-mouth,
+.mock-renderer[data-interaction="reminder:dinner"] .panda-mouth,
+.mock-renderer[data-interaction="reminder:snack"] .panda-mouth {
+  opacity: 0; /* Hide normal mouth while chewing */
+}
+
+@keyframes eatFood {
+  0%, 20%, 80%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  35%, 65% { transform: translateY(-35px) translateX(-20px) scale(1) rotate(-30deg); }
+}
+@keyframes eatArm {
+  0%, 20%, 80%, 100% { transform: rotate(-100deg) translate(-20px, -20px); }
+  35%, 65% { transform: rotate(-140deg) translate(-25px, -35px); }
+}
+@keyframes headChewBob {
+  0%, 25%, 75%, 100% { transform: translateY(0) rotate(0deg); }
+  35%, 45%, 55%, 65% { transform: translateY(2px) rotate(2deg); }
+  40%, 50%, 60% { transform: translateY(-2px) rotate(-2deg); }
+}
+@keyframes chewMouth {
+  0%, 25%, 75%, 100% { opacity: 0; transform: scale(1); }
+  35%, 45%, 55%, 65% { opacity: 1; transform: scale(1.2); }
+  40%, 50%, 60% { opacity: 1; transform: scale(0.6); }
 }
 
 /* Resting Eyes Reminder (Closed Eyes) */

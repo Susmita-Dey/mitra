@@ -14,9 +14,25 @@ export interface ReminderEngine {
   ): void;
 }
 
-function calculateNextSchedule(intervalMs: number, jitterMs: number): number {
-  const base = Date.now() + intervalMs;
-  const jitter = (Math.random() * 2 - 1) * jitterMs; // +/- jitter
+function calculateNextSchedule(config: { intervalMs: number, jitterMs: number, time?: string }): number {
+  const now = new Date();
+
+  if (config.time) {
+    // Clock-time based scheduling (e.g. "13:00") - Exact, no jitter
+    const [hours, minutes] = config.time.split(":").map(Number);
+    const scheduledTime = new Date(now);
+    scheduledTime.setHours(hours, minutes, 0, 0);
+
+    if (scheduledTime.getTime() <= now.getTime()) {
+      // If the time has already passed today, schedule for tomorrow
+      scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+    return scheduledTime.getTime();
+  }
+
+  // Interval-based scheduling
+  const base = now.getTime() + config.intervalMs;
+  const jitter = (Math.random() * 2 - 1) * config.jitterMs; // +/- jitter
   return base + jitter;
 }
 
@@ -38,16 +54,38 @@ export function createReminderEngine(): ReminderEngine {
         if (item.state === "idle" || item.state === "completed" || item.state === "ignored" || item.state === "acknowledged") {
           // Schedule it
           item.state = "scheduled";
-          item.scheduledFor = calculateNextSchedule(config.intervalMs, config.jitterMs);
+          item.scheduledFor = calculateNextSchedule(config);
           changed = true;
           newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Scheduled ${key} for ${new Date(item.scheduledFor).toLocaleTimeString()}`);
         } else if (item.state === "scheduled" && item.scheduledFor) {
-          // If user reduced the interval in settings and it's now scheduled too far in the future
-          const maxAllowedTime = now + config.intervalMs + config.jitterMs;
-          if (item.scheduledFor > maxAllowedTime) {
-             item.scheduledFor = calculateNextSchedule(config.intervalMs, config.jitterMs);
-             changed = true;
-             newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Rescheduled ${key} due to settings change`);
+          if (config.time) {
+            // Clock time logic - checking if scheduled time matches expected clock time (today or tomorrow)
+            const expectedToday = new Date();
+            const [hours, minutes] = config.time.split(":").map(Number);
+            expectedToday.setHours(hours, minutes, 0, 0);
+            
+            const expectedTomorrow = new Date(expectedToday);
+            expectedTomorrow.setDate(expectedTomorrow.getDate() + 1);
+            
+            // If the exact scheduled time doesn't match the config time, it means the settings changed
+            if (item.scheduledFor !== expectedToday.getTime() && item.scheduledFor !== expectedTomorrow.getTime()) {
+              item.scheduledFor = calculateNextSchedule(config);
+              changed = true;
+              newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Rescheduled ${key} due to clock time change`);
+            } else if (now > item.scheduledFor + 2 * 60 * 60 * 1000) {
+              // Deadload fix: If a clock-time reminder was missed by more than 2 hours, skip it and reschedule
+              item.scheduledFor = calculateNextSchedule(config);
+              changed = true;
+              newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Skipped severely overdue ${key} and rescheduled`);
+            }
+          } else {
+            // Interval logic
+            const maxAllowedTime = now + config.intervalMs + config.jitterMs;
+            if (item.scheduledFor > maxAllowedTime) {
+               item.scheduledFor = calculateNextSchedule(config);
+               changed = true;
+               newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Rescheduled ${key} due to settings change`);
+            }
           }
         }
       }
@@ -85,6 +123,21 @@ export function createReminderEngine(): ReminderEngine {
           mostOverdue.scheduledFor = now; // reset the timestamp to when it actually triggered
           changed = true;
           newTimeline = timeline.push(newTimeline, "reminder:triggered", `Triggered ${mostOverdue.id}`);
+
+          // Deadload fix: Prevent stampedes by spacing out other concurrently overdue reminders
+          for (const key of Object.keys(active) as Array<keyof typeof active>) {
+            const other = active[key];
+            const otherConfig = prefs.reminders[key];
+            if (other.id !== mostOverdue.id && other.state === "scheduled" && other.scheduledFor && now >= other.scheduledFor) {
+               // We only bump interval reminders, clock-time reminders shouldn't be bumped (they either trigger or expire)
+               if (!otherConfig.time) {
+                 const bumpMs = Math.min(10 * 60 * 1000, otherConfig.intervalMs || 10 * 60 * 1000);
+                 other.scheduledFor = now + bumpMs;
+                 newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Bumped ${key} to prevent reminder stampede`);
+                 changed = true;
+               }
+            }
+          }
         }
       }
 

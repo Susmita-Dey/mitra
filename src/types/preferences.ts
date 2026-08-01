@@ -6,6 +6,7 @@ export interface WindowPosition {
 export interface ReminderConfig {
   intervalMs: number;
   jitterMs: number; // e.g. 5 minutes randomness
+  time?: string; // If set (e.g. "13:00"), behaves as a clock-based reminder. intervalMs is ignored.
 }
 
 export interface ReminderPreferences {
@@ -16,6 +17,8 @@ export interface ReminderPreferences {
   stretch: ReminderConfig;
   eyes: ReminderConfig;
   lunch: ReminderConfig;
+  dinner: ReminderConfig;
+  snack: ReminderConfig;
 }
 
 export interface BehaviorPreferences {
@@ -60,7 +63,9 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     water: { intervalMs: 2 * 60 * 60 * 1000, jitterMs: 10 * 60 * 1000 },
     stretch: { intervalMs: 60 * 60 * 1000, jitterMs: 5 * 60 * 1000 },
     eyes: { intervalMs: 30 * 60 * 1000, jitterMs: 2 * 60 * 1000 },
-    lunch: { intervalMs: 4 * 60 * 60 * 1000, jitterMs: 15 * 60 * 1000 },
+    lunch: { intervalMs: 0, jitterMs: 5 * 60 * 1000, time: "13:00" },
+    dinner: { intervalMs: 0, jitterMs: 5 * 60 * 1000, time: "20:00" },
+    snack: { intervalMs: 0, jitterMs: 5 * 60 * 1000, time: "17:00" },
   },
   behavior: {
     idleAnimations: true,

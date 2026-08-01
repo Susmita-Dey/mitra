@@ -13,6 +13,10 @@ export function SettingsPage() {
   const [waterInterval, setWaterInterval] = useState(120);
   const [stretchInterval, setStretchInterval] = useState(60);
   const [eyesInterval, setEyesInterval] = useState(30);
+
+  const [lunchTime, setLunchTime] = useState("13:00");
+  const [dinnerTime, setDinnerTime] = useState("20:00");
+  const [snackTime, setSnackTime] = useState("17:00");
   
   const [muteSounds, setMuteSounds] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -30,6 +34,9 @@ export function SettingsPage() {
       setWaterInterval((prefs.reminders?.water?.intervalMs ?? 7200000) / 1000 / 60);
       setStretchInterval((prefs.reminders?.stretch?.intervalMs ?? 3600000) / 1000 / 60);
       setEyesInterval((prefs.reminders?.eyes?.intervalMs ?? 1800000) / 1000 / 60);
+      setLunchTime(prefs.reminders?.lunch?.time ?? "13:00");
+      setDinnerTime(prefs.reminders?.dinner?.time ?? "20:00");
+      setSnackTime(prefs.reminders?.snack?.time ?? "17:00");
       setMuteSounds(prefs.audio?.muteSounds ?? false);
       setVolume(prefs.audio?.volume ?? 0.5);
       setClickThrough(prefs.behavior?.clickThrough ?? false);
@@ -45,7 +52,9 @@ export function SettingsPage() {
         enabled: remindersEnabled,
         quietHoursStart: preferences?.reminders?.quietHoursStart ?? "22:00",
         quietHoursEnd: preferences?.reminders?.quietHoursEnd ?? "08:00",
-        lunch: preferences?.reminders?.lunch ?? { intervalMs: 14400000, jitterMs: 900000 },
+        lunch: { ...(preferences?.reminders?.lunch || { intervalMs: 0, jitterMs: 900000 }), time: lunchTime },
+        dinner: { ...(preferences?.reminders?.dinner || { intervalMs: 0, jitterMs: 900000 }), time: dinnerTime },
+        snack: { ...(preferences?.reminders?.snack || { intervalMs: 0, jitterMs: 900000 }), time: snackTime },
         water: { ...(preferences?.reminders?.water || { jitterMs: 600000 }), intervalMs: waterInterval * 60 * 1000 },
         stretch: { ...(preferences?.reminders?.stretch || { jitterMs: 300000 }), intervalMs: stretchInterval * 60 * 1000 },
         eyes: { ...(preferences?.reminders?.eyes || { jitterMs: 120000 }), intervalMs: eyesInterval * 60 * 1000 },
@@ -138,6 +147,18 @@ export function SettingsPage() {
           <div className="setting-row">
             <label>Eyes Interval (mins)</label>
             <input type="number" value={eyesInterval} disabled={!remindersEnabled} onChange={(e) => setEyesInterval(Number(e.target.value))} />
+          </div>
+          <div className="setting-row">
+            <label>Lunch Time</label>
+            <input type="time" value={lunchTime} disabled={!remindersEnabled} onChange={(e) => setLunchTime(e.target.value)} />
+          </div>
+          <div className="setting-row">
+            <label>Dinner Time</label>
+            <input type="time" value={dinnerTime} disabled={!remindersEnabled} onChange={(e) => setDinnerTime(e.target.value)} />
+          </div>
+          <div className="setting-row">
+            <label>Snack Time</label>
+            <input type="time" value={snackTime} disabled={!remindersEnabled} onChange={(e) => setSnackTime(e.target.value)} />
           </div>
         </section>
       </div>

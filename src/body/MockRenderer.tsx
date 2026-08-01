@@ -147,6 +147,16 @@ export function MockRenderer({ character }: RendererProps) {
               <path className="steam" d="M 140,135 Q 135,120 145,115" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" />
             </g>
 
+            {/* Food Prop (Bamboo) */}
+            <g className="prop-food">
+              <rect x="130" y="120" width="12" height="60" rx="4" fill="#4ADE80" />
+              <rect x="128" y="140" width="16" height="4" rx="2" fill="#22C55E" />
+              <rect x="128" y="160" width="16" height="4" rx="2" fill="#22C55E" />
+              {/* Leaves */}
+              <path d="M 142,125 Q 155,120 150,135 Q 140,130 142,125" fill="#16A34A" />
+              <path d="M 130,145 Q 115,140 120,155 Q 130,150 130,145" fill="#16A34A" />
+            </g>
+
             {/* Beach Towel Prop */}
             <g className="prop-towel">
               <rect x="20" y="210" width="160" height="15" rx="7.5" fill="#FCD34D" />
@@ -294,6 +304,8 @@ export function MockRenderer({ character }: RendererProps) {
           {reminderType === "stretch" && "🤸 Stand & Stretch"}
           {reminderType === "eyes" && "👀 Rest your eyes"}
           {reminderType === "lunch" && "🍽️ Eat lunch!"}
+          {reminderType === "dinner" && "🍲 Dinner time!"}
+          {reminderType === "snack" && "🥨 Snack break!"}
         </div>
       )}
     </div>

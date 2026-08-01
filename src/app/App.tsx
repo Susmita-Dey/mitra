@@ -36,6 +36,9 @@ import {
   WakeBehavior,
   LookAtCursorBehavior,
   WaterReminderBehavior,
+  LunchReminderBehavior,
+  DinnerReminderBehavior,
+  SnackReminderBehavior,
   StretchReminderBehavior,
   EyesReminderBehavior,
   BootGreetBehavior,
@@ -152,6 +155,9 @@ export function App() {
     brain.registerBehavior(WakeBehavior);
     brain.registerBehavior(LookAtCursorBehavior);
     brain.registerBehavior(WaterReminderBehavior);
+    brain.registerBehavior(LunchReminderBehavior);
+    brain.registerBehavior(DinnerReminderBehavior);
+    brain.registerBehavior(SnackReminderBehavior);
     brain.registerBehavior(StretchReminderBehavior);
     brain.registerBehavior(EyesReminderBehavior);
     brain.registerBehavior(SitBehavior);

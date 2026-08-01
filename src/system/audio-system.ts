@@ -25,6 +25,16 @@ const soundMap: Record<string, string[]> = {
   idle: ["/sounds/soft-ambient-breath.mp3"],
 };
 
+// Pre-load all Audio objects into memory to prevent play delays
+const audioCache: Record<string, HTMLAudioElement> = {};
+for (const cat in soundMap) {
+  soundMap[cat].forEach(file => {
+    const audio = new Audio(file);
+    audio.preload = "auto";
+    audioCache[file] = audio;
+  });
+}
+
 export function createAudioSystem(eventBus?: EventBus): AudioSystem {
   let isMuted = false;
   let volume = 0.5;
@@ -100,17 +110,24 @@ export function createAudioSystem(eventBus?: EventBus): AudioSystem {
       
       lastPlayed[category] = now;
       
-      const audio = new Audio(file);
-      audio.volume = effectiveVolume;
+      const audio = audioCache[file] || new Audio(file);
+      
+      // Clone the node so we can play overlapping sounds if needed
+      const clone = audio.cloneNode() as HTMLAudioElement;
+      clone.volume = effectiveVolume;
       
       // Handle the baked in silence for yawns/sleepy by seeking forward
       if (category === "sleepy" || category === "yawns" || file.includes("yawn")) {
-        audio.addEventListener("loadedmetadata", () => {
-          audio.currentTime = 1.5;
+        clone.addEventListener("loadedmetadata", () => {
+          clone.currentTime = 1.5;
         });
+        // If it's already loaded (because of cache), set it directly
+        if (clone.readyState >= 1) {
+           clone.currentTime = 1.5;
+        }
       }
       
-      audio.play().catch(err => {
+      clone.play().catch(err => {
         console.warn("[AudioSystem] Could not play sound (autoplay blocked?):", err);
       });
     }

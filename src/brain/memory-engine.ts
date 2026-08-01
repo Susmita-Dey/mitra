@@ -26,6 +26,8 @@ const INITIAL_MEMORY: CompanionMemory = {
     stretch: { id: "stretch", state: "idle", scheduledFor: null },
     eyes: { id: "eyes", state: "idle", scheduledFor: null },
     lunch: { id: "lunch", state: "idle", scheduledFor: null },
+    dinner: { id: "dinner", state: "idle", scheduledFor: null },
+    snack: { id: "snack", state: "idle", scheduledFor: null },
   },
   lastUserInteraction: Date.now(),
   lastTickle: 0,
