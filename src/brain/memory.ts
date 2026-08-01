@@ -65,6 +65,20 @@ export interface CompanionMemory {
     meetingStartTime: number | null;
     missedReminders: string[];
   };
+
+  /** Long term habit tracker */
+  habitTracker: {
+    lifetimeAcknowledged: number;
+    waterToday: number;
+    waterYesterday: number;
+    stretchToday: number;
+    stretchYesterday: number;
+    eyesToday: number;
+    eyesYesterday: number;
+    weeklyAverage: number;
+    streakDays: number;
+    lastActiveDate: string | null;
+  };
 }
 
 export const DEFAULT_MEMORY: CompanionMemory = {
@@ -99,5 +113,17 @@ export const DEFAULT_MEMORY: CompanionMemory = {
   meetingTracker: {
     meetingStartTime: null,
     missedReminders: [],
+  },
+  habitTracker: {
+    lifetimeAcknowledged: 0,
+    waterToday: 0,
+    waterYesterday: 0,
+    stretchToday: 0,
+    stretchYesterday: 0,
+    eyesToday: 0,
+    eyesYesterday: 0,
+    weeklyAverage: 0,
+    streakDays: 0,
+    lastActiveDate: null,
   }
 };

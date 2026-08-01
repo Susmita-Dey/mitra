@@ -10,6 +10,11 @@ export type Emotion =
   | "focused"
   | "bored"
   | "alert"
-  | "energetic";
+  | "energetic"
+  | "calm"
+  | "playful"
+  | "excited"
+  | "cozy"
+  | "shy";
 
 export const DEFAULT_EMOTION: Emotion = "neutral";

@@ -229,6 +229,19 @@ export function App() {
       openSettingsWindow();
     };
 
+    const handleDebug = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail.type === 'force-reminder') {
+        brain.debugForceReminder(detail.payload);
+      } else if (detail.type === 'force-emotion') {
+        brain.pushEmotion(detail.payload);
+      } else if (detail.type === 'force-interaction') {
+        if (detail.payload === 'pet') brain.registerInteraction();
+        // we can add other interaction forced triggers later if needed
+      }
+    };
+
+    window.addEventListener("companion:debug", handleDebug);
     window.addEventListener("companion:reminder:ack", handleAck);
     window.addEventListener("companion:drag:start", handleDragStart);
     window.addEventListener("companion:interaction:head", () => handleInteraction("pet"));
@@ -243,6 +256,7 @@ export function App() {
       stopBrain();
       unlistenHidden.then((f: any) => f());
       unlistenShown.then((f: any) => f());
+      window.removeEventListener("companion:debug", handleDebug);
       window.removeEventListener("companion:reminder:ack", handleAck);
       window.removeEventListener("companion:drag:start", handleDragStart);
       window.removeEventListener("companion:interaction:head", () => handleInteraction("pet"));

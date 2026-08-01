@@ -45,6 +45,18 @@ const INITIAL_MEMORY: CompanionMemory = {
   meetingTracker: {
     meetingStartTime: null,
     missedReminders: [],
+  },
+  habitTracker: {
+    lifetimeAcknowledged: 0,
+    waterToday: 0,
+    waterYesterday: 0,
+    stretchToday: 0,
+    stretchYesterday: 0,
+    eyesToday: 0,
+    eyesYesterday: 0,
+    weeklyAverage: 0,
+    streakDays: 0,
+    lastActiveDate: null,
   }
 };
 

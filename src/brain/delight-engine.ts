@@ -11,10 +11,10 @@ export interface DelightEngine {
 
 export function createDelightEngine(): DelightEngine {
   let lastDelightTime = 0;
-  // Wait at least 15 minutes between delight checks
-  const DELIGHT_COOLDOWN = 15 * 60 * 1000;
-  // Small probability of a delight moment occurring when eligible
-  const DELIGHT_PROBABILITY = 0.005;
+  // Wait at least 4 hours between delight checks (per user request)
+  const DELIGHT_COOLDOWN = 4 * 60 * 60 * 1000;
+  // Small probability of a delight moment occurring when eligible (per tick)
+  const DELIGHT_PROBABILITY = 0.01;
 
   return {
     tick(timeMs, _memory) {
@@ -37,22 +37,26 @@ export function createDelightEngine(): DelightEngine {
       // Determine what delight to show
       const rand = Math.random();
       
-      if (day === 5 && hours > 15 && rand < 0.2) {
+      if (day === 5 && hours >= 15 && rand < 0.15) {
         // Celebrating Friday afternoon
-        intents.push({ type: "ChangeEmotion", emotion: "happy" });
-        intents.push({ type: "Celebrate" });
-      } else if (day === 1 && hours < 10 && rand < 0.2) {
+        intents.push({ type: "ChangeEmotion", emotion: "excited" });
+        intents.push({ type: "PlayAnimation", animation: "celebrate" });
+      } else if (day === 1 && hours < 10 && rand < 0.3) {
         // Sleepy Monday morning
         intents.push({ type: "ChangeEmotion", emotion: "sleepy" });
         intents.push({ type: "PlayAnimation", animation: "yawn" });
-      } else if (rand < 0.4) {
-        // Finding a flower or watching a butterfly (represented via curiosity & observe)
+      } else if (rand < 0.5) {
+        // Sneeze (sudden micro-interaction)
+        intents.push({ type: "ChangeEmotion", emotion: "bored" });
+        intents.push({ type: "PlayAnimation", animation: "sneeze" });
+      } else if (rand < 0.7) {
+        // Finding a flower or watching a butterfly (represented via curiosity)
         intents.push({ type: "ChangeEmotion", emotion: "curious" });
         intents.push({ type: "PlayAnimation", animation: "look-around" });
         intents.push({ type: "PlaySound", category: "chirps" });
-      } else if (rand < 0.7) {
-        // Peeking from screen edge
-        intents.push({ type: "ChangeEmotion", emotion: "curious" });
+      } else if (rand < 0.85) {
+        // Suddenly realizes she's sliding off and pulls herself up (represented via peek/alert)
+        intents.push({ type: "ChangeEmotion", emotion: "alert" });
         intents.push({ type: "PlayAnimation", animation: "peek" });
       } else {
         // Chasing a floating leaf (wander)

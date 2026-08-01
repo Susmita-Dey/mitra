@@ -18,6 +18,7 @@ export type Animation =
   | "ear-twitch"
   | "celebrate"
   | "wander"
-  | "double-blink";
+  | "double-blink"
+  | "sneeze";
 
 export const DEFAULT_ANIMATION: Animation = "idle";

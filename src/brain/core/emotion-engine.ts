@@ -1,36 +1,50 @@
 import { EmotionState, ProceduralAnimationState } from "./types";
 import { EMOTION_DEFINITIONS } from "../emotion-definitions";
+import { getCurrentLifeRhythm } from "./life-rhythm";
+import { getAttachmentLevel, getAttachmentModifier } from "./attachment";
 import type { Emotion } from "@/types";
+import type { CompanionMemory } from "../memory";
 
 export interface EmotionEngine {
-  tick(currentEmotion: EmotionState, setEmotion: (e: Partial<EmotionState>) => void): void;
+  tick(currentEmotion: EmotionState, setEmotion: (e: Partial<EmotionState>) => void, memory: CompanionMemory): void;
   push(incoming: Emotion, currentEmotion: EmotionState): Partial<EmotionState> | null;
-  clear(): Partial<EmotionState>;
+  clear(memory: CompanionMemory): Partial<EmotionState>;
   // Transforms high-level emotion into specific procedural joints
   deriveAnimation(emotion: EmotionState, isInteracting: boolean): ProceduralAnimationState;
 }
 
 export function createEmotionEngine(): EmotionEngine {
   return {
-    tick(currentEmotion, setEmotion) {
+    tick(currentEmotion, setEmotion, memory) {
+      const rhythm = getCurrentLifeRhythm();
+      const attachmentLevel = getAttachmentLevel(memory);
+      const attachmentModifier = getAttachmentModifier(attachmentLevel);
+      
       let changed = false;
       const updates: Partial<EmotionState> = {};
       
       // Decay mood if timer expired
       if (currentEmotion.moodDecaysAt !== null && Date.now() >= currentEmotion.moodDecaysAt) {
-        updates.mood = "neutral";
+        updates.mood = rhythm.baselineEmotion;
+        
+        // If New Friend and baseline is playful, override to shy
+        if (attachmentLevel === "New Friend" && ["playful", "excited"].includes(updates.mood)) {
+           updates.mood = "shy";
+        }
+        
         updates.moodDecaysAt = null;
         changed = true;
       }
 
-      // Over time, energy and attention naturally decay towards neutral
-      // This is a simple decay loop. BehaviorEngine will pump these values back up.
+      // Over time, energy and attention naturally decay towards baseline
+      // BehaviorEngine will pump these values back up during interactions.
+      const baselineEnergy = Math.max(0, Math.min(100, 50 + ((rhythm.energyModifier + attachmentModifier) * 50)));
       
-      if (currentEmotion.energy > 50) {
-        updates.energy = Math.max(50, currentEmotion.energy - 1);
+      if (currentEmotion.energy > baselineEnergy) {
+        updates.energy = Math.max(baselineEnergy, currentEmotion.energy - 1);
         changed = true;
-      } else if (currentEmotion.energy < 50) {
-        updates.energy = Math.min(50, currentEmotion.energy + 1);
+      } else if (currentEmotion.energy < baselineEnergy) {
+        updates.energy = Math.min(baselineEnergy, currentEmotion.energy + 1);
         changed = true;
       }
       
@@ -78,9 +92,13 @@ export function createEmotionEngine(): EmotionEngine {
       };
     },
 
-    clear(): Partial<EmotionState> {
+    clear(memory: CompanionMemory): Partial<EmotionState> {
+      let baseline = getCurrentLifeRhythm().baselineEmotion;
+      if (getAttachmentLevel(memory) === "New Friend" && ["playful", "excited"].includes(baseline)) {
+         baseline = "shy";
+      }
       return {
-        mood: "neutral",
+        mood: baseline,
         moodDecaysAt: null
       };
     },
@@ -123,6 +141,33 @@ export function createEmotionEngine(): EmotionEngine {
         anim.ears = "twitch";
         anim.tail = "flick";
         anim.posture = "stand";
+      }
+      else if (emotion.mood === "calm" || emotion.mood === "cozy") {
+        anim.eyes = "squint";
+        anim.ears = "down";
+        anim.tail = "still";
+        anim.posture = "sit";
+      }
+      else if (emotion.mood === "playful") {
+        anim.eyes = "sparkle";
+        anim.mouth = "smile";
+        anim.ears = "up";
+        anim.tail = "wag";
+        anim.posture = "stand";
+      }
+      else if (emotion.mood === "excited") {
+        anim.eyes = "sparkle";
+        anim.mouth = "grin";
+        anim.ears = "up";
+        anim.tail = "wag";
+        anim.bodyMotion = "bounce";
+        anim.posture = "stand";
+      }
+      else if (emotion.mood === "shy") {
+        anim.eyes = "squint";
+        anim.ears = "down";
+        anim.tail = "still";
+        anim.posture = "sit";
       }
 
       // Overrides based on immediate interaction

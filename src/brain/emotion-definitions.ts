@@ -152,4 +152,44 @@ export const EMOTION_DEFINITIONS: Readonly<Record<Emotion, EmotionDefinition>> =
       interruptible: true,
       allowedFrom: "any",
     },
+
+    calm: {
+      id: "calm",
+      priority: 0,
+      decayMs: null,
+      interruptible: true,
+      allowedFrom: "any",
+    },
+
+    playful: {
+      id: "playful",
+      priority: 2,
+      decayMs: 30_000,
+      interruptible: true,
+      allowedFrom: "any",
+    },
+
+    excited: {
+      id: "excited",
+      priority: 3,
+      decayMs: 20_000,
+      interruptible: true,
+      allowedFrom: "any",
+    },
+
+    cozy: {
+      id: "cozy",
+      priority: 1,
+      decayMs: null,
+      interruptible: true,
+      allowedFrom: "any",
+    },
+
+    shy: {
+      id: "shy",
+      priority: 1,
+      decayMs: null,
+      interruptible: true,
+      allowedFrom: "any",
+    },
   };

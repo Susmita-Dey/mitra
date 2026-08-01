@@ -67,6 +67,10 @@ export interface Brain {
   acknowledgeReminder(id: string): void;
   /** Registers a tummy tickle. */
   registerTickle(): void;
+  /**
+   * DEV/DEBUG ONLY: Force a reminder to trigger immediately.
+   */
+  debugForceReminder(type: string): void;
   /** Trigger a specific companion interaction. */
   triggerInteraction(interaction: import("./interaction-engine").CompanionInteraction): void;
   /** Trigger a celebration event. */
@@ -174,6 +178,25 @@ export function createBrain(
       this.act();
     },
 
+    debugForceReminder(type: string) {
+      const active = memoryEngine.get().activeReminders;
+      if (active[type as keyof typeof active]) {
+        // Manually inject a triggered state directly into memory, bypassing the reminder engine timer
+        const updates: any = {};
+        updates[type] = {
+           ...active[type as keyof typeof active],
+           state: "triggered",
+           scheduledFor: Date.now()
+        };
+        memoryEngine.update({ activeReminders: { ...active, ...updates } });
+        
+        // Force immediate tick
+        this.observe();
+        this.think();
+        this.act();
+      }
+    },
+
     acknowledgeReminder(id: string) {
       const memory = memoryEngine.get();
       const type = id as keyof typeof memory.activeReminders;
@@ -188,14 +211,50 @@ export function createBrain(
           `User acknowledged ${type}`
         );
         
+        const habits = { ...memory.habitTracker };
+        const today = new Date().toISOString().split('T')[0];
+        
+        habits.lifetimeAcknowledged++;
+        
+        if (habits.lastActiveDate !== today) {
+          // New day rollover
+          habits.waterYesterday = habits.waterToday;
+          habits.stretchYesterday = habits.stretchToday;
+          habits.eyesYesterday = habits.eyesToday;
+          habits.waterToday = 0;
+          habits.stretchToday = 0;
+          habits.eyesToday = 0;
+          habits.lastActiveDate = today;
+        }
+
+        let shouldCelebrate = false;
+        if (type === 'water') {
+          habits.waterToday++;
+          if ([1, 3, 5, 8].includes(habits.waterToday)) shouldCelebrate = true;
+        }
+        if (type === 'stretch') {
+          habits.stretchToday++;
+          if ([1, 2, 4].includes(habits.stretchToday)) shouldCelebrate = true;
+        }
+        if (type === 'eyes') {
+          habits.eyesToday++;
+          if ([1, 2, 4].includes(habits.eyesToday)) shouldCelebrate = true;
+        }
+        
         memoryEngine.update({ 
           activeReminders: active,
           lastUserInteraction: Date.now(),
-          timeline: newTimeline
+          timeline: newTimeline,
+          habitTracker: habits
         });
         
-        const updates = emotionEngine.push("happy", currentEmotionState);
-        if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
+        if (shouldCelebrate) {
+          this.triggerCelebration("ReminderAcknowledged");
+        } else {
+          const updates = emotionEngine.push("happy", currentEmotionState);
+          if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
+        }
+        
         animationDirector.clearSequence(`reminder:${type}`);
         
         // Force an immediate tick to clear the interaction state and push emotion
@@ -251,7 +310,7 @@ export function createBrain(
       if (memoryEngine.get().wasAsleep && currentSnapshot.idleMs < 1000) {
         memoryEngine.update({ wasAsleep: false });
         if (currentEmotionState.mood === "sleepy") {
-           const updates = emotionEngine.clear();
+           const updates = emotionEngine.clear(memoryEngine.get());
            currentEmotionState = { ...currentEmotionState, ...updates };
         }
       }
@@ -283,7 +342,7 @@ export function createBrain(
       // Step 1 — advance emotion decay timers and reminder timers.
       emotionEngine.tick(currentEmotionState, (updates) => {
          currentEmotionState = { ...currentEmotionState, ...updates };
-      });
+      }, memoryEngine.get());
       
       reminderEngine.tick(
         memoryEngine.get(), 
