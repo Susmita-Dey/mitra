@@ -17,7 +17,7 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
         // NOTE: Make sure icon.ico is properly configured in tauri.conf.json
         .icon(app.default_window_icon().unwrap().clone())
         .menu(&menu)
-        .on_menu_event(|app, event| match event.id.as_ref() {
+        .on_menu_event(move |app, event| match event.id.as_ref() {
             "quit" => {
                 app.exit(0);
             }
@@ -27,27 +27,19 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
                     if is_visible {
                         let _ = window.hide();
                         let _ = window.emit("companion:window:hidden", ());
-                        let _ = app.tray_by_id("main").map(|t| {
-                            let _ = t.menu().map(|m| {
-                                if let Some(item) = m.get("toggle_visibility") {
-                                    if let Some(menu_item) = item.as_menuitem() {
-                                        let _ = menu_item.set_text("Show Mitra");
-                                    }
-                                }
-                            });
-                        });
+                        if let Some(item) = menu.get("toggle_visibility") {
+                            if let Some(menu_item) = item.as_menuitem() {
+                                let _ = menu_item.set_text("Show Mitra");
+                            }
+                        }
                     } else {
                         let _ = window.show();
                         let _ = window.emit("companion:window:shown", ());
-                        let _ = app.tray_by_id("main").map(|t| {
-                            let _ = t.menu().map(|m| {
-                                if let Some(item) = m.get("toggle_visibility") {
-                                    if let Some(menu_item) = item.as_menuitem() {
-                                        let _ = menu_item.set_text("Hide Mitra");
-                                    }
-                                }
-                            });
-                        });
+                        if let Some(item) = menu.get("toggle_visibility") {
+                            if let Some(menu_item) = item.as_menuitem() {
+                                let _ = menu_item.set_text("Hide Mitra");
+                            }
+                        }
                     }
                 }
             }
