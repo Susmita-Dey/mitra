@@ -2,8 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v0.1.0] - Initial Launch Release
+## [v0.2.0] - The Companion Update (Product Hunt Launch)
 
+### 🚀 Features & Enhancements
+- **Media Reactions (Windows)**: Mitra now listens to your music via Windows Global System Media Transport Controls (`win-gsmtc`). She knows what you're listening to and will vibe with you!
+- **Context Awareness (Meetings & Coding)**: Mitra smartly detects when you're in a meeting (Zoom, Teams, Discord, etc.) to give you privacy, and detects when you're coding (VS Code, JetBrains) to quietly cheer you on. 
+
+### 🐛 Bug Fixes
+- **System Tray Stability**: Fixed an issue with the Tauri tray menu method causing build failures.
+- **Media API & Lifetimes**: Resolved Rust compilation errors (`E0432`, `E0106`) by upgrading to the latest `gsmtc` crate API and fixing missing lifetime specifiers for `sysinfo` state management.
+
+## [v0.1.0] - Initial Launch Release
 ### 🚀 Features & Enhancements
 - **Procedural Animation Engine**: Introduced a dynamic skeletal rig (`useAnimationRig.ts`) that smoothly interpolates between different postures and moods, giving Mitra a lifelike presence.
 - **Expressive Moods**: Added new facial expressions including `happy-closed` (^ ^), `sad` (drooping eyelids), `yawn` (wide mouth), and `smirk`.

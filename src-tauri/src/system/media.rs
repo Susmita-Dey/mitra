@@ -19,7 +19,7 @@ pub fn start_media_listener(app_handle: AppHandle) {
 fn start_windows_media_listener(app_handle: AppHandle) {
     use serde::Serialize;
     use tauri::Emitter;
-    use win_gsmtc::{SessionManager, SessionUpdateEvent};
+    use gsmtc::{SessionManager, SessionUpdateEvent};
 
     #[derive(Clone, Serialize)]
     struct MediaState {
@@ -34,17 +34,22 @@ fn start_windows_media_listener(app_handle: AppHandle) {
 
         match manager_res {
             Ok(mut manager) => {
-                let mut rx = manager.session_update_receiver();
-
-                while let Ok(event) = rx.recv().await {
-                    if let SessionUpdateEvent::Model(model) = event {
-                        let state = MediaState {
-                            title: model.media_info.title.clone(),
-                            artist: model.media_info.artist.clone(),
-                            is_playing: model.playback_info.is_playing(),
-                            source: model.source.clone(),
-                        };
-                        let _ = app_handle.emit("media-session-update", state);
+                while let Some(evt) = manager.recv().await {
+                    if let gsmtc::ManagerEvent::SessionCreated { mut rx, .. } = evt {
+                        let app_handle = app_handle.clone();
+                        tauri::async_runtime::spawn(async move {
+                            while let Some(session_evt) = rx.recv().await {
+                                if let SessionUpdateEvent::Model(model) = session_evt {
+                                    let state = MediaState {
+                                        title: model.media.as_ref().map(|m| m.title.clone()).unwrap_or_default(),
+                                        artist: model.media.as_ref().map(|m| m.artist.clone()).unwrap_or_default(),
+                                        is_playing: model.playback.as_ref().map(|p| p.status == gsmtc::PlaybackStatus::Playing).unwrap_or(false),
+                                        source: model.source.clone(),
+                                    };
+                                    let _ = app_handle.emit("media-session-update", state);
+                                }
+                            }
+                        });
                     }
                 }
             }

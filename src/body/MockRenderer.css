@@ -29,9 +29,14 @@
 }
 
 /* Base styles for interactive regions */
-.panda-tummy, .panda-head, .panda-arm, .panda-tail, .panda-ear {
+.panda-tummy, .panda-head-group, .panda-arm, .panda-tail-group, .panda-ear {
   pointer-events: auto;
   cursor: pointer;
+}
+
+/* Allow children of interactive groups to receive pointer events so the group can catch them */
+.panda-head-group *, .panda-arm *, .panda-tail-group *, .panda-ear * {
+  pointer-events: auto;
 }
 
 /* Reminder Speech Bubble */

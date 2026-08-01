@@ -91,6 +91,9 @@ export function MockRenderer({ character }: RendererProps) {
                e.stopPropagation();
                window.dispatchEvent(new CustomEvent("companion:interaction:tail"));
              }}>
+            {/* Visible larger hitbox for easier clicking */}
+            <path d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="36" strokeLinecap="round" style={{ pointerEvents: "stroke" }} />
+            
             {/* Orange Base */}
             <path className="panda-tail-base" d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="#E86A33" strokeWidth="36" strokeLinecap="round" />
             
@@ -142,7 +145,7 @@ export function MockRenderer({ character }: RendererProps) {
               cx="100" cy="170" rx="35" ry="40" 
               fill="#FFF9ED" 
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-              onClick={(e) => {
+              onPointerDown={(e) => {
                 e.stopPropagation();
                 window.dispatchEvent(new CustomEvent("companion:interaction:tummy"));
               }}
@@ -242,6 +245,8 @@ export function MockRenderer({ character }: RendererProps) {
                  e.stopPropagation();
                  window.dispatchEvent(new CustomEvent("companion:interaction:paws"));
                }}>
+              {/* Visible thicker stroke for a larger click target */}
+              <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="25" strokeLinecap="round" style={{ pointerEvents: "stroke" }} />
               <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
               <ellipse cx="44" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(-20 44 186)" />
             </g>
@@ -257,6 +262,11 @@ export function MockRenderer({ character }: RendererProps) {
                  e.stopPropagation();
                  window.dispatchEvent(new CustomEvent("companion:interaction:paws"));
                }}>
+                {/* Invisible larger hitbox for easier clicking */}
+            {/* <path d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="transparent" strokeWidth="60" strokeLinecap="round" style={{ pointerEvents: "stroke" }} /> */}
+
+              {/* Visible thicker stroke for a larger click target */}
+              <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="25" strokeLinecap="round" style={{ pointerEvents: "stroke" }} />
               <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
               <ellipse cx="156" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(20 156 186)" />
             </g>

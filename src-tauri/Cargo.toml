@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Your tiny open-source desktop companion."
 authors = ["you"]
 edition = "2021"
+default-run = "mitra"
 
 [lib]
 name = "mitra_lib"

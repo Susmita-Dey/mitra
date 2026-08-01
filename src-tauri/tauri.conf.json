@@ -60,7 +60,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; connect-src 'self' https://ipapi.co; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:;"
+      "csp": "default-src 'self'; connect-src 'self' https://ipapi.co https://*.open-meteo.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:;"
     }
   },
   "bundle": {

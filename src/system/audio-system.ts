@@ -10,7 +10,7 @@ export interface AudioSystem {
 
 const soundMap: Record<string, string[]> = {
   greet: ["/sounds/dragon-studio-pop-402322.mp3", "/sounds/dragon-studio-pop-402324.mp3"],
-  happy: ["/sounds/mrstokes302-goofy-laugh-sfx-verb-mrstokes302-525043.mp3", "/sounds/happy-variation.mp3"],
+  happy: ["/sounds/mrstokes302-goofy-laugh-sfx-verb-mrstokes302-525043.mp3"],
   celebration: ["/sounds/shrek_30-pop-wow-323262.mp3", "/sounds/miraclei-11l-applause_from_a_smal-1749174330556-355760.mp3"],
   sad: ["/sounds/11325622-cartoon-trombone-sound-effect-241387.mp3"],
   sleepy: ["/sounds/freesound_community-yawning-6096.mp3", "/sounds/dragon-studio-male-yawn-effect-376879.mp3", "/sounds/pwlpl-yawning-sound-effect-521103.mp3"],

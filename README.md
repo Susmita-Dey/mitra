@@ -1,6 +1,11 @@
-# 🐼 Mitra
+# 🦊 Mitra
 
-> Your tiny open-source desktop companion.
+<div align="center">
+  <img src="./public/mitra_banner.png" alt="Mitra Banner" width="100%" />
+</div>
+<br/>
+
+> _**Your tiny open-source desktop companion.**_
 
 Mitra quietly lives on your desktop while you work.
 
@@ -28,6 +33,9 @@ Mitra is designed to be completely out of your way until you need her. There are
 - **Drag anywhere**: Click and hold to drag her anywhere on your screen.
 - **Interactions**: Try clicking on her tummy, her paws, or giving her a high-five! She has a custom physics-based animation system that makes her respond dynamically to your interactions.
 - **Reminders**: She will automatically know when it's time for lunch, dinner, or when you need a stretch. When she gives you a reminder bubble, you can click the bubble to dismiss it.
+- **🎵 Music Vibes**: She listens along to your music (Windows-only) and enjoys the tunes with you!
+- **🤫 Meeting Privacy**: She intelligently detects when you're on a Zoom or Teams call and stays completely out of the way.
+- **💻 Coding Buddy**: She detects when your IDE is open (VS Code, JetBrains) and silently cheers you on!
 - **Weather & Battery**: She fetches local weather to know when to hold an umbrella, and she does a happy dance when your laptop battery hits 100%!
 - **Settings**: Right-click the system tray icon (down in your taskbar) to open Settings or toggle Compact Mode.
 

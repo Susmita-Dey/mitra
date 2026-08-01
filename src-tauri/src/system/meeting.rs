@@ -16,7 +16,7 @@ impl SystemState {
 
 const REFRESH_INTERVAL: Duration = Duration::from_secs(30);
 
-fn refresh_if_stale(state: &tauri::State<'_, SystemState>) -> std::sync::MutexGuard<'_, (System, Instant)> {
+fn refresh_if_stale<'a>(state: &'a tauri::State<'a, SystemState>) -> std::sync::MutexGuard<'a, (System, Instant)> {
     let mut guard = state.0.lock().unwrap();
     if guard.1.elapsed() >= REFRESH_INTERVAL {
         guard.0.refresh_processes(ProcessesToUpdate::All, true);
