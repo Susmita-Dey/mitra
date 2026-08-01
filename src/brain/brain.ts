@@ -334,7 +334,9 @@ export function createBrain(
                else if (intent.interaction === "reminder:dinner") text = "🍲 Dinner time!";
                else if (intent.interaction === "reminder:bio") text = "🚽 Time for a bio break!";
                
-               let overrides: Partial<import("./core/types").ProceduralAnimationState> = {};
+               let overrides: Partial<import("./core/types").ProceduralAnimationState> = {
+                  eyes: "squint" // Rest eyes during all reminders
+               };
                if (intent.interaction === "reminder:stretch") {
                  overrides.posture = "stretch";
                  overrides.eyes = "closed";
@@ -376,16 +378,21 @@ export function createBrain(
               id: "celebrate", priority: "Interaction", speechBubble: "Yay!", durationMs: 4000,
               animationOverrides: { posture: "stand", bodyMotion: "dance", eyes: "sparkle", tail: "wag" }
             });
-         } else if (intent.type === "Yawn") {
-            animationDirector.queueSequence({
-              id: "yawn", priority: "Idle", durationMs: 3000,
-              animationOverrides: { mouth: "open", eyes: "squint" }
-            });
-         } else if (intent.type === "Stretch") {
-            animationDirector.queueSequence({
-              id: "stretch", priority: "Idle", durationMs: 4000,
-              animationOverrides: { posture: "stretch", eyes: "closed" }
-            });
+         } else if (intent.type === "PlayAnimation") {
+            const anim = intent.animation;
+            if (anim === "blink") {
+               animationDirector.queueSequence({ id: "blink", priority: "Idle", durationMs: 200, animationOverrides: { eyes: "closed" } });
+            } else if (anim === "double-blink") {
+               animationDirector.queueSequence({ id: "double-blink", priority: "Idle", durationMs: 400, animationOverrides: { eyes: "closed" } });
+            } else if (anim === "look-around") {
+               animationDirector.queueSequence({ id: "look-around", priority: "Idle", durationMs: 3000, animationOverrides: { bodyMotion: "look-around", ears: "twitch" } });
+            } else if (anim === "yawn") {
+               animationDirector.queueSequence({ id: "yawn", priority: "Idle", durationMs: 3000, animationOverrides: { mouth: "open", eyes: "squint", ears: "down" } });
+            } else if (anim === "stretch") {
+               animationDirector.queueSequence({ id: "stretch", priority: "Idle", durationMs: 4000, animationOverrides: { posture: "stretch", eyes: "closed" } });
+            } else if (anim === "walk") {
+               animationDirector.queueSequence({ id: "walk", priority: "Idle", durationMs: 4000, animationOverrides: { posture: "stand", bodyMotion: "bounce", tail: "wag" } });
+            }
          }
       }
       

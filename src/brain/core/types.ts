@@ -38,7 +38,7 @@ export interface ProceduralAnimationState {
   ears: "up" | "down" | "twitch";
   tail: "still" | "wag" | "flick" | "droop" | "curl";
   posture: "stand" | "sit" | "lie-down" | "stretch" | "sleep" | "slump" | "high-five";
-  bodyMotion: "still" | "breathe" | "bounce" | "sway" | "shiver" | "dance";
+  bodyMotion: "still" | "breathe" | "bounce" | "sway" | "shiver" | "dance" | "look-around";
   rootScale: number;
   /** Active visual props (e.g., "laptop", "umbrella", "sunglasses") */
   props?: string[];

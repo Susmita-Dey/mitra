@@ -68,7 +68,7 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
       const t = timeRef.current;
 
       const state = proceduralState || {
-        eyes: "open", mouth: "neutral", ears: "up", tail: "still", posture: "stand", bodyMotion: "breathe"
+        eyes: "open" as const, mouth: "neutral" as const, ears: "up" as const, tail: "still" as const, posture: "stand" as const, bodyMotion: "breathe" as const, props: [] as string[]
       };
 
       // 1. Determine TARGET values based on Posture/Action
@@ -81,16 +81,18 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
       };
 
       if (state.posture === "sit") {
-        target.rootY = 20;
-        target.bodyScaleY = 0.90;
-        target.bodyScaleX = 1.05;
-        target.bodyRot = 0;
-        target.headY = 5;
+        target.rootY = 30; // Sit lower
+        target.bodyScaleY = 0.85; // Squat down
+        target.bodyScaleX = 1.1; // Wider base
+        target.bodyRot = 0; // Upright
+        target.headY = 15; // Head tucked slightly down
         target.headRot = 0;
-        target.leftLegRot = -45;
-        target.rightLegRot = 45;
-        target.leftArmRot = 15;
-        target.rightArmRot = -15;
+        // Legs splayed forward
+        target.leftLegRot = -80;
+        target.rightLegRot = 80;
+        // Arms resting on belly
+        target.leftArmRot = 45;
+        target.rightArmRot = -45;
       } else if (state.posture === "lie-down") {
         target.rootY = 25;
         target.bodyScaleY = 0.85;
@@ -100,17 +102,18 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         target.rightLegRot = 20;
         target.tailRot = -100;
       } else if (state.posture === "sleep") {
-        // Curled up sleeping pose
-        target.rootY = 40;
-        target.bodyScaleY = 0.7; // Squished down
-        target.bodyScaleX = 1.2; // Sprawled wide
-        target.headRot = 35; // Head tucked in
-        target.headY = 20; // Head lowered
-        target.leftLegRot = -50; // Legs tucked
-        target.rightLegRot = 50;
-        target.leftArmRot = 70; // Arms tucked in
-        target.rightArmRot = -70;
-        target.tailRot = -140; // Tail curled around the body
+        // Curled up sleeping pose like a real red panda
+        target.rootY = 50; // Very low
+        target.bodyScaleY = 0.65; // Squished into a ball
+        target.bodyScaleX = 1.15; // Wide ball
+        target.bodyRot = 90; // Curled sideways
+        target.headRot = 50; // Head tucked deeply
+        target.headY = 25; // Head lowered
+        target.leftLegRot = -90; // Legs tucked flat
+        target.rightLegRot = 90;
+        target.leftArmRot = 90; // Arms tucked flat
+        target.rightArmRot = -90;
+        target.tailRot = -160; // Tail wrapped entirely around the body
       } else if (state.posture === "stretch") {
         target.rootY = -25;
         target.bodyScaleY = 1.25;
@@ -159,6 +162,17 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         target.rightArmRot -= b * 40;
         target.leftLegRot += Math.sin(danceSpeed + Math.PI) * 10;
         target.rightLegRot += b * 10;
+      } else if (state.bodyMotion === "look-around") {
+        // Gentle sweep left and right
+        const look = Math.sin(t * 3);
+        target.headRot += look * 20;
+        target.bodyRot += look * 5;
+      }
+
+      // Food prop override: both paws holding the bamboo centrally
+      if (state.props?.includes("food")) {
+        target.leftArmRot = 110;
+        target.rightArmRot = -110;
       }
 
       // 3. Add Secondary Motion (Tail Follow-through)
