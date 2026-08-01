@@ -23,7 +23,8 @@
         "maximizable": false,
         "fullscreen": false,
         "shadow": false,
-        "visible": true
+        "visible": true,
+        "skipTaskbar": true
       },
       {
         "label": "settings",

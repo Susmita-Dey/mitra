@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ProceduralAnimationState } from "../brain/core/types";
 
 // The skeletal bone values we will interpolate and apply to the SVG
@@ -19,6 +19,19 @@ export interface RigState {
 }
 
 
+
+export interface RigRefs {
+  root: React.RefObject<SVGGElement | null>;
+  tail: React.RefObject<SVGGElement | null>;
+  leftLeg: React.RefObject<SVGGElement | null>;
+  rightLeg: React.RefObject<SVGGElement | null>;
+  torso: React.RefObject<SVGGElement | null>;
+  leftArm: React.RefObject<SVGGElement | null>;
+  rightArm: React.RefObject<SVGGElement | null>;
+  head: React.RefObject<SVGGElement | null>;
+  leftEar: React.RefObject<SVGGElement | null>;
+  rightEar: React.RefObject<SVGGElement | null>;
+}
 
 // Simple spring physics
 const spring = (current: number, target: number, velocity: number, dt: number, tension: number, friction: number) => {
@@ -55,8 +68,18 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
     headRot: 0, headY: 0, tailRot: 0, leftArmRot: 0, rightArmRot: 0, leftLegRot: 0, rightLegRot: 0, leftEarRot: 0, rightEarRot: 0,
   });
 
-  // State used to trigger React re-renders
-  const [, setFrame] = useState(0);
+  const refs: RigRefs = {
+    root: useRef<SVGGElement>(null),
+    tail: useRef<SVGGElement>(null),
+    leftLeg: useRef<SVGGElement>(null),
+    rightLeg: useRef<SVGGElement>(null),
+    torso: useRef<SVGGElement>(null),
+    leftArm: useRef<SVGGElement>(null),
+    rightArm: useRef<SVGGElement>(null),
+    head: useRef<SVGGElement>(null),
+    leftEar: useRef<SVGGElement>(null),
+    rightEar: useRef<SVGGElement>(null),
+  };
 
   useEffect(() => {
     let lastTime = performance.now();
@@ -262,8 +285,39 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
       applySpring('leftEarRot', armTension * 1.5, friction * 0.8);
       applySpring('rightEarRot', armTension * 1.5, friction * 0.8);
 
-      // Trigger a render frame if we want React to apply inline styles (or we can use refs directly in DOM)
-      setFrame(f => f + 1);
+      // Directly apply styles to DOM nodes bypassing React render cycle!
+      if (refs.root.current) {
+        refs.root.current.style.transform = `translateY(${rig.rootY}px) scale(${rig.bodyScaleX}, ${rig.bodyScaleY})`;
+      }
+      if (refs.tail.current) {
+        refs.tail.current.style.transform = `rotate(${rig.tailRot}deg)`;
+      }
+      if (refs.leftLeg.current) {
+        refs.leftLeg.current.style.transform = `rotate(${rig.leftLegRot}deg)`;
+      }
+      if (refs.rightLeg.current) {
+        refs.rightLeg.current.style.transform = `rotate(${rig.rightLegRot}deg)`;
+      }
+      if (refs.torso.current) {
+        refs.torso.current.style.transform = `rotate(${rig.bodyRot}deg)`;
+      }
+      if (refs.leftArm.current) {
+        refs.leftArm.current.style.transform = `rotate(${rig.leftArmRot}deg)`;
+      }
+      if (refs.rightArm.current) {
+        refs.rightArm.current.style.transform = `rotate(${rig.rightArmRot}deg)`;
+      }
+      if (refs.head.current) {
+        const extraHeadY = (state.posture === "lie-down" || state.posture === "sit") ? 40 : 0;
+        refs.head.current.style.transform = `translateY(${rig.headY + extraHeadY}px) rotate(${rig.headRot}deg)`;
+      }
+      if (refs.leftEar.current) {
+        refs.leftEar.current.style.transform = `rotate(${rig.leftEarRot}deg)`;
+      }
+      if (refs.rightEar.current) {
+        refs.rightEar.current.style.transform = `rotate(${rig.rightEarRot}deg)`;
+      }
+
       reqRef.current = requestAnimationFrame(loop);
     };
 
@@ -271,5 +325,5 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
     return () => cancelAnimationFrame(reqRef.current);
   }, [proceduralState]);
 
-  return currentRig.current;
+  return { rig: currentRig.current, refs };
 }

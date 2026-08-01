@@ -11,18 +11,18 @@ export interface AudioSystem {
 const soundMap: Record<string, string[]> = {
   greet: ["/sounds/dragon-studio-pop-402322.mp3", "/sounds/dragon-studio-pop-402324.mp3"],
   happy: ["/sounds/mrstokes302-goofy-laugh-sfx-verb-mrstokes302-525043.mp3", "/sounds/happy-variation.mp3"],
-  celebration: ["/sounds/shrek_30-pop-wow-323262.mp3", "/sounds/celebration-fanfare.mp3"],
+  celebration: ["/sounds/shrek_30-pop-wow-323262.mp3", "/sounds/miraclei-11l-applause_from_a_smal-1749174330556-355760.mp3"],
   sad: ["/sounds/11325622-cartoon-trombone-sound-effect-241387.mp3"],
   sleepy: ["/sounds/freesound_community-yawning-6096.mp3", "/sounds/dragon-studio-male-yawn-effect-376879.mp3", "/sounds/pwlpl-yawning-sound-effect-521103.mp3"],
   curious: ["/sounds/dragon-studio-cartoon-blinking-372481.mp3"],
   bored: ["/sounds/11325622-clock-ticking-sound-effect-240503.mp3"],
   alert: ["/sounds/dragon-studio-ding-402325.mp3", "/sounds/dragon-studio-notification-sound-effect-372475.mp3"],
   drink: ["/sounds/freesounds123-drinking-water-sound-403454.mp3", "/sounds/freesound_community-drinking-liquid-sound-96442.mp3"],
-  chirps: ["/sounds/ambient-chirp-1.mp3", "/sounds/ambient-chirp-2.mp3"],
+  chirps: ["/sounds/dragon-studio-ding-402325.mp3"], // Fallback to ding for chirps
   yawns: ["/sounds/freesound_community-yawning-6096.mp3", "/sounds/dragon-studio-male-yawn-effect-376879.mp3"],
-  stretch: ["/sounds/stretch-creak.mp3"],
-  footsteps: ["/sounds/step-1.mp3", "/sounds/step-2.mp3"],
-  idle: ["/sounds/soft-ambient-breath.mp3"],
+  stretch: ["/sounds/justsomesounds-breathing-432885.mp3"],
+  footsteps: ["/sounds/freesoundsxx-walking-on-concrete-ver-2-268513.mp3"],
+  idle: ["/sounds/justsomesounds-breathing-432885.mp3"],
 };
 
 // Web Audio API Context

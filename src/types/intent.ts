@@ -9,6 +9,8 @@ export type Intent =
   | { type: "ChangeEmotion"; emotion: Emotion }
   | { type: "PlayAnimation"; animation: Animation }
   | { type: "SetInteraction"; interaction: Interaction }
+  | { type: "SetProceduralState"; state: Partial<import("../brain/core/types").ProceduralAnimationState> }
+  | { type: "SetBubble"; text: string; duration?: number }
   | { type: "Greet" }
   | { type: "Celebrate" }
   | { type: "Sleep" }

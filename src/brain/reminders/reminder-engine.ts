@@ -53,7 +53,6 @@ function calculateNextSchedule(config: { intervalMs: number, jitterMs: number, t
 
 export function createReminderEngine(): ReminderEngine {
   let wasInMeeting = false;
-  let missedDuringMeeting: string[] = [];
 
   return {
     tick(memory, setMemory, prefs, timeline, context) {
@@ -137,14 +136,24 @@ export function createReminderEngine(): ReminderEngine {
         }
 
         if (mostOverdue) {
-          // Check for Context-based Deferrals
-          if (context.userState === "Meeting") {
+          // Check for Context-based Deferrals or Hidden State
+          const isHidden = (window as any).IS_HIDDEN === true;
+          
+          if (context.userState === "Meeting" || isHidden) {
             // Defer entirely and track for summary
             mostOverdue.state = "ignored";
             mostOverdue.scheduledFor = calculateNextSchedule(prefs.reminders[mostOverdue.id], "ignored");
-            missedDuringMeeting.push(mostOverdue.id);
+            
+            const currentTracker = memory.meetingTracker || { meetingStartTime: null, missedReminders: [] };
+            const newTracker = { 
+              ...currentTracker, 
+              missedReminders: [...currentTracker.missedReminders, mostOverdue.id] 
+            };
+            
             changed = true;
-            newTimeline = timeline.push(newTimeline, "reminder:deferred", `Deferred ${mostOverdue.id} due to Meeting`);
+            newTimeline = timeline.push(newTimeline, "reminder:deferred", `Deferred ${mostOverdue.id} due to ${isHidden ? 'Hidden' : 'Meeting'}`);
+            setMemory({ activeReminders: active, timeline: newTimeline, meetingTracker: newTracker });
+            return; // Exit early since we called setMemory manually
           } else if (context.userState === "Focused" && mostOverdue.id !== "water") {
             // Defer non-critical things while Focused
             mostOverdue.scheduledFor = now + 15 * 60 * 1000; // Bump by 15 mins
@@ -176,13 +185,7 @@ export function createReminderEngine(): ReminderEngine {
 
       // 4. Meeting Summary Logic
       if (wasInMeeting && context.userState !== "Meeting") {
-        if (missedDuringMeeting.length > 0) {
-           // Create a synthetic interaction or bubble
-           newTimeline = timeline.push(newTimeline, "reminder:summary", `Summarized missed items: ${missedDuringMeeting.join(", ")}`);
-           // We could inject a special interaction state here, for now we just clear it
-           missedDuringMeeting = [];
-           changed = true;
-        }
+        // This is now handled globally by CatchUpBehavior when window is shown
       }
       wasInMeeting = context.userState === "Meeting";
 

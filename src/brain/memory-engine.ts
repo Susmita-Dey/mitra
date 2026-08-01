@@ -42,6 +42,10 @@ const INITIAL_MEMORY: CompanionMemory = {
     energetic: 0.5,
     sleepy: 0.3,
   },
+  meetingTracker: {
+    meetingStartTime: null,
+    missedReminders: [],
+  }
 };
 
 export function createMemoryEngine(): MemoryEngine {

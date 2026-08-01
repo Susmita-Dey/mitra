@@ -20,7 +20,7 @@ export function MockRenderer({ character }: RendererProps) {
   };
 
   const { posture, eyes, mouth } = proceduralState;
-  const rig = useAnimationRig(proceduralState);
+  const { rig, refs } = useAnimationRig(proceduralState);
   
   const hasBubble = !!character.bubbleText;
   
@@ -73,13 +73,14 @@ export function MockRenderer({ character }: RendererProps) {
         <ellipse className="panda-shadow" cx="100" cy="225" rx="60" ry="10" fill="rgba(0,0,0,0.15)" />
 
         {/* Main Panda Group */}
-        <g className="panda-group" style={{ 
+        <g className="panda-group" ref={refs.root} style={{ 
             transform: `translateY(${rig.rootY}px) scale(${rig.bodyScaleX}, ${rig.bodyScaleY})`,
             transformOrigin: '100px 180px'
           }}>
           
           {/* Tail with Thick Rings */}
           <g className="panda-tail-group"
+             ref={refs.tail}
              style={{ 
                pointerEvents: 'auto', 
                cursor: 'pointer',
@@ -100,6 +101,7 @@ export function MockRenderer({ character }: RendererProps) {
           {/* Legs with Toe Beans */}
           <g className="panda-legs">
             <g className="panda-leg left"
+               ref={refs.leftLeg}
                style={{
                  transform: `rotate(${rig.leftLegRot}deg)`,
                  transformOrigin: '65px 215px'
@@ -111,6 +113,7 @@ export function MockRenderer({ character }: RendererProps) {
               <ellipse cx="65" cy="210" rx="7" ry="5" fill="#5c2915" />
             </g>
             <g className="panda-leg right"
+               ref={refs.rightLeg}
                style={{
                  transform: `rotate(${rig.rightLegRot}deg)`,
                  transformOrigin: '135px 215px'
@@ -124,7 +127,7 @@ export function MockRenderer({ character }: RendererProps) {
           </g>
 
           {/* Torso & Tummy Group */}
-          <g style={{ transform: `rotate(${rig.bodyRot}deg)`, transformOrigin: '100px 160px' }}>
+          <g ref={refs.torso} style={{ transform: `rotate(${rig.bodyRot}deg)`, transformOrigin: '100px 160px' }}>
             {/* Torso */}
             <ellipse className="panda-torso" cx="100" cy="160" rx="55" ry="60" fill="#E86A33" />
             {/* Soft Tummy Fur Fluffs (Orange curves) */}
@@ -228,6 +231,7 @@ export function MockRenderer({ character }: RendererProps) {
           {/* Arms with Paws */}
           <g className="panda-arms">
             <g className="panda-arm left"
+               ref={refs.leftArm}
                style={{ 
                  pointerEvents: 'auto', 
                  cursor: 'pointer',
@@ -242,6 +246,7 @@ export function MockRenderer({ character }: RendererProps) {
               <ellipse cx="44" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(-20 44 186)" />
             </g>
             <g className="panda-arm right"
+               ref={refs.rightArm}
                style={{ 
                  pointerEvents: 'auto', 
                  cursor: 'pointer',
@@ -259,6 +264,7 @@ export function MockRenderer({ character }: RendererProps) {
 
           {/* Head */}
           <g className="panda-head-group"
+             ref={refs.head}
              style={{ 
                pointerEvents: 'auto', 
                cursor: 'pointer',
@@ -271,6 +277,7 @@ export function MockRenderer({ character }: RendererProps) {
              }}>
             {/* Left Ear */}
             <g className="panda-ear left-ear"
+               ref={refs.leftEar}
                style={{
                  transform: `rotate(${rig.leftEarRot}deg)`,
                  transformOrigin: '55px 45px'
@@ -288,6 +295,7 @@ export function MockRenderer({ character }: RendererProps) {
             
             {/* Right Ear */}
             <g className="panda-ear right-ear"
+               ref={refs.rightEar}
                style={{
                  transform: `rotate(${rig.rightEarRot}deg)`,
                  transformOrigin: '145px 45px'

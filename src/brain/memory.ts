@@ -59,6 +59,12 @@ export interface CompanionMemory {
     energetic: number;
     sleepy: number;
   };
+  
+  /** Track long meetings and hidden states for the summary feature */
+  meetingTracker: {
+    meetingStartTime: number | null;
+    missedReminders: string[];
+  };
 }
 
 export const DEFAULT_MEMORY: CompanionMemory = {
@@ -89,5 +95,9 @@ export const DEFAULT_MEMORY: CompanionMemory = {
     gentle: 0.5,
     energetic: 0.5,
     sleepy: 0.3,
+  },
+  meetingTracker: {
+    meetingStartTime: null,
+    missedReminders: [],
   }
 };

@@ -17,7 +17,11 @@ export const BioReminderBehavior: RegisteredBehavior = {
     return context.world.memory.activeReminders.bio?.state === "triggered";
   },
   execute: (context: BehaviorContext) => {
-    context.emit({ type: "PlayAnimation", animation: "sit" });
+    // Mitra nervously asks for a bio break, holding a towel
+    context.emit({ 
+      type: "SetProceduralState", 
+      state: { posture: "shy", eyes: "wide", mouth: "neutral", ears: "down", tail: "still", bodyMotion: "shiver", props: ["beach-towel"] } 
+    });
     context.emit({ type: "SetInteraction", interaction: "reminder:bio" });
     context.emit({ type: "PlaySound", category: "alert" });
   },

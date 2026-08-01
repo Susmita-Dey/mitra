@@ -3,6 +3,21 @@ import { type AppPreferences, DEFAULT_PREFERENCES } from "@/types";
 
 const PREFS_KEY = "mitra_preferences";
 
+function deepMerge(target: any, source: any): any {
+  if (typeof target !== "object" || target === null) return source;
+  if (typeof source !== "object" || source === null) return source;
+  
+  const output = { ...target };
+  for (const key of Object.keys(source)) {
+    if (source[key] instanceof Object && !Array.isArray(source[key]) && key in target) {
+      output[key] = deepMerge(target[key], source[key]);
+    } else {
+      output[key] = source[key];
+    }
+  }
+  return output;
+}
+
 /**
  * Type of a migration function.
  * Takes the old state (as any) and returns the migrated state.
@@ -67,8 +82,8 @@ export function createAppStorage(backend: Storage, eventBus?: EventBus): AppStor
         }
       }
 
-      // If missing top-level keys from DEFAULT_PREFERENCES, merge them
-      currentData = { ...DEFAULT_PREFERENCES, ...currentData };
+      // Deep merge missing keys and nested objects from DEFAULT_PREFERENCES
+      currentData = deepMerge(DEFAULT_PREFERENCES, currentData);
 
       if (migrated) {
         await backend.save(PREFS_KEY, currentData);

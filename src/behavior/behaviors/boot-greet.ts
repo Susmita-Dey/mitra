@@ -17,19 +17,30 @@ export const BootGreetBehavior: RegisteredBehavior = {
     // Has she already greeted?
     if (context.world.memory.hasGreeted) return false;
     
-    // Check if 5 minutes have passed since boot
-    // For testing, developers can change this to a smaller number.
-    const BOOT_DELAY_MS = 2 * 60 * 1000;
-    return Date.now() - context.world.memory.bootTime > BOOT_DELAY_MS;
+    // Don't greet if onboarding is currently showing!
+    if ((window as any).ONBOARDING_ACTIVE) return false;
+    
+    // As soon as onboarding finishes (or if already finished on startup), trigger!
+    return true;
   },
   execute: (context: BehaviorContext) => {
     // Mark as greeted and no longer asleep
     context.setMemory({ hasGreeted: true, wasAsleep: false });
     
-    // Wake up and greet
+    // Wake up and greet energetically!
     context.emit({ type: "ChangeEmotion", emotion: "happy" });
-    context.emit({ type: "PlayAnimation", animation: "wave" });
+    
+    // Use our new procedural poses for an adorable energetic cheer!
+    context.emit({ 
+      type: "SetProceduralState", 
+      state: { posture: "cheer", eyes: "happy-closed", mouth: "open", ears: "up", tail: "wag", bodyMotion: "bounce" } 
+    });
+    
+    // Friend greeting bubble
+    context.emit({ type: "SetBubble", text: "Hi! I'm Mitra, your new desktop buddy! ✨", duration: 6000 });
     context.emit({ type: "SetInteraction", interaction: "none" });
+    
+    // Play happy sound
     context.emit({ type: "PlaySound", category: "greet" });
 
     // "walking in" - we'll request a move-to here.

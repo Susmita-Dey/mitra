@@ -295,6 +295,14 @@ export function createBrain(
         currentContext
       );
 
+      // Ensure reminders that timed out (ignored) or were completed are cleared from the screen
+      const activeRems = memoryEngine.get().activeReminders;
+      for (const [key, item] of Object.entries(activeRems)) {
+        if (item.state !== "triggered") {
+          animationDirector.clearSequence(`reminder:${key}`);
+        }
+      }
+
       // Step 2 — ask the BehaviorEngine for the winning behavior this tick.
       const context = getContext();
       
@@ -433,10 +441,18 @@ export function createBrain(
     },
 
     act() {
-      // Look for ChangeEmotion intents to feed to EmotionEngine
+      // Look for ChangeEmotion intents to feed to EmotionEngine, and SetProceduralState / SetBubble
       for (const intent of currentIntents) {
         if (intent.type === "ChangeEmotion") {
           emotionEngine.push(intent.emotion);
+        } else if (intent.type === "SetProceduralState") {
+          currentProceduralState = { ...currentProceduralState, ...intent.state } as ProceduralAnimationState;
+        } else if (intent.type === "SetBubble") {
+          currentBubbleText = intent.text;
+          // Set bubble timer if duration provided
+          if (intent.duration) {
+             setTimeout(() => { engine.setBubbleText(null); }, intent.duration);
+          }
         }
       }
 

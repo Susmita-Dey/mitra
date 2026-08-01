@@ -5,6 +5,7 @@
  * Mitra stays a companion surface — no routes, settings, or productivity UI.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { Companion } from "@/body";
 import { createBrain, initializeBrain } from "@/brain";
 import { StateDebug } from "@/ui";
@@ -56,6 +57,7 @@ import {
   WanderBehavior,
   TaskbarBehavior,
   BioReminderBehavior,
+  CatchUpBehavior,
 } from "@/behavior/behaviors";
 import { createCompanionEngine } from "./companion-engine";
 
@@ -126,14 +128,31 @@ export function App() {
 
     const unsubscribeEngine = engine.subscribe(updateClickThrough);
 
+    // Assume onboarding might be active until storage loads, to prevent premature greetings
+    (window as any).ONBOARDING_ACTIVE = true;
+
     // Load preferences on startup so the Settings Panel can render
     appStorage.load().then((prefs: any) => {
       clickThroughPref = !!prefs?.behavior?.clickThrough;
       if (!prefs?.onboardingComplete) {
+        (window as any).ONBOARDING_ACTIVE = true;
         setShowOnboarding(true);
+      } else {
+        (window as any).ONBOARDING_ACTIVE = false;
       }
       updateClickThrough();
     }).catch(console.error);
+
+    // Listen to visibility events from tray
+    (window as any).IS_HIDDEN = false;
+    const unlistenHidden = listen("companion:window:hidden", () => {
+      (window as any).IS_HIDDEN = true;
+    });
+    const unlistenShown = listen("companion:window:shown", () => {
+      (window as any).IS_HIDDEN = false;
+      // Trigger a special event to evaluate the CatchUp behavior
+      window.dispatchEvent(new CustomEvent("companion:window:shown"));
+    });
 
     eventBus.subscribe("preferences:updated", (prefs: any) => {
       if (prefs.behavior?.clickThrough !== undefined) {
@@ -181,6 +200,7 @@ export function App() {
     brain.registerBehavior(PeekBehavior);
     brain.registerBehavior(WanderBehavior);
     brain.registerBehavior(TaskbarBehavior);
+    brain.registerBehavior(CatchUpBehavior);
 
     const stopBrain = initializeBrain(brain, scheduler);
 
@@ -221,6 +241,8 @@ export function App() {
 
     return () => {
       stopBrain();
+      unlistenHidden.then((f: any) => f());
+      unlistenShown.then((f: any) => f());
       window.removeEventListener("companion:reminder:ack", handleAck);
       window.removeEventListener("companion:drag:start", handleDragStart);
       window.removeEventListener("companion:interaction:head", () => handleInteraction("pet"));
@@ -245,7 +267,10 @@ export function App() {
       {showOnboarding && appStorageRef.current && (
         <Onboarding 
           storage={appStorageRef.current} 
-          onComplete={() => setShowOnboarding(false)} 
+          onComplete={() => {
+            (window as any).ONBOARDING_ACTIVE = false;
+            setShowOnboarding(false);
+          }} 
         />
       )}
 

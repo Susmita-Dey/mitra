@@ -12,7 +12,7 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
 
     let menu = Menu::with_items(app, &[&toggle_i, &compact_i, &settings_i, &quit_i])?;
 
-    let _tray = TrayIconBuilder::new()
+    let _tray = TrayIconBuilder::with_id("main")
         .tooltip("Mitra")
         // NOTE: Make sure icon.ico is properly configured in tauri.conf.json
         .icon(app.default_window_icon().unwrap().clone())
@@ -26,8 +26,28 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
                     let is_visible = window.is_visible().unwrap_or(false);
                     if is_visible {
                         let _ = window.hide();
+                        let _ = window.emit("companion:window:hidden", ());
+                        let _ = app.tray_by_id("main").map(|t| {
+                            let _ = t.menu().map(|m| {
+                                if let Some(item) = m.get("toggle_visibility") {
+                                    if let Some(menu_item) = item.as_menuitem() {
+                                        let _ = menu_item.set_text("Show Mitra");
+                                    }
+                                }
+                            });
+                        });
                     } else {
                         let _ = window.show();
+                        let _ = window.emit("companion:window:shown", ());
+                        let _ = app.tray_by_id("main").map(|t| {
+                            let _ = t.menu().map(|m| {
+                                if let Some(item) = m.get("toggle_visibility") {
+                                    if let Some(menu_item) = item.as_menuitem() {
+                                        let _ = menu_item.set_text("Hide Mitra");
+                                    }
+                                }
+                            });
+                        });
                     }
                 }
             }
