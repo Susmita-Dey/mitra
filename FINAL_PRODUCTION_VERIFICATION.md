@@ -52,6 +52,10 @@ We reproduced, root-caused, and implemented robust fixes for every verified issu
 - **Root Cause**: Process matching in Rust for IDEs and meetings assumed Windows `.exe` suffixes, failing on macOS and Linux.
 - **Resolution**: Modified the Rust commands to strip `.exe` extensions, enabling cross-platform process name matching.
 
+### ✅ [test_media.rs / Cargo.toml] macOS and Linux Compilation Failures (P1)
+- **Root Cause**: The test binary `src-tauri/src/bin/test_media.rs` imported the `gsmtc` and `tokio` crates directly. However, these crates were defined as target-specific dependencies only under `[target.'cfg(target_os = "windows")'.dependencies]` in `Cargo.toml`. When Cargo compiled the codebase for macOS or Linux, it attempted to build the `test_media.rs` binary, which failed due to the missing crates.
+- **Resolution**: Wrapped the contents of `test_media.rs` with `#[cfg(target_os = "windows")]` conditional target compilation checks and provided a dummy no-op entry point for non-Windows platforms. Added `libgtk-3-dev` to the Linux dependencies in `release.yml` for completeness.
+
 ### ✅ [brain.ts] Speech Bubble Timeout Disappearance (P2)
 - **Root Cause**: A custom `SetBubble` intent in `act()` used a raw `setTimeout` that conflicted with the animation director's tick loop, causing custom bubbles (boot greetings, git commits) to disappear after 1 second.
 - **Resolution**: Moved the `SetBubble` intent to the central animation director's queue during the `think` phase, letting the director manage its duration and clean it up naturally.

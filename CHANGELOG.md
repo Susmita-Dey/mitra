@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - **Subsystem Lifecycle Disposal**: Added native `.dispose()` lifecycle callbacks to `AppStorage`, `WeatherSystem`, `BatterySystem`, and `WindowController` to unsubscribe from listeners/intervals.
 - **Plugin Lifecycle Leaks**: Implemented automatic registry and subscription cleanup when unloading plugins in `plugin-manager.ts`.
 - **Cross-Platform Compatibility**: Resolved OS-specific process suffix assumptions in Rust `meeting.rs` to support cross-platform Zoom/Teams matching.
+- **macOS & Linux Compilation**: Added target conditional compilation guards to `test_media.rs` and added `libgtk-3-dev` to the Linux CI runner, resolving build failures on non-Windows targets caused by missing Windows-only dependencies.
 - **Tauri IPC Capabilities**: Added missing window management IPC capabilities to `default.json` preventing production runtime crashes.
 - **Food Prop Rotations & Layering**: Swapped inverted arm rotation signs for the food prop and adjusted SVG layering order to make the bamboo prop visible.
 - **Speech Bubble Race Conditions**: Replaced unmanaged speech bubble `setTimeout` callbacks with a centralized `AnimationDirector` queue.

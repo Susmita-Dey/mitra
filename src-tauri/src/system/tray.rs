@@ -72,18 +72,22 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
                     let _ = window.show();
                     let _ = window.set_focus();
                 } else {
-                    let _ = tauri::WebviewWindowBuilder::new(
+                    let builder = tauri::WebviewWindowBuilder::new(
                         app,
                         "tasks",
                         tauri::WebviewUrl::App("/?page=tasks".into()),
                     )
                     .title("Tasks & Goals")
-                    .inner_size(380.0, 550.0)
-                    .transparent(true)
-                    .decorations(false)
-                    .always_on_top(true)
-                    .shadow(true)
-                    .build();
+                    .inner_size(380.0, 550.0);
+
+                    #[cfg(not(target_os = "macos"))]
+                    let builder = builder.transparent(true);
+
+                    let _ = builder
+                        .decorations(false)
+                        .always_on_top(true)
+                        .shadow(true)
+                        .build();
                 }
             }
             _ => {}
