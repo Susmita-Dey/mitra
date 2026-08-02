@@ -66,19 +66,19 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
             }
             _ => {}
         })
-        .on_tray_icon_event(|tray, event| match event {
-            TrayIconEvent::Click {
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Up,
                 ..
-            } => {
+            } = event
+            {
                 let app = tray.app_handle();
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.show();
                     let _ = window.set_focus();
                 }
             }
-            _ => {}
         })
         .build(app)?;
 
