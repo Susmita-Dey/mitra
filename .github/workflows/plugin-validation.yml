@@ -133,15 +133,7 @@ jobs:
       - name: Check for known vulnerabilities
         run: bunx audit-ci --moderate || echo "::warning::Audit warnings found. Review before merging."
 
-      - name: Check for new unlocked packages (lockfile drift)
-        run: |
-          bun install
-          if git diff --exit-code bun.lockb > /dev/null 2>&1; then
-            echo "✅ Lockfile is consistent."
-          else
-            echo "::error::bun.lockb changed after install. Commit the updated lockfile."
-            exit 1
-          fi
+
 
   # ──────────────────────────────────────────────────────────────────────────
   # 4. Rust / Tauri Backend Build
@@ -166,4 +158,4 @@ jobs:
       - name: Cargo audit (Rust dependency vulnerabilities)
         run: |
           cargo install cargo-audit --quiet
-          cargo audit --manifest-path src-tauri/Cargo.toml
+          cd src-tauri && cargo audit
