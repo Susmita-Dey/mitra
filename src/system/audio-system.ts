@@ -17,7 +17,7 @@ const soundMap: Record<string, string[]> = {
   sad: ["/sounds/11325622-cartoon-trombone-sound-effect-241387.wav"],
   sleepy: ["/sounds/freesound_community-yawning-6096.wav", "/sounds/dragon-studio-male-yawn-effect-376879.wav", "/sounds/pwlpl-yawning-sound-effect-521103.wav"],
   curious: ["/sounds/dragon-studio-cartoon-blinking-372481.wav"],
-  bored: ["/sounds/11325622-clock-ticking-sound-effect-240503.wav"],
+  bored: ["/sounds/boring.wav"],
   alert: ["/sounds/dragon-studio-notification-sound-effect-372475.wav"],
   drink: ["/sounds/freesounds123-drinking-water-sound-403454.wav", "/sounds/freesound_community-drinking-liquid-sound-96442.wav"],
   chirps: ["/sounds/dragon-studio-ding-402325.wav"], // Fallback to ding for chirps
