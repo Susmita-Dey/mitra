@@ -1,5 +1,7 @@
 import { EmotionState, ProceduralAnimationState } from "./types";
 import { EmotionEngine } from "./emotion-engine";
+import type { ChainStep } from "@/behavior/chains/behavior-chains";
+import type { Emotion } from "@/types";
 
 export type DirectorPriority = 
   | "CriticalReminder"
@@ -11,10 +13,19 @@ export type DirectorPriority =
 export interface ActiveSequence {
   id: string;
   priority: DirectorPriority;
+  steps: ChainStep[];
+  currentStepIndex: number;
+  stepStartedAt: number;
+}
+
+export interface SequenceOptions {
+  id: string;
+  priority: DirectorPriority;
   animationOverrides?: Partial<ProceduralAnimationState>;
   speechBubble?: string;
   durationMs?: number;
-  startedAt: number;
+  emotion?: Emotion;
+  steps?: ChainStep[];
 }
 
 export interface AnimationDirector {
@@ -22,16 +33,17 @@ export interface AnimationDirector {
     now: number,
     emotion: EmotionState,
     emotionEngine: EmotionEngine,
-    setRenderState: (anim: ProceduralAnimationState, bubble: string | null, interactionId: string | null) => void
+    setRenderState: (anim: ProceduralAnimationState, bubble: string | null, interactionId: string | null, tempEmotion: Emotion | null) => void
   ): void;
   
-  queueSequence(sequence: Omit<ActiveSequence, "startedAt">): void;
+  queueSequence(opts: SequenceOptions): void;
   clearSequence(id: string): void;
+  cancelAnticipation(): void;
 }
 
 export function createAnimationDirector(): AnimationDirector {
   let activeSequence: ActiveSequence | null = null;
-  const queue: Omit<ActiveSequence, "startedAt">[] = [];
+  const queue: ActiveSequence[] = [];
 
   const priorityWeight: Record<DirectorPriority, number> = {
     CriticalReminder: 100,
@@ -42,22 +54,37 @@ export function createAnimationDirector(): AnimationDirector {
   };
 
   return {
-    queueSequence(seq) {
-      if (activeSequence?.id === seq.id) {
+    queueSequence(opts) {
+      if (activeSequence?.id === opts.id) {
         return; // Already active
       }
       
-      const existingIdx = queue.findIndex(q => q.id === seq.id);
+      const existingIdx = queue.findIndex(q => q.id === opts.id);
       if (existingIdx !== -1) {
         return; // Already in queue
       }
+
+      const steps = opts.steps || [{
+        durationMs: opts.durationMs,
+        animationOverrides: opts.animationOverrides,
+        speechBubble: opts.speechBubble,
+        emotion: opts.emotion
+      }];
+
+      const seq: ActiveSequence = {
+        id: opts.id,
+        priority: opts.priority,
+        steps,
+        currentStepIndex: 0,
+        stepStartedAt: 0 // Will be set when activated
+      };
 
       if (!activeSequence || priorityWeight[seq.priority] > priorityWeight[activeSequence.priority]) {
         // Preempt current
         if (activeSequence && activeSequence.priority !== "Idle") {
            queue.push({ ...activeSequence });
         }
-        activeSequence = { ...seq, startedAt: Date.now() };
+        activeSequence = { ...seq, stepStartedAt: Date.now() };
       } else {
         queue.push(seq);
         // Sort queue by priority
@@ -69,40 +96,61 @@ export function createAnimationDirector(): AnimationDirector {
       if (activeSequence?.id === id) {
         activeSequence = null;
       }
-      // Remove all instances from queue (in case there were dupes previously)
       for (let i = queue.length - 1; i >= 0; i--) {
          if (queue[i].id === id) {
             queue.splice(i, 1);
          }
       }
     },
+    
+    cancelAnticipation() {
+      if (activeSequence?.priority === "Reminder") {
+        const currentStep = activeSequence.steps[activeSequence.currentStepIndex];
+        // If it doesn't have a speech bubble, it's an anticipation step.
+        if (!currentStep.speechBubble) {
+           activeSequence = null;
+        }
+      }
+    },
 
     tick(now, emotion, emotionEngine, setRenderState) {
-      // 1. Check if active sequence expired
-      if (activeSequence && activeSequence.durationMs && now - activeSequence.startedAt > activeSequence.durationMs) {
-        activeSequence = null;
+      // 1. Check if active step expired
+      if (activeSequence) {
+        const currentStep = activeSequence.steps[activeSequence.currentStepIndex];
+        if (currentStep.durationMs && now - activeSequence.stepStartedAt > currentStep.durationMs) {
+          if (activeSequence.currentStepIndex < activeSequence.steps.length - 1) {
+            activeSequence.currentStepIndex++;
+            activeSequence.stepStartedAt = now;
+          } else {
+            activeSequence = null; // chain finished
+          }
+        }
       }
 
       // 2. Promote from queue if idle
       if (!activeSequence && queue.length > 0) {
         const next = queue.shift()!;
-        activeSequence = { ...next, startedAt: now };
+        activeSequence = { ...next, stepStartedAt: now };
       }
 
       // 3. Derive base procedural state from emotion
+      const activeStep = activeSequence ? activeSequence.steps[activeSequence.currentStepIndex] : null;
+      const tempEmotion = activeStep?.emotion || null;
+      
       const isInteracting = activeSequence?.priority === "Interaction";
-      const baseAnim = emotionEngine.deriveAnimation(emotion, isInteracting);
+      const derivedEmotionState = tempEmotion ? { ...emotion, mood: tempEmotion } : emotion;
+      const baseAnim = emotionEngine.deriveAnimation(derivedEmotionState, isInteracting);
 
       // 4. Apply sequence overrides
       const finalAnim: ProceduralAnimationState = {
         ...baseAnim,
-        ...(activeSequence?.animationOverrides || {})
+        ...(activeStep?.animationOverrides || {})
       };
       
-      const bubble = activeSequence?.speechBubble || null;
+      const bubble = activeStep?.speechBubble || null;
 
       // 5. Output to renderer
-      setRenderState(finalAnim, bubble, activeSequence?.id || null);
+      setRenderState(finalAnim, bubble, activeSequence?.id || null, tempEmotion);
     }
   };
 }

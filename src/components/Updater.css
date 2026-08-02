@@ -1,0 +1,65 @@
+.updater-toast {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  color: white;
+  z-index: 9999;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  animation: slideInDown 0.4s ease-out forwards;
+  max-width: 250px;
+}
+
+@keyframes slideInDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.updater-content h4 {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #FCD34D;
+}
+
+.updater-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.updater-btn-primary {
+  background: #E86A33;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.updater-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.updater-loading {
+  font-size: 12px;
+  opacity: 0.8;
+  margin: 0;
+  animation: pulse 1.5s infinite;
+}
+
+.updater-error {
+  color: #EF4444;
+  font-size: 11px;
+  margin: 0 0 8px 0;
+}

@@ -19,6 +19,8 @@ export interface Character {
   interaction: Interaction;
   proceduralState?: ProceduralAnimationState;
   bubbleText?: string | null;
+  energy?: number;
+  attention?: number;
 }
 
 export function createCharacter(overrides?: Partial<Character>): Character {
@@ -27,5 +29,7 @@ export function createCharacter(overrides?: Partial<Character>): Character {
     animation: overrides?.animation ?? DEFAULT_ANIMATION,
     emotion: overrides?.emotion ?? DEFAULT_EMOTION,
     interaction: overrides?.interaction ?? DEFAULT_INTERACTION,
+    energy: overrides?.energy ?? 50,
+    attention: overrides?.attention ?? 50,
   };
 }

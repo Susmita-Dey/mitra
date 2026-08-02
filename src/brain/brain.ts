@@ -25,6 +25,7 @@ import { createInteractionEngine } from "./interaction-engine";
 import { createCelebrationEngine } from "./celebration-engine";
 import { createPersonalityEngine } from "./personality-engine";
 import { createDelightEngine } from "./delight-engine";
+import { getReminderChain } from "@/behavior/chains/behavior-chains";
 
 // A frozen empty snapshot used before the first real observation.
 const EMPTY_SNAPSHOT: EnvironmentSnapshot = Object.freeze({
@@ -136,6 +137,7 @@ export function createBrain(
   // Animation Director output
   let currentProceduralState: ProceduralAnimationState | null = null;
   let currentBubbleText: string | null = null;
+  let currentTempEmotion: import("@/types").Emotion | null = null;
 
   const getContext = (): BehaviorContext => ({
     world: currentWorldState!,
@@ -188,7 +190,11 @@ export function createBrain(
            state: "triggered",
            scheduledFor: Date.now()
         };
-        memoryEngine.update({ activeReminders: { ...active, ...updates } });
+        // Also reset lastUserInteraction to bypass the 30s interaction cooldown check in reminderEngine
+        memoryEngine.update({
+          activeReminders: { ...active, ...updates },
+          lastUserInteraction: Date.now() - 60_000 // 60s ago = no cooldown
+        });
         
         // Force immediate tick
         this.observe();
@@ -272,6 +278,7 @@ export function createBrain(
       const fullMemoryUpdate = { ...memoryUpdate, ...adaptedPersonality };
       
       memoryEngine.update(fullMemoryUpdate);
+      // Pre-load these intents so think() will pick them up alongside behavior intents
       currentIntents.push(...intents);
       
       const newTimeline = timelineEngine.push(
@@ -281,6 +288,9 @@ export function createBrain(
       );
       memoryEngine.update({ timeline: newTimeline });
       
+      // Must run the full cycle so think() processes SetInteraction → animationDirector
+      this.observe();
+      this.think();
       this.act();
     },
 
@@ -307,12 +317,15 @@ export function createBrain(
       }
 
       // Wake up immediately if there's user activity (mouse movement/typing)
-      if (memoryEngine.get().wasAsleep && currentSnapshot.idleMs < 1000) {
-        memoryEngine.update({ wasAsleep: false });
-        if (currentEmotionState.mood === "sleepy") {
-           const updates = emotionEngine.clear(memoryEngine.get());
-           currentEmotionState = { ...currentEmotionState, ...updates };
+      if (currentSnapshot.idleMs < 1000) {
+        if (memoryEngine.get().wasAsleep) {
+          memoryEngine.update({ wasAsleep: false });
+          if (currentEmotionState.mood === "sleepy") {
+             const updates = emotionEngine.clear(memoryEngine.get());
+             currentEmotionState = { ...currentEmotionState, ...updates };
+          }
         }
+        animationDirector.cancelAnticipation();
       }
       
       const meetingState = meetingSystem?.getState();
@@ -381,6 +394,20 @@ export function createBrain(
         behaviorEngine.markExecuted(selected.definition.id);
       }
       
+      // Step 3.5 - Expand TriggerCelebration intents
+      const expandedIntents: Intent[] = [];
+      for (const intent of currentIntents) {
+         if (intent.type === "TriggerCelebration") {
+            const cIntents = celebrationEngine.handleEvent(intent.event as any);
+            expandedIntents.push(...cIntents);
+            const adaptedPersonality = personalityEngine.adaptToCelebration(intent.event as any, memoryEngine.get());
+            memoryEngine.update({ ...adaptedPersonality });
+         } else {
+            expandedIntents.push(intent);
+         }
+      }
+      currentIntents = expandedIntents;
+      
       // Step 4 - Pass everything to Animation Director
       // Find interaction intents
       let interactionId: string | null = null;
@@ -390,53 +417,32 @@ export function createBrain(
             const isReminder = intent.interaction.startsWith("reminder:");
             
             if (isReminder) {
-               let text = "";
-               if (intent.interaction === "reminder:water") text = "💧 Time for water!";
-               else if (intent.interaction === "reminder:snack") text = "🥨 Snack break!";
-               else if (intent.interaction === "reminder:lunch") text = "🍽️ Eat lunch!";
-               else if (intent.interaction === "reminder:stretch") text = "🤸 Stand & Stretch";
-               else if (intent.interaction === "reminder:eyes") text = "👀 Rest your eyes";
-               else if (intent.interaction === "reminder:dinner") text = "🍲 Dinner time!";
-               else if (intent.interaction === "reminder:bio") text = "🚽 Time for a bio break!";
-               
-               let overrides: Partial<import("./core/types").ProceduralAnimationState> = {
-                  eyes: "squint" // Rest eyes during all reminders
-               };
-               if (intent.interaction === "reminder:stretch") {
-                 overrides.posture = "stretch";
-                 overrides.eyes = "closed";
-               } else if (intent.interaction === "reminder:snack" || intent.interaction === "reminder:lunch" || intent.interaction === "reminder:dinner") {
-                 overrides.posture = "sit";
-                 overrides.props = ["food"];
-               } else if (intent.interaction === "reminder:water") {
-                 overrides.props = ["mug"];
-               }
-
+               const chain = getReminderChain(intent.interaction);
                animationDirector.queueSequence({
                   id: intent.interaction,
                   priority: "Reminder",
-                  speechBubble: text,
-                  animationOverrides: Object.keys(overrides).length > 0 ? overrides : undefined
+                  steps: chain
                });
             } else {
                let overrides: Partial<import("./core/types").ProceduralAnimationState> = {};
                if (intent.interaction === "ear-twitch") overrides.ears = "twitch";
-               if (intent.interaction === "tail-flick") overrides.tail = "flick";
+               if (intent.interaction === "tail-flick") { overrides.tail = "wag"; overrides.posture = "shy"; overrides.eyes = "wide"; }
                if (intent.interaction === "pet") { overrides.eyes = "squint"; overrides.ears = "down"; }
-               if (intent.interaction === "tickle") { overrides.bodyMotion = "dance"; overrides.mouth = "grin"; }
-               if (intent.interaction === "high-five") { overrides.posture = "high-five"; overrides.mouth = "grin"; overrides.eyes = "sparkle"; overrides.tail = "wag"; }
+               if (intent.interaction === "tickle") { overrides.bodyMotion = "bounce"; overrides.mouth = "laugh"; overrides.eyes = "happy-closed"; overrides.ears = "twitch"; }
+               if (intent.interaction === "high-five") { overrides.posture = "high-five"; overrides.bodyMotion = "bounce"; overrides.mouth = "smile"; overrides.eyes = "happy-closed"; overrides.ears = "up"; }
                
                animationDirector.queueSequence({
                   id: intent.interaction,
                   priority: "Interaction",
                   animationOverrides: overrides,
-                  durationMs: 2000
+                  durationMs: intent.interaction === "high-five" ? 3500 : 2000,
+                  speechBubble: intent.interaction === "high-five" ? "High-Five! 🙌" : undefined
                });
             }
          } else if (intent.type === "Greet") {
             animationDirector.queueSequence({
               id: "greet", priority: "Interaction", speechBubble: "Hi there!", durationMs: 4000,
-              animationOverrides: { posture: "stand", bodyMotion: "bounce", eyes: "sparkle" }
+              animationOverrides: { posture: "stand", bodyMotion: "wave", eyes: "sparkle" }
             });
          } else if (intent.type === "Celebrate") {
              animationDirector.queueSequence({
@@ -471,16 +477,21 @@ export function createBrain(
       if (currentPrefs.costumes?.towel) props.push("beach-towel");
       if (currentPrefs.costumes?.mug) props.push("mug");
 
+      let prevBubbleText = currentBubbleText;
+
       animationDirector.tick(
          Date.now(),
          currentEmotionState,
          emotionEngine,
-         (animState, bubbleText, interactionId) => {
+         (animState, bubbleText, interactionId, tempEmotion) => {
              // Merge procedural props with contextual props
              const activeProps = new Set([...(animState.props || []), ...props]);
              animState.props = Array.from(activeProps);
              currentProceduralState = animState;
              currentBubbleText = bubbleText;
+             currentTempEmotion = tempEmotion;
+             engine.setEnergy(currentEmotionState.energy);
+             engine.setAttention(currentEmotionState.attention);
              if (interactionId) {
                  engine.setInteraction(interactionId as import("@/types").Interaction);
              } else if (currentBubbleText === null) {
@@ -488,6 +499,11 @@ export function createBrain(
              }
          }
       );
+      
+      if (prevBubbleText === null && currentBubbleText !== null) {
+          // A new bubble just popped up!
+          currentIntents.push({ type: "PlaySound", category: "alert" });
+      }
       
       // Pass to Sound Manager
       soundManager.tick(
@@ -522,7 +538,7 @@ export function createBrain(
       });
 
       // Commit resolved emotion and procedural states to the CompanionEngine store.
-      engine.setEmotion(currentEmotionState.mood);
+      engine.setEmotion(currentTempEmotion || currentEmotionState.mood);
       
       if (currentProceduralState) {
          engine.setProceduralState(currentProceduralState);

@@ -192,4 +192,12 @@ export const EMOTION_DEFINITIONS: Readonly<Record<Emotion, EmotionDefinition>> =
       interruptible: true,
       allowedFrom: "any",
     },
+
+    caring: {
+      id: "caring",
+      priority: 4,
+      decayMs: 15_000,
+      interruptible: true,
+      allowedFrom: "any",
+    },
   };

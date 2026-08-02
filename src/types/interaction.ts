@@ -21,7 +21,7 @@ export type Interaction =
   | "pet"
   | "tickle"
   | "high-five"
-  | "poke-annoyed"
+  | "poke"
   | "poke-alert"
   | "gentle-tap"
   | "idle";

@@ -51,7 +51,7 @@ export function createInteractionEngine(): InteractionEngine {
         } else {
           intents.push({ type: "ChangeEmotion", emotion: "happy" });
           intents.push({ type: "PlayAnimation", animation: "idle" });
-          intents.push({ type: "PlaySound", category: "happy" });
+          intents.push({ type: "PlaySound", category: "chirps" });
         }
       } else if (interaction === "poke") {
         if (now - lastPokeTime > 30_000) pokeCount = 0;
@@ -60,10 +60,12 @@ export function createInteractionEngine(): InteractionEngine {
 
         if (pokeCount > 3) {
           intents.push({ type: "ChangeEmotion", emotion: "concerned" });
-          intents.push({ type: "SetInteraction", interaction: "poke-annoyed" });
+          intents.push({ type: "SetInteraction", interaction: "poke-alert" });
+          intents.push({ type: "PlaySound", category: "alert" });
         } else {
           intents.push({ type: "ChangeEmotion", emotion: "alert" });
-          intents.push({ type: "SetInteraction", interaction: "poke-alert" });
+          intents.push({ type: "SetInteraction", interaction: "poke" });
+          intents.push({ type: "PlaySound", category: "bored" }); // Short tick/bored sound for minor pokes
         }
       } else if (interaction === "gentle-tap") {
         intents.push({ type: "ChangeEmotion", emotion: "curious" });
@@ -76,7 +78,7 @@ export function createInteractionEngine(): InteractionEngine {
       } else if (interaction === "high-five") {
         intents.push({ type: "ChangeEmotion", emotion: "happy" });
         intents.push({ type: "SetInteraction", interaction: "high-five" });
-        intents.push({ type: "PlaySound", category: "happy" });
+        intents.push({ type: "PlaySound", category: "smack" });
       } else if (interaction === "tail-flick") {
         intents.push({ type: "ChangeEmotion", emotion: "alert" });
         intents.push({ type: "SetInteraction", interaction: "tail-flick" });

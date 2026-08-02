@@ -36,7 +36,7 @@ export function createSoundManager(): SoundManager {
         if (activeAnimation === "walk") {
            baseAudio.playSound("footsteps");
         } else if (activeAnimation === "celebrate") {
-           baseAudio.playSound("celebration");
+           baseAudio.playSound("wow");
         }
         lastPlayedAnim = activeAnimation;
       }

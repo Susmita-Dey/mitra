@@ -28,15 +28,17 @@ body {
 
 .companion-shell {
   width: 350px;
-  height: 400px;
+  height: 500px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   padding-bottom: 20px;
+  padding-top: 50px;
   gap: 6px;
   position: relative;
   flex-shrink: 0;
+  overflow: visible;
 }
 
 .settings-btn {

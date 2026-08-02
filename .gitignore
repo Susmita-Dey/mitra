@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tauri keys
+*.key
+*.key.pub
+.tauri/
+.~

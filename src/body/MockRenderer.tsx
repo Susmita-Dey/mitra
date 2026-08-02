@@ -55,6 +55,9 @@ export function MockRenderer({ character }: RendererProps) {
           window.dispatchEvent(new CustomEvent("companion:drag:start"));
         }
       }}
+      onDoubleClick={() => {
+        window.dispatchEvent(new CustomEvent("companion:interaction:poke"));
+      }}
     >
       <svg
         className="panda-svg"
@@ -152,32 +155,105 @@ export function MockRenderer({ character }: RendererProps) {
             />
           </g>
 
-          {/* Props Layer (Behind Arms) */}
-          <g className="panda-props">
+          {/* Props Layer (Behind Arms - e.g. Laptop on table, towel on ground) */}
+          <g className="panda-props-background">
             {/* Laptop Prop */}
             {proceduralState.props?.includes("laptop") && (
               <g className="prop-laptop">
-                <rect x="40" y="150" width="120" height="70" rx="6" fill="#E2E8F0" />
-                <rect x="45" y="155" width="110" height="50" rx="4" fill="#1E293B" />
-                <rect x="35" y="220" width="130" height="8" rx="4" fill="#CBD5E1" />
-                {/* Glowing logo */}
-                <circle cx="100" cy="180" r="6" fill="#38BDF8" opacity="0.9" />
-                {/* Keyboard suggestion */}
-                <rect x="50" y="222" width="100" height="2" rx="1" fill="#94A3B8" opacity="0.5" />
+                {/* Base */}
+                <path d="M 40,220 L 160,220 L 170,230 L 30,230 Z" fill="#9CA3AF" />
+                {/* Screen */}
+                <rect x="50" y="160" width="100" height="60" rx="4" fill="#4B5563" />
+                <rect x="55" y="165" width="90" height="50" rx="2" fill="#111827" />
+                {/* Code lines */}
+                <path d="M 60,175 L 100,175 M 60,185 L 120,185 M 60,195 L 90,195 M 60,205 L 110,205" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
+                {/* Apple logo-ish */}
+                <circle cx="100" cy="190" r="4" fill="#6EE7B7" opacity="0.3" />
               </g>
             )}
 
-
-            {/* Thermometer Prop (For Sick/Low Battery) */}
-            {proceduralState.props?.includes("thermometer") && (
-              <g className="prop-thermometer">
-                <rect x="75" y="130" width="8" height="35" rx="4" fill="#FFF" transform="rotate(-30 75 130)" />
-                <circle cx="88" cy="155" r="7" fill="#EF4444" />
-                <line x1="88" y1="155" x2="78" y2="135" stroke="#EF4444" strokeWidth="3" strokeLinecap="round" />
+            {/* Beach Towel Prop */}
+            {proceduralState.props?.includes("beach-towel") && (
+              <g className="prop-towel">
+                <rect x="0" y="210" width="200" height="20" rx="4" fill="#FCD34D" />
+                <path d="M 20,210 L 20,230 M 60,210 L 60,230 M 100,210 L 100,230 M 140,210 L 140,230 M 180,210 L 180,230" stroke="#F59E0B" strokeWidth="8" />
+                {/* Sunglasses resting on towel */}
+                <path d="M 150,215 Q 160,210 170,215 Q 165,225 155,225 Z" fill="#1F2937" />
+                <path d="M 175,215 Q 185,210 195,215 Q 190,225 180,225 Z" fill="#1F2937" />
+                <path d="M 170,215 L 175,215" stroke="#1F2937" strokeWidth="2" />
               </g>
             )}
+          </g>
 
-            {/* Mug Prop */}
+          {/* Arms with Paws */}
+          <g className="panda-arms">
+            <g className="panda-arm left"
+               ref={refs.leftArm}
+               style={{ 
+                 pointerEvents: 'auto', 
+                 cursor: 'pointer',
+                 transform: `rotate(${rig.leftArmRot}deg)`,
+                 transformOrigin: '50px 140px'
+               }}
+               onPointerDown={(e) => {
+                 e.stopPropagation();
+                 window.dispatchEvent(new CustomEvent("companion:interaction:paws"));
+               }}>
+              {/* Invisible larger hitbox for easier clicking */}
+              <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="transparent" strokeWidth="60" strokeLinecap="round" style={{ pointerEvents: "stroke" }} />
+              {/* Visible thicker stroke for a larger click target */}
+              <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="25" strokeLinecap="round" style={{ pointerEvents: "none" }} />
+              <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
+              <ellipse cx="44" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(-20 44 186)" />
+            </g>
+            <g className="panda-arm right"
+               ref={refs.rightArm}
+               style={{ 
+                 pointerEvents: 'auto', 
+                 cursor: 'pointer',
+                 transform: `rotate(${rig.rightArmRot}deg)`,
+                 transformOrigin: '150px 140px'
+               }}
+               onPointerDown={(e) => {
+                 e.stopPropagation();
+                 window.dispatchEvent(new CustomEvent("companion:interaction:paws"));
+               }}>
+              {/* Invisible larger hitbox for easier clicking */}
+              <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="transparent" strokeWidth="60" strokeLinecap="round" style={{ pointerEvents: "stroke" }} />
+              {/* Visible thicker stroke for a larger click target */}
+              <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="25" strokeLinecap="round" style={{ pointerEvents: "none" }} />
+              <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
+              {posture === "high-five" ? (
+                <g className="panda-high-five-paw">
+                  <circle cx="155" cy="190" r="14" fill="#150A05" />
+                  <circle cx="147" cy="195" r="3" fill="#FCA5A5" />
+                  <circle cx="155" cy="198" r="3" fill="#FCA5A5" />
+                  <circle cx="163" cy="195" r="3" fill="#FCA5A5" />
+                  <ellipse cx="155" cy="187" rx="6" ry="4" fill="#FCA5A5" />
+                </g>
+              ) : (
+                <ellipse cx="156" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(20 156 186)" />
+              )}
+            </g>
+          </g>
+
+          {/* Foreground Props Layer (In front of arms, so she looks like she is holding them) */}
+          <g className="panda-props-foreground">
+            {/* Birthday Cake Prop (Held in left hand) */}
+            {proceduralState.props?.includes("birthday-cake") && (
+              <g className="prop-cake">
+                <rect x="20" y="160" width="60" height="10" rx="4" fill="#E2E8F0" />
+                <rect x="25" y="140" width="50" height="20" rx="4" fill="#F472B6" />
+                {/* Frosting */}
+                <path d="M 25,145 Q 35,150 40,145 Q 50,150 55,145 Q 65,150 75,145" fill="none" stroke="#FCE7F3" strokeWidth="4" strokeLinecap="round" />
+                {/* Candle */}
+                <rect x="47" y="125" width="6" height="15" fill="#FEF08A" />
+                <path d="M 47,118 Q 50,110 53,118 Q 51,125 47,118 Z" fill="#EF4444" />
+                <path d="M 48.5,120 Q 50,115 51.5,120 Q 50.5,123 48.5,120 Z" fill="#FBBF24" />
+              </g>
+            )}
+            
+            {/* Mug Prop (Held in right hand) */}
             {proceduralState.props?.includes("mug") && (
               <g className="prop-mug">
                 <rect x="130" y="140" width="30" height="35" rx="3" fill="#60A5FA" />
@@ -200,76 +276,15 @@ export function MockRenderer({ character }: RendererProps) {
                 <path d="M 130,145 Q 115,140 120,155 Q 130,150 130,145" fill="#16A34A" />
               </g>
             )}
-
-            {/* Beach Towel Prop */}
-            {proceduralState.props?.includes("beach-towel") && (
-              <g className="prop-towel">
-                <rect x="0" y="210" width="200" height="20" rx="4" fill="#FCD34D" />
-                <path d="M 20,210 L 20,230 M 60,210 L 60,230 M 100,210 L 100,230 M 140,210 L 140,230 M 180,210 L 180,230" stroke="#F59E0B" strokeWidth="8" />
-                {/* Sunglasses resting on towel */}
-                <path d="M 150,215 Q 160,210 170,215 Q 165,225 155,225 Z" fill="#1F2937" />
-                <path d="M 175,215 Q 185,210 195,215 Q 190,225 180,225 Z" fill="#1F2937" />
-                <path d="M 170,215 L 175,215" stroke="#1F2937" strokeWidth="2" />
+            
+            {/* Thermometer Prop */}
+            {proceduralState.props?.includes("thermometer") && (
+              <g className="prop-thermometer">
+                <rect x="75" y="130" width="8" height="35" rx="4" fill="#FFF" transform="rotate(-30 75 130)" />
+                <circle cx="88" cy="155" r="7" fill="#EF4444" />
+                <line x1="88" y1="155" x2="78" y2="135" stroke="#EF4444" strokeWidth="3" strokeLinecap="round" />
               </g>
             )}
-
-            {/* Laptop Prop */}
-            {proceduralState.props?.includes("laptop") && (
-              <g className="prop-laptop">
-                {/* Base */}
-                <path d="M 40,220 L 160,220 L 170,230 L 30,230 Z" fill="#9CA3AF" />
-                {/* Screen */}
-                <rect x="50" y="160" width="100" height="60" rx="4" fill="#4B5563" />
-                <rect x="55" y="165" width="90" height="50" rx="2" fill="#111827" />
-                {/* Code lines */}
-                <path d="M 60,175 L 100,175 M 60,185 L 120,185 M 60,195 L 90,195 M 60,205 L 110,205" stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
-                {/* Apple logo-ish */}
-                <circle cx="100" cy="190" r="4" fill="#6EE7B7" opacity="0.3" />
-              </g>
-            )}
-
-
-          </g>
-
-          {/* Arms with Paws */}
-          <g className="panda-arms">
-            <g className="panda-arm left"
-               ref={refs.leftArm}
-               style={{ 
-                 pointerEvents: 'auto', 
-                 cursor: 'pointer',
-                 transform: `rotate(${rig.leftArmRot}deg)`,
-                 transformOrigin: '50px 140px'
-               }}
-               onPointerDown={(e) => {
-                 e.stopPropagation();
-                 window.dispatchEvent(new CustomEvent("companion:interaction:paws"));
-               }}>
-              {/* Visible thicker stroke for a larger click target */}
-              <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="25" strokeLinecap="round" style={{ pointerEvents: "stroke" }} />
-              <path d="M 50,140 Q 30,170 45,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
-              <ellipse cx="44" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(-20 44 186)" />
-            </g>
-            <g className="panda-arm right"
-               ref={refs.rightArm}
-               style={{ 
-                 pointerEvents: 'auto', 
-                 cursor: 'pointer',
-                 transform: `rotate(${rig.rightArmRot}deg)`,
-                 transformOrigin: '150px 140px'
-               }}
-               onPointerDown={(e) => {
-                 e.stopPropagation();
-                 window.dispatchEvent(new CustomEvent("companion:interaction:paws"));
-               }}>
-                {/* Invisible larger hitbox for easier clicking */}
-            {/* <path d="M 140,180 C 190,200 210,130 180,100 C 160,80 140,110 150,130" fill="none" stroke="transparent" strokeWidth="60" strokeLinecap="round" style={{ pointerEvents: "stroke" }} /> */}
-
-              {/* Visible thicker stroke for a larger click target */}
-              <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="25" strokeLinecap="round" style={{ pointerEvents: "stroke" }} />
-              <path d="M 150,140 Q 170,170 155,190" fill="none" stroke="#150A05" strokeWidth="24" strokeLinecap="round" />
-              <ellipse cx="156" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(20 156 186)" />
-            </g>
           </g>
 
           {/* Head */}
@@ -321,6 +336,18 @@ export function MockRenderer({ character }: RendererProps) {
               <path d="M 160,45 Q 170,65 145,65" fill="none" stroke="#E86A33" strokeWidth="4" strokeLinecap="round" />
             </g>
 
+            {/* Birthday Hat Prop (On top of head) */}
+            {proceduralState.props?.includes("birthday-hat") && (
+              <g className="prop-birthday-hat" style={{ transform: "translate(0px, -20px) rotate(15deg)", transformOrigin: "100px 30px" }}>
+                <path d="M 100,-10 L 75,40 L 125,40 Z" fill="#3B82F6" />
+                {/* Stripes */}
+                <path d="M 90,15 L 110,15 M 85,25 L 115,25" stroke="#FDE047" strokeWidth="4" />
+                {/* Pom-pom */}
+                <circle cx="100" cy="-10" r="10" fill="#EF4444" />
+                <circle cx="100" cy="-10" r="6" fill="#FCA5A5" />
+              </g>
+            )}
+
             {/* Main Head Shape */}
             <ellipse cx="100" cy="90" rx="72" ry="58" fill="#E86A33" />
             
@@ -350,7 +377,12 @@ export function MockRenderer({ character }: RendererProps) {
 
             {/* Mouth */}
             <g className="panda-mouth-group">
-              {mouth === "grin" ? (
+              {mouth === "laugh" ? (
+                <>
+                  <path className="panda-mouth-laugh" d="M 88,125 Q 100,150 112,125 Z" fill="#2E1C12" />
+                  <path className="panda-mouth-tongue" d="M 94,132 Q 100,146 106,132 Z" fill="#F472B6" />
+                </>
+              ) : mouth === "grin" ? (
                 <path className="panda-mouth-happy" d="M 90,125 Q 100,145 110,125 Z" fill="#2E1C12" />
               ) : mouth === "yawn" || mouth === "open" ? (
                 <circle cx="100" cy="130" r="5" fill="#2E1C12" />
@@ -374,7 +406,7 @@ export function MockRenderer({ character }: RendererProps) {
                 ) : eyes === "happy-closed" ? (
                    <path className="panda-happy-eye left" d="M 60,103 Q 70,93 80,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
                 ) : (
-                  <>
+                  <g ref={refs.leftEyePupil}>
                     <circle cx="70" cy="100" r={eyes === "wide" ? 12 : 11} fill="#2E1C12" className="panda-eye" />
                     {eyes === "sparkle" && <circle cx="70" cy="100" r="11" fill="#ffeb3b" opacity="0.3" />}
                     <circle cx={eyes === "wide" ? 70 : 66} cy={eyes === "wide" ? 100 : 96} r={eyes === "wide" ? 2 : 4} fill="#FFFFFF" className="panda-eye-glint" />
@@ -382,7 +414,7 @@ export function MockRenderer({ character }: RendererProps) {
                     {eyes === "sad" && (
                        <path d="M 57,103 Q 70,95 83,92 L 83,85 L 57,85 Z" fill="#FFF9ED" />
                     )}
-                  </>
+                  </g>
                 )}
               </g>
               
@@ -393,7 +425,7 @@ export function MockRenderer({ character }: RendererProps) {
                 ) : eyes === "happy-closed" ? (
                    <path className="panda-happy-eye right" d="M 120,103 Q 130,93 140,103" fill="none" stroke="#2E1C12" strokeWidth="4" strokeLinecap="round" />
                 ) : (
-                  <>
+                  <g ref={refs.rightEyePupil}>
                     <circle cx="130" cy="100" r={eyes === "wide" ? 12 : 11} fill="#2E1C12" className="panda-eye" />
                     {eyes === "sparkle" && <circle cx="130" cy="100" r="11" fill="#ffeb3b" opacity="0.3" />}
                     <circle cx={eyes === "wide" ? 130 : 126} cy={eyes === "wide" ? 100 : 96} r={eyes === "wide" ? 2 : 4} fill="#FFFFFF" className="panda-eye-glint" />
@@ -401,7 +433,7 @@ export function MockRenderer({ character }: RendererProps) {
                     {eyes === "sad" && (
                        <path d="M 117,92 Q 130,95 143,103 L 143,85 L 117,85 Z" fill="#FFF9ED" />
                     )}
-                  </>
+                  </g>
                 )}
               </g>
             </g>
@@ -448,6 +480,19 @@ export function MockRenderer({ character }: RendererProps) {
           </g>
         )}
       </svg>
+
+      {/* Confetti Overlay during Dance! */}
+      {proceduralState.bodyMotion === "dance" && (
+        <div className="confetti-container">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <div key={i} className={`confetti c-${i % 4}`} style={{ 
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${1 + Math.random()}s`
+            }} />
+          ))}
+        </div>
+      )}
 
       {posture === "sleep" && (
         <div className="mock-zzz-container">

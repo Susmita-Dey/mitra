@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "reminder.eyes",
   priority: 80,
   weight: 5,
-  cooldownMs: 300000,
+  cooldownMs: 0,
   action: "idle",
   canInterrupt: true,
 };
@@ -16,9 +16,7 @@ export const EyesReminderBehavior: RegisteredBehavior = {
   canExecute: (context: BehaviorContext) => {
     return context.world.memory.activeReminders.eyes.state === "triggered";
   },
-  execute: (context: BehaviorContext) => {
-    context.emit({ type: "PlayAnimation", animation: "sit" });
+    execute: (context: BehaviorContext) => {
     context.emit({ type: "SetInteraction", interaction: "reminder:eyes" });
-    context.emit({ type: "PlaySound", category: "alert" });
   },
 };

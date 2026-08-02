@@ -6,11 +6,12 @@ use tauri::{
 
 pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let toggle_i = MenuItem::with_id(app, "toggle_visibility", "Hide Mitra", true, None::<&str>)?;
-    let compact_i = MenuItem::with_id(app, "toggle_compact", "Compact Mode", true, None::<&str>)?;
+    let updates_i = MenuItem::with_id(app, "check_updates", "Check for Updates", true, None::<&str>)?;
+    let tasks_i = MenuItem::with_id(app, "tasks", "Open Tasks", true, None::<&str>)?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-    let menu = Menu::with_items(app, &[&toggle_i, &compact_i, &settings_i, &quit_i])?;
+    let menu = Menu::with_items(app, &[&toggle_i, &tasks_i, &settings_i, &updates_i, &quit_i])?;
 
     let _tray = TrayIconBuilder::with_id("main")
         .tooltip("Mitra")
@@ -43,9 +44,11 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             }
-            "toggle_compact" => {
+            "check_updates" => {
                 if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.emit("companion:mode:compact_toggle", ());
+                    let _ = window.emit("companion:window:check_updates", ());
+                    let _ = window.show();
+                    let _ = window.set_focus();
                 }
             }
             "settings" => {
@@ -61,6 +64,25 @@ pub fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
                     )
                     .title("Mitra Settings")
                     .inner_size(350.0, 480.0)
+                    .build();
+                }
+            }
+            "tasks" => {
+                if let Some(window) = app.get_webview_window("tasks") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                } else {
+                    let _ = tauri::WebviewWindowBuilder::new(
+                        app,
+                        "tasks",
+                        tauri::WebviewUrl::App("/?page=tasks".into()),
+                    )
+                    .title("Tasks & Goals")
+                    .inner_size(380.0, 550.0)
+                    .transparent(true)
+                    .decorations(false)
+                    .always_on_top(true)
+                    .shadow(true)
                     .build();
                 }
             }

@@ -117,9 +117,16 @@
   margin-bottom: 0;
 }
 
+.setting-row input[type="number"] {
+  width: 80px;
+}
+
+.setting-row input[type="text"] {
+  width: 140px;
+}
+
 .setting-row input[type="number"],
 .setting-row input[type="text"] {
-  width: 80px;
   padding: 6px 10px;
   border: 1px solid rgba(0,0,0,0.1);
   border-radius: 8px;
@@ -239,8 +246,8 @@
 }
 .radio-card.active {
   background: white;
-  border-color: #4ade80;
-  box-shadow: 0 0 0 1px #4ade80, 0 4px 12px rgba(74, 222, 128, 0.15);
+  border-color: #E86A33;
+  box-shadow: 0 0 0 1px #E86A33, 0 4px 12px rgba(232, 106, 51, 0.15);
 }
 .radio-card-content {
   display: flex;
@@ -255,5 +262,160 @@
   font-size: 11px;
   color: #666;
   margin-top: 2px;
+}
+
+/* Premium Reminders Section & Calendar Input */
+.premium-input {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(232, 106, 51, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(232, 106, 51, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-weight: 600;
+  color: #C24F1E;
+  transition: all 0.3s ease !important;
+}
+.premium-input:focus {
+  box-shadow: 0 0 0 3px rgba(232, 106, 51, 0.2) !important;
+  border-color: #E86A33 !important;
+}
+
+.premium-reminders-section {
+  background: linear-gradient(145deg, rgba(255,255,255,0.7), rgba(255,255,255,0.4)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05) !important;
+}
+
+.reminders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.reminders-header h3 {
+  margin: 0 !important;
+  font-size: 14px !important;
+  color: #1A1A1A !important;
+}
+
+.reminders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  transition: opacity 0.3s ease;
+}
+
+.reminders-grid.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(0.5);
+}
+
+.premium-reminder-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-reminder-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(232, 106, 51, 0.1);
+  border-color: rgba(232, 106, 51, 0.3);
+}
+
+.card-icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.03);
+}
+
+.water-icon { background: rgba(59, 130, 246, 0.1); }
+.stretch-icon { background: rgba(16, 185, 129, 0.1); }
+.eyes-icon { background: rgba(139, 92, 246, 0.1); }
+.bio-icon { background: rgba(245, 158, 11, 0.1); }
+.meal-icon { background: rgba(239, 68, 68, 0.1); }
+.snack-icon { background: rgba(232, 106, 51, 0.1); }
+
+.card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-content label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  margin: 0 !important;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748B;
+}
+
+.premium-reminder-card input[type="number"],
+.premium-reminder-card input[type="time"] {
+  width: 100% !important;
+  max-width: 60px;
+  padding: 4px 6px !important;
+  font-size: 11px !important;
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  background: white !important;
+  border-radius: 6px !important;
+}
+.premium-reminder-card input[type="time"] {
+  max-width: 100px;
+}
+
+/* Premium Toggle */
+.premium-toggle input {
+  display: none;
+}
+.premium-toggle-track {
+  width: 44px;
+  height: 24px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 24px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+.premium-toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.premium-toggle input:checked + .premium-toggle-track {
+  background: linear-gradient(135deg, #FCD34D 0%, #E86A33 100%);
+}
+.premium-toggle input:checked + .premium-toggle-track::after {
+  transform: translateX(20px);
 }
 

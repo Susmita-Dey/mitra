@@ -31,6 +31,8 @@ export interface CompanionEngine {
   setInteraction(interaction: Interaction): void;
   setProceduralState(state: import("../brain/core/types").ProceduralAnimationState): void;
   setBubbleText(text: string | null): void;
+  setEnergy(energy: number): void;
+  setAttention(attention: number): void;
 }
 
 export function createCompanionEngine(
@@ -77,5 +79,7 @@ export function createCompanionEngine(
     setInteraction: (interaction) => patch({ interaction }),
     setProceduralState: (proceduralState) => patch({ proceduralState }),
     setBubbleText: (bubbleText) => patch({ bubbleText }),
+    setEnergy: (energy) => patch({ energy }),
+    setAttention: (attention) => patch({ attention }),
   };
 }

@@ -1,6 +1,6 @@
 [package]
 name = "mitra"
-version = "0.1.0"
+version = "1.0.0"
 description = "Your tiny open-source desktop companion."
 authors = ["you"]
 edition = "2021"
@@ -17,6 +17,9 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["tray-icon"] }
 serde = { version = "1.0", features = ["derive"] }
 sysinfo = "0.39.6"
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-process = "2.3.1"
+serde_json = "1.0.151"
 
 # Windows-only: Global System Media Transport Controls
 [target.'cfg(target_os = "windows")'.dependencies]

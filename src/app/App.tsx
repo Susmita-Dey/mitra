@@ -9,6 +9,7 @@ import { listen } from "@tauri-apps/api/event";
 import { Companion } from "@/body";
 import { createBrain, initializeBrain } from "@/brain";
 import { StateDebug } from "@/ui";
+import { Updater } from "@/components/Updater";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { createEnvironmentService } from "@/system/environment-service";
@@ -58,6 +59,8 @@ import {
   TaskbarBehavior,
   BioReminderBehavior,
   CatchUpBehavior,
+  UserBirthdayBehavior,
+  MitraBirthdayBehavior,
 } from "@/behavior/behaviors";
 import { createCompanionEngine } from "./companion-engine";
 
@@ -128,13 +131,18 @@ export function App() {
     gitWatcher.start();
     
     let clickThroughPref = false;
+    let lastIgnoreState: boolean | null = null;
 
     const updateClickThrough = () => {
       const char = engine.getCharacter();
-      const isIdleOrSleeping = char.animation === "idle" || char.animation === "sleep" || char.animation === "wander";
+      const isIdleOrSleeping = char.animation === "idle" || char.animation === "sleep" || char.animation === "wander" || char.animation === "walk";
       const hasBubble = !!char.bubbleText;
       const shouldIgnore = clickThroughPref && isIdleOrSleeping && !hasBubble;
-      winCtrl.setIgnoreCursorEvents(shouldIgnore).catch(console.error);
+      
+      if (lastIgnoreState !== shouldIgnore) {
+        lastIgnoreState = shouldIgnore;
+        winCtrl.setIgnoreCursorEvents(shouldIgnore).catch(console.error);
+      }
     };
 
     const unsubscribeEngine = engine.subscribe(updateClickThrough);
@@ -157,6 +165,21 @@ export function App() {
       }
       updateClickThrough();
     }).catch(console.error);
+    
+    listen("onboarding-completed", async () => {
+      console.log("Onboarding completed event received!");
+      (window as any).ONBOARDING_ACTIVE = false;
+      await getCurrentWindow().show();
+    });
+
+    listen("task:completed", (e: any) => {
+      const size = e.payload?.size;
+      if (size === "big") {
+        brain.triggerCelebration("TaskCompletedBig");
+      } else {
+        brain.triggerCelebration("TaskCompletedSmall");
+      }
+    });
 
     // Listen to visibility events from tray
     (window as any).IS_HIDDEN = false;
@@ -202,6 +225,11 @@ export function App() {
       }
     });
 
+    // Listen to global Tauri events for preferences (since localStorage 'storage' event is sometimes flaky across webviews)
+    listen("preferences:updated", () => {
+      appStorage.load().catch(console.error);
+    });
+
     // Demonstrate loading a plugin statically
     _pluginManager.loadPlugin(HelloWorldPlugin).catch(console.error);
 
@@ -239,6 +267,8 @@ export function App() {
     brain.registerBehavior(WanderBehavior);
     brain.registerBehavior(TaskbarBehavior);
     brain.registerBehavior(CatchUpBehavior);
+    brain.registerBehavior(UserBirthdayBehavior);
+    brain.registerBehavior(MitraBirthdayBehavior);
 
     const stopBrain = initializeBrain(brain, scheduler);
 
@@ -274,8 +304,7 @@ export function App() {
       } else if (detail.type === 'force-emotion') {
         brain.pushEmotion(detail.payload);
       } else if (detail.type === 'force-interaction') {
-        if (detail.payload === 'pet') brain.registerInteraction();
-        // we can add other interaction forced triggers later if needed
+        brain.triggerInteraction(detail.payload);
       }
     };
 
@@ -284,9 +313,11 @@ export function App() {
     window.addEventListener("companion:drag:start", handleDragStart);
     window.addEventListener("companion:interaction:head", () => handleInteraction("pet"));
     window.addEventListener("companion:interaction:tummy", () => handleInteraction("tickle"));
-    window.addEventListener("companion:interaction:paws", () => handleInteraction("high-five"));
+    window.addEventListener("companion:interaction:paws", () => handleInteraction("gentle-tap"));
+    window.addEventListener("companion:interaction:hand", () => handleInteraction("high-five"));
     window.addEventListener("companion:interaction:tail", () => handleInteraction("tail-flick"));
     window.addEventListener("companion:interaction:ears", () => handleInteraction("ear-twitch"));
+    window.addEventListener("companion:interaction:poke", () => handleInteraction("poke"));
     window.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("contextmenu", handleContextMenu);
 
@@ -302,9 +333,10 @@ export function App() {
       window.removeEventListener("companion:drag:start", handleDragStart);
       window.removeEventListener("companion:interaction:head", () => handleInteraction("pet"));
       window.removeEventListener("companion:interaction:tummy", () => handleInteraction("tickle"));
-      window.removeEventListener("companion:interaction:paws", () => handleInteraction("high-five"));
+      window.removeEventListener("companion:interaction:paws", () => handleInteraction("gentle-tap"));
       window.removeEventListener("companion:interaction:tail", () => handleInteraction("tail-flick"));
       window.removeEventListener("companion:interaction:ears", () => handleInteraction("ear-twitch"));
+      window.removeEventListener("companion:interaction:poke", () => handleInteraction("poke"));
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("contextmenu", handleContextMenu);
       scheduler.dispose();
@@ -317,6 +349,7 @@ export function App() {
 
   return (
     <CompanionProvider engine={engine}>
+      <Updater />
       <CompanionView />
 
       {/* Settings / Menu Gear Icon */}

@@ -10,6 +10,8 @@ pub fn run() {
             system::meeting::check_coding_status,
             system::git::get_git_hash,
         ])
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             system::window::configure_main_window(app)?;
             system::tray::setup_tray(app)?;

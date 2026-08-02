@@ -29,3 +29,5 @@ export { PeekBehavior } from "./presence-peek";
 export { WanderBehavior } from "./presence-wander";
 export { TaskbarBehavior } from "./presence-taskbar";
 export { CatchUpBehavior } from "./catch-up";
+export { UserBirthdayBehavior } from "./user-birthday";
+export { MitraBirthdayBehavior } from "./mitra-birthday";

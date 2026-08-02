@@ -142,6 +142,13 @@ export function createEmotionEngine(): EmotionEngine {
         anim.tail = "flick";
         anim.posture = "stand";
       }
+      else if (emotion.mood === "bored") {
+        anim.eyes = "squint";
+        anim.ears = "down";
+        anim.tail = "droop";
+        anim.posture = "slump";
+        anim.bodyMotion = "sway";
+      }
       else if (emotion.mood === "calm" || emotion.mood === "cozy") {
         anim.eyes = "squint";
         anim.ears = "down";
@@ -167,7 +174,14 @@ export function createEmotionEngine(): EmotionEngine {
         anim.eyes = "squint";
         anim.ears = "down";
         anim.tail = "still";
-        anim.posture = "sit";
+        anim.posture = "shy";
+      }
+      else if (emotion.mood === "sad") {
+        anim.eyes = "sad";
+        anim.mouth = "sad";
+        anim.ears = "down";
+        anim.tail = "still";
+        anim.posture = "concerned"; // Shoulders slumped
       }
 
       // Overrides based on immediate interaction

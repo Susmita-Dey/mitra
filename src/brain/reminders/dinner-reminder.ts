@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "reminder.dinner",
   priority: 80,
   weight: 5,
-  cooldownMs: 300000,
+  cooldownMs: 0,
   action: "idle",
   canInterrupt: true,
 };
@@ -16,9 +16,7 @@ export const DinnerReminderBehavior: RegisteredBehavior = {
   canExecute: (context: BehaviorContext) => {
     return context.world.memory.activeReminders.dinner?.state === "triggered";
   },
-  execute: (context: BehaviorContext) => {
-    context.emit({ type: "PlayAnimation", animation: "sit" });
+    execute: (context: BehaviorContext) => {
     context.emit({ type: "SetInteraction", interaction: "reminder:dinner" });
-    context.emit({ type: "PlaySound", category: "alert" });
   },
 };

@@ -19,6 +19,7 @@ export function SettingsPage() {
   const [lunchTime, setLunchTime] = useState("13:00");
   const [dinnerTime, setDinnerTime] = useState("20:00");
   const [snackTime, setSnackTime] = useState("17:00");
+  const [userBirthday, setUserBirthday] = useState("");
   
   const [muteSounds, setMuteSounds] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -33,7 +34,7 @@ export function SettingsPage() {
   const [mug, setMug] = useState(false);
 
   // Mitra+ License State (Mocked for now)
-  const [hasMitraPlus, setHasMitraPlus] = useState(false);
+  const [hasMitraPlus] = useState(false);
 
   const [locationTrust, setLocationTrust] = useState<"unknown" | "granted" | "denied" | "approximate" | "off">("approximate");
 
@@ -41,13 +42,20 @@ export function SettingsPage() {
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
+    let isMounted = true;
+    
     const setupCloseHandler = async () => {
       try {
         const win = getCurrentWindow();
-        unlisten = await win.onCloseRequested((event) => {
+        const unlistenFn = await win.onCloseRequested((event) => {
           event.preventDefault();
           win.hide();
         });
+        if (isMounted) {
+          unlisten = unlistenFn;
+        } else {
+          unlistenFn();
+        }
       } catch (err) {
         console.error("Failed to setup close handler", err);
       }
@@ -55,6 +63,7 @@ export function SettingsPage() {
     setupCloseHandler();
 
     appStorage.load().then(prefs => {
+      if (!isMounted) return;
       setPreferences(prefs);
       setRemindersEnabled(prefs.reminders?.enabled ?? true);
       setWaterInterval((prefs.reminders?.water?.intervalMs ?? 7200000) / (60 * 1000));
@@ -71,6 +80,7 @@ export function SettingsPage() {
       setWanderEnabled(prefs.behavior?.wanderEnabled ?? false);
       setWeatherLocation(prefs.behavior?.weatherLocation ?? "");
       setHideDuringMeetings(prefs.behavior?.hideDuringMeetings ?? false);
+      setUserBirthday(prefs.birthday ?? "");
       
       setSunglasses(prefs.costumes?.sunglasses ?? false);
       setTowel(prefs.costumes?.towel ?? false);
@@ -80,6 +90,7 @@ export function SettingsPage() {
     });
 
     return () => {
+      isMounted = false;
       if (unlisten) unlisten();
     };
   }, []);
@@ -129,7 +140,8 @@ export function SettingsPage() {
           discord: "unknown",
         } as const),
         location: locationTrust,
-      }
+      },
+      birthday: userBirthday
     });
     try {
       await getCurrentWindow().hide();
@@ -145,9 +157,6 @@ export function SettingsPage() {
       {errorMsg && <div className="error-banner">{errorMsg}</div>}
       <div className="settings-header">
         <h2>Settings</h2>
-        <button onClick={() => setHasMitraPlus(!hasMitraPlus)} style={{ fontSize: '10px', padding: '2px 6px', background: 'transparent', border: '1px dashed #666', color: '#666', cursor: 'pointer', marginLeft: 'auto', borderRadius: '4px' }}>
-          [Dev] Toggle Pro
-        </button>
       </div>
 
       <div className="settings-content">
@@ -192,6 +201,29 @@ export function SettingsPage() {
             </div>
           </section>
         ) : null}
+
+        <section className="settings-section">
+          <h3>Personalize</h3>
+          <div className="setting-row">
+            <label>
+              Your Birthday
+              <input 
+                type="date" 
+                value={userBirthday ? `2000-${userBirthday}` : ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    const parts = val.split('-');
+                    setUserBirthday(`${parts[1]}-${parts[2]}`);
+                  } else {
+                    setUserBirthday("");
+                  }
+                }}
+                className="premium-input"
+              />
+            </label>
+          </div>
+        </section>
 
         <section className="settings-section">
           <h3>Behaviors</h3>
@@ -255,7 +287,12 @@ export function SettingsPage() {
                 </div>
               </label>
               <label className={`radio-card ${locationTrust === "granted" ? "active" : ""}`}>
-                <input type="radio" name="location" value="granted" checked={locationTrust === "granted"} onChange={() => setLocationTrust("granted")} style={{ display: 'none' }} />
+                <input type="radio" name="location" value="granted" checked={locationTrust === "granted"} onChange={() => {
+                  setLocationTrust("granted");
+                  if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(() => {}, () => {});
+                  }
+                }} style={{ display: 'none' }} />
                 <div className="radio-card-content">
                   <span className="radio-card-title">Precise</span>
                   <span className="radio-card-desc">Best Weather Accuracy</span>
@@ -265,19 +302,19 @@ export function SettingsPage() {
             {locationTrust === "denied" && <div className="trust-warning" style={{ fontSize: '0.85em', color: '#EF4444', marginTop: '12px', padding: '8px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: 4, verticalAlign: '-1px'}}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>Precise Location Denied. Using approximate location.</div>}
           </div>
 
-          <div className="privacy-dashboard" style={{ marginTop: '24px', padding: '16px', background: 'linear-gradient(145deg, rgba(20, 25, 20, 0.6), rgba(10, 15, 10, 0.8))', borderRadius: '12px', border: '1px solid rgba(74, 222, 128, 0.2)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
-            <h4 style={{ margin: '0 0 16px 0', color: '#4ade80', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <div className="privacy-dashboard" style={{ marginTop: '24px', padding: '16px', background: 'linear-gradient(145deg, rgba(232, 106, 51, 0.05), rgba(194, 79, 30, 0.1))', borderRadius: '12px', border: '1px solid rgba(232, 106, 51, 0.2)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.05)' }}>
+            <h4 style={{ margin: '0 0 16px 0', color: '#C24F1E', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
               Mitra Privacy Promise
             </h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85em', color: '#e2e8f0' }}>
-              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No telemetry</li>
-              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Runs locally</li>
-              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Weather only</li>
-              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No screenshots</li>
-              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No microphone</li>
-              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No camera</li>
-              <li style={{display: 'flex', alignItems: 'center', gap: '6px', gridColumn: 'span 2'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No cloud AI processing</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85em', color: '#334155' }}>
+              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E86A33" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No telemetry</li>
+              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E86A33" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Runs locally</li>
+              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E86A33" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> Weather only</li>
+              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E86A33" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No screenshots</li>
+              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E86A33" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No microphone</li>
+              <li style={{display: 'flex', alignItems: 'center', gap: '6px'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E86A33" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No camera</li>
+              <li style={{display: 'flex', alignItems: 'center', gap: '6px', gridColumn: 'span 2'}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#E86A33" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg> No cloud AI processing</li>
             </ul>
           </div>
         </section>
@@ -318,44 +355,90 @@ export function SettingsPage() {
           </div>
         </section>
 
-        <section className="settings-section">
-          <h3>Reminders</h3>
-          <div className="setting-row">
-            <label>
+        <section className="settings-section premium-reminders-section">
+          <div className="reminders-header">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+              Smart Reminders
+            </h3>
+            <label className="premium-toggle">
               <input type="checkbox" checked={remindersEnabled} onChange={(e) => setRemindersEnabled(e.target.checked)} />
-              Enable Reminders
+              <div className="premium-toggle-track"></div>
             </label>
           </div>
-          <div className="setting-row">
-            <label>Water Interval (mins)</label>
-            <input type="number" value={waterInterval} disabled={!remindersEnabled} onChange={(e) => setWaterInterval(Number(e.target.value))} />
-          </div>
-          <div className="setting-row">
-            <label>Stretch Interval (mins)</label>
-            <input type="number" value={stretchInterval} disabled={!remindersEnabled} onChange={(e) => setStretchInterval(Number(e.target.value))} />
-          </div>
-          <div className="setting-row inline">
-            <label>Rest Eyes every</label>
-            <input type="number" min="10" value={eyesInterval} onChange={e => setEyesInterval(Number(e.target.value))} />
-            <span>mins</span>
-          </div>
-          <div className="setting-row inline">
-            <label>Bio Break every</label>
-            <input type="number" min="30" value={bioInterval} onChange={e => setBioInterval(Number(e.target.value))} />
-            <span>mins</span>
-          </div>
 
-          <div className="setting-row inline">
-            <label>Lunch Time</label>
-            <input type="time" value={lunchTime} disabled={!remindersEnabled} onChange={(e) => setLunchTime(e.target.value)} />
-          </div>
-          <div className="setting-row">
-            <label>Dinner Time</label>
-            <input type="time" value={dinnerTime} disabled={!remindersEnabled} onChange={(e) => setDinnerTime(e.target.value)} />
-          </div>
-          <div className="setting-row">
-            <label>Snack Time</label>
-            <input type="time" value={snackTime} disabled={!remindersEnabled} onChange={(e) => setSnackTime(e.target.value)} />
+          <div className={`reminders-grid ${!remindersEnabled ? 'disabled' : ''}`}>
+            <div className="premium-reminder-card">
+              <div className="card-icon water-icon">💧</div>
+              <div className="card-content">
+                <label>Water</label>
+                <div className="input-group">
+                  <span>Every</span>
+                  <input type="number" value={waterInterval} disabled={!remindersEnabled} onChange={(e) => setWaterInterval(Number(e.target.value))} />
+                  <span>m</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="premium-reminder-card">
+              <div className="card-icon stretch-icon">🧘</div>
+              <div className="card-content">
+                <label>Stretch</label>
+                <div className="input-group">
+                  <span>Every</span>
+                  <input type="number" value={stretchInterval} disabled={!remindersEnabled} onChange={(e) => setStretchInterval(Number(e.target.value))} />
+                  <span>m</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="premium-reminder-card">
+              <div className="card-icon eyes-icon">👀</div>
+              <div className="card-content">
+                <label>Rest Eyes</label>
+                <div className="input-group">
+                  <span>Every</span>
+                  <input type="number" min="10" value={eyesInterval} disabled={!remindersEnabled} onChange={e => setEyesInterval(Number(e.target.value))} />
+                  <span>m</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="premium-reminder-card">
+              <div className="card-icon bio-icon">🏃</div>
+              <div className="card-content">
+                <label>Bio Break</label>
+                <div className="input-group">
+                  <span>Every</span>
+                  <input type="number" min="30" value={bioInterval} disabled={!remindersEnabled} onChange={e => setBioInterval(Number(e.target.value))} />
+                  <span>m</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="premium-reminder-card">
+              <div className="card-icon meal-icon">🍱</div>
+              <div className="card-content">
+                <label>Lunch</label>
+                <input type="time" value={lunchTime} disabled={!remindersEnabled} onChange={(e) => setLunchTime(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="premium-reminder-card">
+              <div className="card-icon meal-icon">🌙</div>
+              <div className="card-content">
+                <label>Dinner</label>
+                <input type="time" value={dinnerTime} disabled={!remindersEnabled} onChange={(e) => setDinnerTime(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="premium-reminder-card">
+              <div className="card-icon snack-icon">🍎</div>
+              <div className="card-content">
+                <label>Snack</label>
+                <input type="time" value={snackTime} disabled={!remindersEnabled} onChange={(e) => setSnackTime(e.target.value)} />
+              </div>
+            </div>
           </div>
         </section>
       </div>

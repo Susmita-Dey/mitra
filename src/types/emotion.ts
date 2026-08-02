@@ -6,6 +6,7 @@ export type Emotion =
   | "happy"
   | "sad"
   | "concerned"
+  | "caring"
   | "sleepy"
   | "focused"
   | "bored"

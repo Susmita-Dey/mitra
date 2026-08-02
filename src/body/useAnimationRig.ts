@@ -16,6 +16,8 @@ export interface RigState {
   rightLegRot: number;
   leftEarRot: number;
   rightEarRot: number;
+  eyeLookX: number;
+  eyeLookY: number;
 }
 
 
@@ -31,6 +33,8 @@ export interface RigRefs {
   head: React.RefObject<SVGGElement | null>;
   leftEar: React.RefObject<SVGGElement | null>;
   rightEar: React.RefObject<SVGGElement | null>;
+  leftEyePupil: React.RefObject<SVGGElement | null>;
+  rightEyePupil: React.RefObject<SVGGElement | null>;
 }
 
 // Simple spring physics
@@ -60,12 +64,15 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
     rightLegRot: 0,
     leftEarRot: 0,
     rightEarRot: 0,
+    eyeLookX: 0,
+    eyeLookY: 0,
   });
 
   // Track velocities for spring physics
   const velocities = useRef<RigState>({
     rootY: 0, bodyScaleX: 0, bodyScaleY: 0, bodyRot: 0,
     headRot: 0, headY: 0, tailRot: 0, leftArmRot: 0, rightArmRot: 0, leftLegRot: 0, rightLegRot: 0, leftEarRot: 0, rightEarRot: 0,
+    eyeLookX: 0, eyeLookY: 0,
   });
 
   const refs: RigRefs = {
@@ -79,6 +86,8 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
     head: useRef<SVGGElement>(null),
     leftEar: useRef<SVGGElement>(null),
     rightEar: useRef<SVGGElement>(null),
+    leftEyePupil: useRef<SVGGElement>(null),
+    rightEyePupil: useRef<SVGGElement>(null),
   };
 
   useEffect(() => {
@@ -100,7 +109,8 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         headRot: 0, headY: 0, tailRot: 5, 
         leftArmRot: 10, rightArmRot: -10, // Slight natural curve to arms when standing
         leftLegRot: 5, rightLegRot: -5,    // Slight stance
-        leftEarRot: 0, rightEarRot: 0
+        leftEarRot: 0, rightEarRot: 0,
+        eyeLookX: 0, eyeLookY: 0
       };
 
       if (state.posture === "sit") {
@@ -175,6 +185,17 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         target.bodyRot = -5;
         target.leftLegRot = 15;    // Legs slightly inward
         target.rightLegRot = -15;
+      } else if (state.posture === "slump") {
+        target.rootY = 15;        // Sit/slump down
+        target.bodyScaleY = 0.9;  // Squish vertically
+        target.bodyScaleX = 1.05; // Widen slightly
+        target.headRot = 15;      // Head drooping down heavily
+        target.headY = 20;        // Head lowered
+        target.leftArmRot = -30;  // Arms hanging limply
+        target.rightArmRot = 30;
+        target.leftLegRot = -5;
+        target.rightLegRot = 5;
+        target.tailRot = -60;     // Tail limp
       } else if (state.posture === "concerned") {
         target.headRot = 5;
         target.headY = 15;         // Head lowered
@@ -227,6 +248,20 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         const look = Math.sin(t * 3);
         target.headRot += look * 20;
         target.bodyRot += look * 5;
+        // Shift eyes to enhance 3D feel
+        target.eyeLookX = look * 3.5;
+        target.eyeLookY = Math.abs(look) * 1.5;
+      } else if (state.bodyMotion === "wave") {
+        const wave = Math.sin(t * 15);
+        target.leftArmRot = 140 + wave * 30;
+        target.bodyRot += Math.sin(t * 7.5) * 5;
+        target.headRot -= Math.sin(t * 7.5) * 3;
+      } else if (state.bodyMotion === "sway") {
+        const sway = Math.sin(t * 1.5);
+        target.bodyRot += sway * 6;
+        target.headRot -= sway * 4;
+        target.leftArmRot += sway * 5;
+        target.rightArmRot += sway * 5;
       }
 
       // Food prop override: both paws holding the bamboo centrally
@@ -284,6 +319,8 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
       applySpring('rightLegRot', armTension, friction);
       applySpring('leftEarRot', armTension * 1.5, friction * 0.8);
       applySpring('rightEarRot', armTension * 1.5, friction * 0.8);
+      applySpring('eyeLookX', armTension * 2, friction);
+      applySpring('eyeLookY', armTension * 2, friction);
 
       // Directly apply styles to DOM nodes bypassing React render cycle!
       if (refs.root.current) {
@@ -316,6 +353,12 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
       }
       if (refs.rightEar.current) {
         refs.rightEar.current.style.transform = `rotate(${rig.rightEarRot}deg)`;
+      }
+      if (refs.leftEyePupil.current) {
+        refs.leftEyePupil.current.style.transform = `translate(${rig.eyeLookX}px, ${rig.eyeLookY}px)`;
+      }
+      if (refs.rightEyePupil.current) {
+        refs.rightEyePupil.current.style.transform = `translate(${rig.eyeLookX}px, ${rig.eyeLookY}px)`;
       }
 
       reqRef.current = requestAnimationFrame(loop);

@@ -7,30 +7,42 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(8px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(245, 245, 245, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  border: 1px solid rgba(232, 106, 51, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   z-index: 10000;
   animation: fadeIn 0.5s ease-out forwards;
 }
 
 .onboarding-modal {
-  width: 90%;
-  max-width: 400px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255,255,255,0.5);
+  width: 100%;
+  max-width: 600px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 40px;
   text-align: center;
   color: #334155;
   animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .onboarding-step h1 {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   color: #1E293B;
+  margin-top: 0;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.brand-text {
   background: linear-gradient(135deg, #E86A33, #F59E0B);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -46,19 +58,26 @@
   text-align: left;
   list-style: none;
   padding: 0;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .onboarding-features li {
   font-size: 15px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 14px;
+  line-height: 1.5;
+}
+
+.emoji-icon {
+  font-size: 18px;
+  line-height: 1.3;
+  flex-shrink: 0;
 }
 
 .highlight-text {
-  background: #F1F5F9;
+  background: rgba(232, 106, 51, 0.08);
   padding: 12px;
   border-radius: 12px;
   border-left: 4px solid #E86A33;
@@ -77,26 +96,26 @@
 }
 
 .onboarding-btn.primary {
-  background: #E86A33;
+  background: linear-gradient(135deg, #E86A33 0%, #C24F1E 100%);
   color: white;
 }
 
 .onboarding-btn.primary:hover {
-  background: #d65a22;
+  background: linear-gradient(135deg, #F59E0B 0%, #E86A33 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(232, 106, 51, 0.4);
 }
 
 .onboarding-btn.success {
-  background: #10B981;
+  background: linear-gradient(135deg, #E86A33 0%, #C24F1E 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 12px rgba(232, 106, 51, 0.3);
 }
 
 .onboarding-btn.success:hover {
-  background: #059669;
+  background: linear-gradient(135deg, #F59E0B 0%, #E86A33 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 16px rgba(232, 106, 51, 0.4);
 }
 
 @keyframes fadeIn {

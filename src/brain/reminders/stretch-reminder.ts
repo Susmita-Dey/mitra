@@ -6,7 +6,7 @@ const definition: BehaviorDefinition = {
   id: "reminder.stretch",
   priority: 80,
   weight: 5,
-  cooldownMs: 300000,
+  cooldownMs: 0,
   action: "stretch",
   canInterrupt: true,
 };
@@ -16,9 +16,7 @@ export const StretchReminderBehavior: RegisteredBehavior = {
   canExecute: (context: BehaviorContext) => {
     return context.world.memory.activeReminders.stretch.state === "triggered";
   },
-  execute: (context: BehaviorContext) => {
-    context.emit({ type: "PlayAnimation", animation: "stretch" });
+    execute: (context: BehaviorContext) => {
     context.emit({ type: "SetInteraction", interaction: "reminder:stretch" });
-    context.emit({ type: "PlaySound", category: "alert" });
   },
 };

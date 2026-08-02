@@ -20,6 +20,7 @@ export type Intent =
   | { type: "AcknowledgeReminder"; reminderId: string }
   | { type: "LookAround" }
   | { type: "Observe" }
+  | { type: "TriggerCelebration"; event: string }
   
   // "?"? Semantic Plugin Intents "?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?"?
   | { type: "RequestGreeting"; context: string }
@@ -39,4 +40,4 @@ export type Intent =
   | { type: "ShowWindow" }
   
   // ── Audio Intents ──────────────────────────────────────────────────────
-  | { type: "PlaySound"; category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" | "chirps" | "yawns" | "stretch" | "celebration" | "footsteps" | "idle"; emotion?: Emotion };
+  | { type: "PlaySound"; category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" | "chirps" | "yawns" | "stretch" | "wow" | "applause" | "smack" | "footsteps" | "idle"; emotion?: Emotion };

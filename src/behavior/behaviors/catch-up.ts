@@ -60,7 +60,7 @@ export const CatchUpBehavior: RegisteredBehavior = {
     context.emit({ type: "SetBubble", text, duration: 8000 });
     context.emit({ type: "SetInteraction", interaction: "none" });
     
-    context.emit({ type: "PlaySound", category: "celebration" });
+    context.emit({ type: "PlaySound", category: "applause" });
     context.emit({ type: "SnapToEdge" });
   },
 };
