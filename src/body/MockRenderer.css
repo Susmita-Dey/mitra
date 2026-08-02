@@ -58,7 +58,7 @@
   z-index: 10;
   border: 2px solid #E2E8F0;
   white-space: nowrap;
-  max-width: 220px;
+  max-width: max-content;
 }
 .reminder-bubble::after {
   content: '';

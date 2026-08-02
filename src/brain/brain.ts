@@ -345,8 +345,6 @@ export function createBrain(
     },
 
     think() {
-      currentIntents = []; // Clear intents for this tick
-      
       // Update Context Engine asynchronously
       contextEngine.tick(currentContext, (updates) => {
          currentContext = { ...currentContext, ...updates };
@@ -544,6 +542,9 @@ export function createBrain(
          engine.setProceduralState(currentProceduralState);
       }
       engine.setBubbleText(currentBubbleText);
+      
+      // Clear intents after execution so next tick starts fresh
+      currentIntents = [];
     },
   };
 }
