@@ -166,13 +166,13 @@ export function App() {
       updateClickThrough();
     }).catch(console.error);
     
-    listen("onboarding-completed", async () => {
+    const unlistenOnboarding = listen("onboarding-completed", async () => {
       console.log("Onboarding completed event received!");
       (window as any).ONBOARDING_ACTIVE = false;
       await getCurrentWindow().show();
     });
 
-    listen("task:completed", (e: any) => {
+    const unlistenTask = listen("task:completed", (e: any) => {
       const size = e.payload?.size;
       if (size === "big") {
         brain.triggerCelebration("TaskCompletedBig");
@@ -226,7 +226,7 @@ export function App() {
     });
 
     // Listen to global Tauri events for preferences (since localStorage 'storage' event is sometimes flaky across webviews)
-    listen("preferences:updated", () => {
+    const unlistenPrefs = listen("preferences:updated", () => {
       appStorage.load().catch(console.error);
     });
 
@@ -308,42 +308,57 @@ export function App() {
       }
     };
 
+    const handlePet       = () => handleInteraction("pet");
+    const handleTickle    = () => handleInteraction("tickle");
+    const handleTap       = () => handleInteraction("gentle-tap");
+    const handleHighFive  = () => handleInteraction("high-five");
+    const handleTailFlick = () => handleInteraction("tail-flick");
+    const handleEarTwitch = () => handleInteraction("ear-twitch");
+    const handlePoke      = () => handleInteraction("poke");
+
     window.addEventListener("companion:debug", handleDebug);
     window.addEventListener("companion:reminder:ack", handleAck);
     window.addEventListener("companion:drag:start", handleDragStart);
-    window.addEventListener("companion:interaction:head", () => handleInteraction("pet"));
-    window.addEventListener("companion:interaction:tummy", () => handleInteraction("tickle"));
-    window.addEventListener("companion:interaction:paws", () => handleInteraction("gentle-tap"));
-    window.addEventListener("companion:interaction:hand", () => handleInteraction("high-five"));
-    window.addEventListener("companion:interaction:tail", () => handleInteraction("tail-flick"));
-    window.addEventListener("companion:interaction:ears", () => handleInteraction("ear-twitch"));
-    window.addEventListener("companion:interaction:poke", () => handleInteraction("poke"));
+    window.addEventListener("companion:interaction:head", handlePet);
+    window.addEventListener("companion:interaction:tummy", handleTickle);
+    window.addEventListener("companion:interaction:paws", handleTap);
+    window.addEventListener("companion:interaction:hand", handleHighFive);
+    window.addEventListener("companion:interaction:tail", handleTailFlick);
+    window.addEventListener("companion:interaction:ears", handleEarTwitch);
+    window.addEventListener("companion:interaction:poke", handlePoke);
     window.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
       stopBrain();
       meetingSystem.dispose();
+      weatherSystem.dispose();
+      batterySystem.dispose();
+      appStorage.dispose();
+      winCtrl.dispose();
       unlistenHidden.then((f: any) => f());
       unlistenShown.then((f: any) => f());
       unlistenMedia.then((f: any) => f());
+      unlistenOnboarding.then((f: any) => f());
+      unlistenTask.then((f: any) => f());
+      unlistenPrefs.then((f: any) => f());
       unsubscribeEngine();
       window.removeEventListener("companion:debug", handleDebug);
       window.removeEventListener("companion:reminder:ack", handleAck);
       window.removeEventListener("companion:drag:start", handleDragStart);
-      window.removeEventListener("companion:interaction:head", () => handleInteraction("pet"));
-      window.removeEventListener("companion:interaction:tummy", () => handleInteraction("tickle"));
-      window.removeEventListener("companion:interaction:paws", () => handleInteraction("gentle-tap"));
-      window.removeEventListener("companion:interaction:tail", () => handleInteraction("tail-flick"));
-      window.removeEventListener("companion:interaction:ears", () => handleInteraction("ear-twitch"));
-      window.removeEventListener("companion:interaction:poke", () => handleInteraction("poke"));
+      window.removeEventListener("companion:interaction:head", handlePet);
+      window.removeEventListener("companion:interaction:tummy", handleTickle);
+      window.removeEventListener("companion:interaction:paws", handleTap);
+      window.removeEventListener("companion:interaction:hand", handleHighFive);
+      window.removeEventListener("companion:interaction:tail", handleTailFlick);
+      window.removeEventListener("companion:interaction:ears", handleEarTwitch);
+      window.removeEventListener("companion:interaction:poke", handlePoke);
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("contextmenu", handleContextMenu);
       scheduler.dispose();
       env.dispose();
       eventBus.clear();
       gitWatcher.stop();
-      unsubscribeEngine();
     };
   }, [engine]);
 

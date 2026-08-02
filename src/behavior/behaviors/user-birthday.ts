@@ -17,14 +17,27 @@ export const UserBirthdayBehavior: RegisteredBehavior = {
     const birthday = context.world.settings?.birthday;
     if (!birthday) return false;
 
+    const parts = birthday.split("-");
+    let bdayMM = "";
+    let bdayDD = "";
+    if (parts.length === 3) {
+      bdayMM = parts[1];
+      bdayDD = parts[2];
+    } else if (parts.length === 2) {
+      bdayMM = parts[0];
+      bdayDD = parts[1];
+    } else {
+      return false;
+    }
+
     const today = new Date();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
-    const todayStr = `${mm}-${dd}`;
 
-    if (birthday !== todayStr) return false;
+    if (bdayMM !== mm || bdayDD !== dd) return false;
 
     // Has it already celebrated twice today?
+    const todayStr = `${mm}-${dd}`;
     const memoryKey = `birthdayCelebrationCount_${todayStr}`;
     const count = (context.world.memory as any)[memoryKey] || 0;
     if (count >= 2) return false;

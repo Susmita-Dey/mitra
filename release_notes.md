@@ -1,33 +1,54 @@
-# 🦊 Mitra v1.0.0 - The Behavior Chain Update
+# 🦊 Mitra v1.0.0 - The Official Final Release
 
-We are incredibly excited to launch Mitra v1.0! The biggest feedback we received was that Mitra's reminders felt a little abrupt. 
+We are incredibly proud to present the **Official Final Release of Mitra v1.0.0**! 
 
-Today, we're introducing **Behavior Chains**. Now, before Mitra reminds you to drink water or stretch, she will anticipate the action naturally. You'll see her look around, stretch, or yawn—behaving exactly like a real companion about to tell you something! And if you start typing, she'll politely hold her thought.
-
-### 🎉 What's New?
-
-- **🧠 Behavior Chains**: A completely new architecture for how Mitra expresses herself. Expect smooth, lifelike transitions before any dialogue bubble appears.
-- **✨ Natural Anticipation**: Unique, randomly selected anticipation sequences for Water, Stretch, Eyes, and Lunch reminders.
-- **🤫 Polite Cancellations**: If you become active (start typing or moving your mouse) while Mitra is winding up for a reminder, she will gracefully cancel it so she doesn't interrupt your flow.
-- **🎵 Perfectly Timed Audio**: The signature alert sound now plays exactly when the speech bubble appears, perfectly syncing with the visual cue.
+Mitra has evolved from a simple reminder tool into a truly responsive, zero-telemetry desktop companion. This release consolidates all of our major features, architectural improvements, and bug fixes into a single, polished build that is ready for millions of users worldwide.
 
 ---
 
-# 🦊 Mitra v0.2.0 - The Companion Update (Product Hunt Launch)
+## 🧠 Core Features & Highlights
 
-We are thrilled to announce Mitra v0.2.0! This release marks our **official launch on Product Hunt**. We've made Mitra smarter, more context-aware, and even better at being your silent desktop companion. 
+### ✨ Behavior Chains & Natural Anticipation
+Mitra doesn't interrupt you with abrupt notifications. With our new **Behavior Chains** architecture:
+* Before reminding you to stretch, rest your eyes, or drink water, Mitra will anticipate the action naturally (e.g. yawning, looking around, or stretching).
+* **Polite Interruption Handling**: If you start active keyboard or mouse inputs while Mitra is preparing a reminder, she will cancel the animation and hold her thought to keep you in your flow.
+* Reminders are coupled with perfectly synchronized audio cues and custom visual speech bubbles.
 
-### 🎉 What's New?
+### 🎒 Dynamic Props & Costumes
+Mitra holds and interacts with virtual props depending on your environment, actions, and settings:
+* **Meal Times**: Holds a stalk of bamboo (food) during Lunch, Snack, and Dinner times.
+* **Coding Buddy**: Opens up a tiny laptop with glowing code lines when you are working in VS Code or JetBrains IDEs.
+* **Weather Reactions**: Holds a blue umbrella when it's raining, or rests on a yellow beach towel with sunglasses when it's sunny.
+* **Self-Care**: Holds a blue coffee/tea mug to prompt you to drink water.
+* **Celebrations**: Wears a blue party hat and holds a pink birthday cake with lit candles.
 
-- **🎵 Music Vibes (Windows)**: Mitra now listens to your music! We've integrated Windows Global System Media Transport Controls (`win-gsmtc`), so she knows what you're listening to and will vibe with you.
-- **🤫 Meeting Privacy**: She now intelligently detects when you're in a meeting (Zoom, Teams, Discord, etc.) to give you the privacy you need. No unexpected distractions.
-- **💻 Coding Buddy**: Mitra detects when you have VS Code or JetBrains IDEs open and quietly cheers you on while you crush those bugs!
+### 🤫 Smart Context Awareness & Privacy
+Mitra is built to work offline and respect your boundary:
+* **Meeting Privacy**: Automatically detects active calls (Zoom, Teams, Discord, Webex, Slack, etc.) and keeps Mitra silent.
+* **Vibe to Music**: Listens along with your media controls (Windows-only via `win-gsmtc`) to sway and enjoy your music with you.
+* **Local Weather**: Fetches weather based on public IP, requiring zero invasive native OS location permissions.
 
-### 🛠️ Under the Hood Fixes
-- **🌤️ Privacy-First Weather**: Mitra now fetches local weather based on IP instead of native location tracking, requiring zero OS permissions.
-- **🛡️ Production Security**: Fixed a critical Content Security Policy (CSP) issue that was blocking weather fetches in production builds.
-- Fixed an issue with the Tauri tray menu method causing build failures.
-- Resolved Rust compilation errors by upgrading to the latest `gsmtc` crate API.
-- Fixed missing lifetime specifiers for `sysinfo` state management, ensuring stable and reliable performance.
+---
 
-Thank you to everyone who supported us on this journey! Go download the latest release and give Mitra a high-five! ❤️
+## 🛠️ Production Readiness & Stability Fixes
+
+This final release includes critical patches addressing memory, performance, and cross-platform readiness:
+
+1. **Zero Event Leaks (P0/P1)**: Swapped out anonymous event listeners in `App.tsx` and `SettingsPage.tsx` with static, memoized handlers. Fully cleaned up all window moved event listeners, weather intervals, battery event hooks, and plugin instances on unmount.
+2. **Cross-Platform Compatibility**: Rewrote backend process matching in Rust to be fully platform-agnostic, stripping `.exe` and platform-specific suffixes so context detection functions perfectly on Windows, macOS, and Linux.
+3. **Production Capability Permissions**: Added missing window management and update capabilities (`allow-set-ignore-cursor-events`, `allow-set-position`, `allow-set-size`, `allow-set-always-on-top`, `allow-minimize`, `allow-unminimize`) to prevent crashes in production.
+4. **Preserved Birth Year & Age Wishes**: Fixed the date picker to save and display the user's birth year, enabling Mitra to calculate your exact age and wish you a customized birthday (e.g. *"HAPPY 23rd BIRTHDAY, Susmita!!"*).
+5. **Fixed Food Prop Rotations & Layering**: Swapped inverted arm angles for the food prop so Mitra holds the bamboo stalk centrally, and moved the SVG rendering order so the prop is not hidden behind her head.
+
+---
+
+## 📦 How to Install
+
+Download the native installer for your system:
+* **Windows**: Download the `.msi` or `.exe` installer.
+* **macOS**: Download the `.dmg` package and drag Mitra to your Applications.
+* **Linux**: Download the `.deb` or `.AppImage` package.
+
+Mitra has a built-in **Auto-Updater** that will securely check for updates and seamlessly install new builds when you approve.
+
+*Thank you for being part of Mitra's journey. Let's make desktop companions delightful, lightweight, and private-by-default!* ❤️

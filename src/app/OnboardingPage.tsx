@@ -25,9 +25,7 @@ export function OnboardingPage() {
     try {
       let bday = "";
       if (birthday) {
-        // extracts MM-DD from YYYY-MM-DD
-        const parts = birthday.split("-");
-        if (parts.length === 3) bday = `${parts[1]}-${parts[2]}`;
+        bday = birthday;
       }
       await storage.update({ onboardingComplete: true, userName: userName.trim(), birthday: bday });
       

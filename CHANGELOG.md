@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.0] - The Final Production Release
+
+### 🚀 Features & Enhancements
+- **🧠 Behavior Chains & Anticipation**: Smooth, natural anticipatory transitions before any dialogue bubble appears (looking around, stretching, yawning) with polite cancellation if you become active.
+- **✨ Dynamic Props & Costumes**: Stalk of bamboo (food) during meal times, laptop when coding, beach towel/sunglasses for sunny weather, umbrella for rain, coffee/tea mug for water breaks, and birthday hat/cake for celebrations.
+- **🎂 Birthday & Age Wishes**: Storing birth year correctly, computing age, and greeting you with a custom age wish.
+- **🖥️ DPI & Resolution Recovery**: Added window resize tracking to `EnvironmentService` to dynamically query and update screen geometry, DPI, and monitor count.
+
+### 🐛 Bug Fixes
+- **Event Listener Leaks (P0/P1)**: Closed critical event listener leaks (arrow function removal in `App.tsx` and re-render creation in `SettingsPage.tsx`).
+- **Subsystem Lifecycle Disposal**: Added native `.dispose()` lifecycle callbacks to `AppStorage`, `WeatherSystem`, `BatterySystem`, and `WindowController` to unsubscribe from listeners/intervals.
+- **Plugin Lifecycle Leaks**: Implemented automatic registry and subscription cleanup when unloading plugins in `plugin-manager.ts`.
+- **Cross-Platform Compatibility**: Resolved OS-specific process suffix assumptions in Rust `meeting.rs` to support cross-platform Zoom/Teams matching.
+- **Tauri IPC Capabilities**: Added missing window management IPC capabilities to `default.json` preventing production runtime crashes.
+- **Food Prop Rotations & Layering**: Swapped inverted arm rotation signs for the food prop and adjusted SVG layering order to make the bamboo prop visible.
+- **Speech Bubble Race Conditions**: Replaced unmanaged speech bubble `setTimeout` callbacks with a centralized `AnimationDirector` queue.
+
 ## [v0.2.0] - The Companion Update (Product Hunt Launch)
 
 ### 🚀 Features & Enhancements

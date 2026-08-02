@@ -70,6 +70,18 @@ export function createEnvironmentService(): EnvironmentService {
   const onMouseEnter = () => { cursorInWindow = true; };
   const onMouseLeave = () => { cursorInWindow = false; };
 
+  const onResize = () => {
+    screenWidth = window.screen.width;
+    screenHeight = window.screen.height;
+    devicePixelRatio = window.devicePixelRatio ?? 1;
+    fetchScreenInfo().then((info) => {
+      screenWidth      = info.width;
+      screenHeight     = info.height;
+      devicePixelRatio = info.devicePixelRatio;
+      monitorCount     = info.monitorCount ?? null;
+    }).catch(console.error);
+  };
+
   // Throttle mousemove: we only need to know "did it move?" per tick,
   // not every pixel. The flag is reset after getSnapshot() is called.
   window.addEventListener("mousemove", onMouseMove, { passive: true });
@@ -78,6 +90,7 @@ export function createEnvironmentService(): EnvironmentService {
   window.addEventListener("blur",      onBlur,      { capture: true });
   document.addEventListener("mouseenter", onMouseEnter, { passive: true });
   document.addEventListener("mouseleave", onMouseLeave, { passive: true });
+  window.addEventListener("resize", onResize, { passive: true });
 
   // ── Screen info (async, one-time) ────────────────────────────────────────
 
@@ -125,6 +138,7 @@ export function createEnvironmentService(): EnvironmentService {
       window.removeEventListener("blur",      onBlur,      { capture: true });
       document.removeEventListener("mouseenter", onMouseEnter);
       document.removeEventListener("mouseleave", onMouseLeave);
+      window.removeEventListener("resize", onResize);
     },
   };
 }

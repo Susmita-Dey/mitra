@@ -265,18 +265,6 @@ export function MockRenderer({ character }: RendererProps) {
               </g>
             )}
 
-            {/* Food Prop (Bamboo) */}
-            {proceduralState.props?.includes("food") && (
-              <g className="prop-food">
-                <rect x="130" y="120" width="12" height="60" rx="4" fill="#4ADE80" />
-                <rect x="128" y="140" width="16" height="4" rx="2" fill="#22C55E" />
-                <rect x="128" y="160" width="16" height="4" rx="2" fill="#22C55E" />
-                {/* Leaves */}
-                <path d="M 142,125 Q 155,120 150,135 Q 140,130 142,125" fill="#16A34A" />
-                <path d="M 130,145 Q 115,140 120,155 Q 130,150 130,145" fill="#16A34A" />
-              </g>
-            )}
-            
             {/* Thermometer Prop */}
             {proceduralState.props?.includes("thermometer") && (
               <g className="prop-thermometer">
@@ -449,6 +437,18 @@ export function MockRenderer({ character }: RendererProps) {
               </g>
             )}
           </g>
+          
+          {/* Food Prop (Bamboo - drawn on top of head/torso) */}
+          {proceduralState.props?.includes("food") && (
+            <g className="prop-food">
+              <rect x="130" y="120" width="12" height="60" rx="4" fill="#4ADE80" />
+              <rect x="128" y="140" width="16" height="4" rx="2" fill="#22C55E" />
+              <rect x="128" y="160" width="16" height="4" rx="2" fill="#22C55E" />
+              {/* Leaves */}
+              <path d="M 142,125 Q 155,120 150,135 Q 140,130 142,125" fill="#16A34A" />
+              <path d="M 130,145 Q 115,140 120,155 Q 130,150 130,145" fill="#16A34A" />
+            </g>
+          )}
           
           {/* Umbrella Prop (Drawn ON TOP of everything, held in right hand) */}
           {proceduralState.props?.includes("umbrella") && (

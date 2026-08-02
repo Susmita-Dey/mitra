@@ -11,6 +11,7 @@ export interface BatteryState {
 export interface BatterySystem {
   getState(): BatteryState;
   start(): void;
+  dispose(): void;
 }
 
 export function createBatterySystem(): BatterySystem {
@@ -20,21 +21,25 @@ export function createBatterySystem(): BatterySystem {
     supported: false,
   };
 
+  let batteryObj: any = null;
+  let updateStateCallback: (() => void) | null = null;
+
   return {
     start() {
       if ('getBattery' in navigator) {
         (navigator as any).getBattery().then((battery: any) => {
+          batteryObj = battery;
           currentState.supported = true;
           
-          const updateState = () => {
+          updateStateCallback = () => {
             currentState.level = battery.level;
             currentState.charging = battery.charging;
           };
           
-          updateState();
+          updateStateCallback();
           
-          battery.addEventListener('levelchange', updateState);
-          battery.addEventListener('chargingchange', updateState);
+          battery.addEventListener('levelchange', updateStateCallback);
+          battery.addEventListener('chargingchange', updateStateCallback);
         }).catch((err: any) => {
           console.warn("[BatterySystem] Failed to access battery API", err);
         });
@@ -44,6 +49,14 @@ export function createBatterySystem(): BatterySystem {
     },
     getState() {
       return currentState;
+    },
+    dispose() {
+      if (batteryObj && updateStateCallback) {
+        batteryObj.removeEventListener('levelchange', updateStateCallback);
+        batteryObj.removeEventListener('chargingchange', updateStateCallback);
+      }
+      batteryObj = null;
+      updateStateCallback = null;
     }
   };
 }

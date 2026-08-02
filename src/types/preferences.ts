@@ -84,7 +84,7 @@ export interface AppPreferences {
   trust: TrustPreferences;
   onboardingComplete: boolean;
   userName?: string;
-  birthday?: string; // Format: MM-DD
+  birthday?: string; // Format: YYYY-MM-DD or MM-DD
 }
 
 export const DEFAULT_PREFERENCES: AppPreferences = {

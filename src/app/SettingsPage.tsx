@@ -1,10 +1,21 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { AppPreferences } from "@/types";
 import { createAppStorage } from "@/storage/app-storage";
 import { createBrowserStorage } from "@/storage/browser-storage";
 import "@/components/SettingsPanel.css";
 import "./global.css"; // Ensure global styles are applied
+
+function getDisplayBirthday(bday: string): string {
+  if (!bday) return "";
+  const parts = bday.split("-");
+  if (parts.length === 3) {
+    return bday;
+  } else if (parts.length === 2) {
+    return `2000-${bday}`;
+  }
+  return "";
+}
 
 export function SettingsPage() {
   const [preferences, setPreferences] = useState<AppPreferences | null>(null);
@@ -38,7 +49,7 @@ export function SettingsPage() {
 
   const [locationTrust, setLocationTrust] = useState<"unknown" | "granted" | "denied" | "approximate" | "off">("approximate");
 
-  const appStorage = createAppStorage(createBrowserStorage());
+  const appStorage = useMemo(() => createAppStorage(createBrowserStorage()), []);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -92,6 +103,7 @@ export function SettingsPage() {
     return () => {
       isMounted = false;
       if (unlisten) unlisten();
+      appStorage.dispose();
     };
   }, []);
 
@@ -209,15 +221,9 @@ export function SettingsPage() {
               Your Birthday
               <input 
                 type="date" 
-                value={userBirthday ? `2000-${userBirthday}` : ""}
+                value={getDisplayBirthday(userBirthday)}
                 onChange={(e) => {
-                  const val = e.target.value;
-                  if (val) {
-                    const parts = val.split('-');
-                    setUserBirthday(`${parts[1]}-${parts[2]}`);
-                  } else {
-                    setUserBirthday("");
-                  }
+                  setUserBirthday(e.target.value);
                 }}
                 className="premium-input"
               />

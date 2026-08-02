@@ -36,6 +36,12 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
   const reminders = new Map<string, ReminderDefinition>();
   const registeredBehaviorIds = new Set<string>();
 
+  // Tracks for cleanup on unload
+  const pluginUnsubscribes = new Map<string, Array<() => void>>();
+  const registeredCommands = new Map<string, Set<string>>();
+  const registeredWidgets = new Map<string, Set<string>>();
+  const registeredReminders = new Map<string, Set<string>>();
+
   // Utility to check permissions securely
   const requirePermission = (plugin: MitraPlugin, permission: PluginPermission) => {
     if (!plugin.manifest.permissions.includes(permission)) {
@@ -58,15 +64,20 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
         return;
       }
 
+      const pluginId = plugin.manifest.id;
+      const unsubscribes: Array<() => void> = [];
+      pluginUnsubscribes.set(pluginId, unsubscribes);
+
       // Build the secure API facade for this specific plugin
-      
       const api: PluginAPI = {
         events: {
           emit: (intent) => {
             (brain as any).evaluateIntent?.(intent);
           },
           on: (event: any, handler: any) => {
-            return eventBus.subscribe(event, handler);
+            const unsub = eventBus.subscribe(event, handler);
+            unsubscribes.push(unsub);
+            return unsub;
           }
         },
         scheduler: (brain as any).scheduler,
@@ -78,7 +89,7 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
           registerBehavior: (pluginBehavior: PluginBehavior) => {
             requirePermission(plugin, "behaviors");
             
-            const behaviorId = `plugin:${plugin.manifest.id}:${pluginBehavior.definition.id}`;
+            const behaviorId = `plugin:${pluginId}:${pluginBehavior.definition.id}`;
             const internalBehavior: RegisteredBehavior = {
               definition: { ...pluginBehavior.definition, id: behaviorId },
               canExecute: (context) => pluginBehavior.canExecute(wrapContext(context)),
@@ -91,14 +102,26 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
           registerCommand: (command: CommandDefinition) => {
             requirePermission(plugin, "commands");
             commands.set(command.id, command);
+            if (!registeredCommands.has(pluginId)) {
+              registeredCommands.set(pluginId, new Set());
+            }
+            registeredCommands.get(pluginId)!.add(command.id);
           },
           registerWidget: (widget: WidgetDefinition) => {
             requirePermission(plugin, "widgets");
             widgets.set(widget.id, widget);
+            if (!registeredWidgets.has(pluginId)) {
+              registeredWidgets.set(pluginId, new Set());
+            }
+            registeredWidgets.get(pluginId)!.add(widget.id);
           },
           registerReminder: (reminder: ReminderDefinition) => {
             requirePermission(plugin, "reminders");
             reminders.set(reminder.id, reminder);
+            if (!registeredReminders.has(pluginId)) {
+              registeredReminders.set(pluginId, new Set());
+            }
+            registeredReminders.get(pluginId)!.add(reminder.id);
           }
         }
       };
@@ -118,7 +141,7 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
         await plugin.onEnable(api);
       }
 
-      loadedPlugins.set(plugin.manifest.id, plugin);
+      loadedPlugins.set(pluginId, plugin);
       // Silently loaded
     },
 
@@ -146,8 +169,43 @@ export function createPluginManager(brain: Brain, eventBus: EventBus): PluginMan
           registeredBehaviorIds.delete(id);
         }
       }
+
+      // Clean up event subscriptions
+      const unsubscribes = pluginUnsubscribes.get(pluginId);
+      if (unsubscribes) {
+        for (const unsub of unsubscribes) {
+          unsub();
+        }
+        pluginUnsubscribes.delete(pluginId);
+      }
+
+      // Clean up commands
+      const cmdIds = registeredCommands.get(pluginId);
+      if (cmdIds) {
+        for (const id of cmdIds) {
+          commands.delete(id);
+        }
+        registeredCommands.delete(pluginId);
+      }
+
+      // Clean up widgets
+      const widgetIds = registeredWidgets.get(pluginId);
+      if (widgetIds) {
+        for (const id of widgetIds) {
+          widgets.delete(id);
+        }
+        registeredWidgets.delete(pluginId);
+      }
+
+      // Clean up reminders
+      const reminderIds = registeredReminders.get(pluginId);
+      if (reminderIds) {
+        for (const id of reminderIds) {
+          reminders.delete(id);
+        }
+        registeredReminders.delete(pluginId);
+      }
       
-      // Also clean up commands, widgets, etc. here if needed.
       // Silently unloaded
     },
 

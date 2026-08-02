@@ -49,4 +49,7 @@ export interface WindowController {
    * to the applications underneath.
    */
   setIgnoreCursorEvents(ignore: boolean): Promise<void>;
+
+  /** Cleans up window listeners. */
+  dispose(): void;
 }

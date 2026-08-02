@@ -43,11 +43,19 @@ export interface AppStorage {
   load(): Promise<AppPreferences>;
   save(preferences: AppPreferences): Promise<void>;
   update(patch: Partial<AppPreferences>): Promise<AppPreferences>;
+  dispose(): void;
 }
 
 import type { EventBus } from "@/system/index";
 
 export function createAppStorage(backend: Storage, eventBus?: EventBus): AppStorage {
+  const storageListener = async (e: StorageEvent) => {
+    if (e.key === PREFS_KEY) {
+      // Reload from storage and publish event to update memory
+      await storageInstance.load();
+    }
+  };
+
   const storageInstance: AppStorage = {
     async load(): Promise<AppPreferences> {
       const raw = await backend.load<any>(PREFS_KEY);
@@ -109,17 +117,15 @@ export function createAppStorage(backend: Storage, eventBus?: EventBus): AppStor
       await this.save(updated);
       return updated;
     },
+
+    dispose(): void {
+      window.removeEventListener('storage', storageListener);
+    }
   };
 
   // Cross-window synchronization
   // When the Settings window writes to localStorage, this event fires in the Main window
-  window.addEventListener('storage', async (e) => {
-    if (e.key === PREFS_KEY) {
-      // Reload from storage and publish event to update memory
-      await storageInstance.load();
-      
-    }
-  });
+  window.addEventListener('storage', storageListener);
 
   return storageInstance;
 }

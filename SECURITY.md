@@ -6,8 +6,8 @@ We are currently supporting the latest minor versions of Mitra with security upd
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
-| < 0.1   | :x:                |
+| 1.x     | :white_check_mark: |
+| < 1.0   | :x:                |
 
 *Note: Since Mitra is in active early development, we recommend always upgrading to the latest release to ensure you have the latest features and security patches.*
 

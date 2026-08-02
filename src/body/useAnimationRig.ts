@@ -266,8 +266,8 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
 
       // Food prop override: both paws holding the bamboo centrally
       if (state.props?.includes("food")) {
-        target.leftArmRot = 110;
-        target.rightArmRot = -110;
+        target.leftArmRot = -110;
+        target.rightArmRot = 110;
       }
 
       // 3. Add Secondary Motion (Tail Follow-through)

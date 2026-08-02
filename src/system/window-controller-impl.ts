@@ -9,7 +9,7 @@ export function createWindowController(storage: AppStorage): WindowController {
   
   let moveTimeout: ReturnType<typeof setTimeout>;
   // Track position automatically on move to persist it
-  win.onMoved(({ payload }) => {
+  const unlistenMovedPromise = win.onMoved(({ payload }) => {
     // Tauri often fires (0,0) or spurious moves during initialization.
     // Also debounce to avoid spamming storage.
     clearTimeout(moveTimeout);
@@ -21,6 +21,11 @@ export function createWindowController(storage: AppStorage): WindowController {
   });
 
   return {
+    dispose() {
+      clearTimeout(moveTimeout);
+      unlistenMovedPromise.then((unlisten) => unlisten()).catch(console.error);
+    },
+
     async startDrag() {
       await win.startDragging();
     },

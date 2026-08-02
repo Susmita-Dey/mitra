@@ -397,6 +397,42 @@ export function createBrain(
       for (const intent of currentIntents) {
          if (intent.type === "TriggerCelebration") {
             const cIntents = celebrationEngine.handleEvent(intent.event as any);
+            
+            // Enrich birthday message with age and user's name
+            if (intent.event === "Birthday") {
+               const birthday = currentPrefs.birthday;
+               let ageText = "";
+               if (birthday) {
+                  const parts = birthday.split("-");
+                  if (parts.length === 3) {
+                     const birthYear = parseInt(parts[0], 10);
+                     if (!isNaN(birthYear)) {
+                        const currentYear = new Date().getFullYear();
+                        const age = currentYear - birthYear;
+                        if (age > 0) {
+                           const suffix = (a: number) => {
+                              const j = a % 10;
+                              const k = a % 100;
+                              if (j === 1 && k !== 11) return "st";
+                              if (j === 2 && k !== 12) return "nd";
+                              if (j === 3 && k !== 13) return "rd";
+                              return "th";
+                           };
+                           ageText = ` ${age}${suffix(age)}`;
+                        }
+                     }
+                  }
+               }
+               
+               const name = currentPrefs.userName?.trim();
+               const greetingName = name ? `, ${name}` : "";
+               for (const ci of cIntents) {
+                  if (ci.type === "SetBubble") {
+                     ci.text = `HAPPY${ageText} BIRTHDAY${greetingName}!! Let's eat cake! 🎂`;
+                  }
+               }
+            }
+            
             expandedIntents.push(...cIntents);
             const adaptedPersonality = personalityEngine.adaptToCelebration(intent.event as any, memoryEngine.get());
             memoryEngine.update({ ...adaptedPersonality });
@@ -462,6 +498,13 @@ export function createBrain(
             } else if (anim === "walk") {
                animationDirector.queueSequence({ id: "walk", priority: "Idle", durationMs: 4000, animationOverrides: { posture: "stand", bodyMotion: "bounce", tail: "wag" } });
             }
+         } else if (intent.type === "SetBubble") {
+            animationDirector.queueSequence({
+               id: "custom-speech-bubble",
+               priority: "Interaction",
+               speechBubble: intent.text,
+               durationMs: intent.duration || 4000
+            });
          }
       }
       
@@ -519,12 +562,6 @@ export function createBrain(
           if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
         } else if (intent.type === "SetProceduralState") {
           currentProceduralState = { ...currentProceduralState, ...intent.state } as ProceduralAnimationState;
-        } else if (intent.type === "SetBubble") {
-          currentBubbleText = intent.text;
-          // Set bubble timer if duration provided
-          if (intent.duration) {
-             setTimeout(() => { engine.setBubbleText(null); }, intent.duration);
-          }
         }
       }
 

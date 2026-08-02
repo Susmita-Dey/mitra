@@ -15,6 +15,7 @@ export interface WeatherSystem {
   getState(): WeatherState | null;
   start(): void;
   setLocation(locationStr: string): void;
+  dispose(): void;
 }
 
 import { TrustManager } from "./trust-manager";
@@ -23,6 +24,7 @@ export function createWeatherSystem(trustManager: TrustManager): WeatherSystem {
     let currentState: WeatherState | null = null;
     let hasStarted = false;
     let customLocation = "";
+    let intervalId: any = null;
     const fetchWeather = async () => {
       try {
         const locationTrust = await trustManager.get("location");
@@ -110,7 +112,7 @@ export function createWeatherSystem(trustManager: TrustManager): WeatherSystem {
       
       fetchWeather();
       // Fetch every hour
-      setInterval(fetchWeather, 60 * 60 * 1000);
+      intervalId = setInterval(fetchWeather, 60 * 60 * 1000);
     },
     setLocation(locationStr: string) {
       if (customLocation !== locationStr) {
@@ -120,6 +122,13 @@ export function createWeatherSystem(trustManager: TrustManager): WeatherSystem {
     },
     getState() {
       return currentState;
+    },
+    dispose() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      hasStarted = false;
     }
   };
 }

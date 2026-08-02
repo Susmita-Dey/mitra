@@ -29,12 +29,13 @@ fn refresh_if_stale<'a>(state: &'a tauri::State<'a, SystemState>) -> std::sync::
 pub fn check_meeting_status(state: tauri::State<'_, SystemState>) -> bool {
     let guard = refresh_if_stale(&state);
     let meeting_apps = [
-        "zoom.exe", "teams.exe", "ms-teams.exe", "discord.exe",
-        "webex.exe", "slack.exe", "skype.exe", "meet.exe",
+        "zoom", "teams", "ms-teams", "discord",
+        "webex", "slack", "skype", "meet",
     ];
     guard.0.processes().values().any(|p| {
         let name = p.name().to_string_lossy().to_lowercase();
-        meeting_apps.iter().any(|&app| name == app)
+        let base_name = name.strip_suffix(".exe").unwrap_or(&name);
+        meeting_apps.iter().any(|&app| base_name == app)
     })
 }
 
@@ -42,12 +43,13 @@ pub fn check_meeting_status(state: tauri::State<'_, SystemState>) -> bool {
 pub fn check_coding_status(state: tauri::State<'_, SystemState>) -> bool {
     let guard = refresh_if_stale(&state);
     let coding_apps = [
-        "code.exe", "cursor.exe", "devenv.exe", "idea64.exe",
-        "webstorm64.exe", "rider64.exe", "clion64.exe", "goland64.exe",
-        "pycharm64.exe", "fleet.exe",
+        "code", "cursor", "devenv", "idea", "idea64",
+        "webstorm", "webstorm64", "rider", "rider64", "clion", "clion64",
+        "goland", "goland64", "pycharm", "pycharm64", "fleet",
     ];
     guard.0.processes().values().any(|p| {
         let name = p.name().to_string_lossy().to_lowercase();
-        coding_apps.iter().any(|&app| name == app)
+        let base_name = name.strip_suffix(".exe").unwrap_or(&name);
+        coding_apps.iter().any(|&app| base_name == app)
     })
 }
