@@ -1,4 +1,5 @@
 import type { CompanionEngine } from "@/app/companion-engine";
+import type { AppStorage } from "@/storage/app-storage";
 import type { BehaviorContext } from "@/behavior";
 import type { RegisteredBehavior } from "@/behavior/behavior-engine";
 import { createBehaviorEngine } from "@/behavior/behavior-engine";
@@ -76,6 +77,8 @@ export interface Brain {
   triggerInteraction(interaction: import("./interaction-engine").CompanionInteraction): void;
   /** Trigger a celebration event. */
   triggerCelebration(event: import("./celebration-engine").CelebrationEvent): void;
+  /** Custom helper to show text bubble */
+  showCustomBubble(text: string, duration?: number): void;
 }
 
 import type { EventBus } from "@/system/index";
@@ -89,6 +92,7 @@ export function createBrain(
   weatherSystem?: WeatherSystem,
   meetingSystem?: MeetingSystem,
   eventBus?: EventBus,
+  appStorage?: AppStorage,
 ): Brain {
   const behaviorEngine = createBehaviorEngine();
   const emotionEngine = createEmotionEngine();
@@ -205,6 +209,46 @@ export function createBrain(
 
     acknowledgeReminder(id: string) {
       const memory = memoryEngine.get();
+      
+      if (id.startsWith("custom_")) {
+        if (memory.activeReminders[id]) {
+          const active = { ...memory.activeReminders };
+          active[id].state = "acknowledged";
+          active[id].scheduledFor = null;
+          
+          const newTimeline = timelineEngine.push(
+            memory.timeline, 
+            "reminder:acknowledged", 
+            `User acknowledged custom reminder ${id}`
+          );
+
+          memoryEngine.update({ 
+            activeReminders: active,
+            lastUserInteraction: Date.now(),
+            timeline: newTimeline
+          });
+
+          // If countdown/one-shot custom reminder, remove from preferences
+          if (appStorage && currentPrefs.customReminders) {
+            const customRem = currentPrefs.customReminders.find(r => r.id === id);
+            if (customRem && customRem.countdownMs) {
+              const updatedCustom = currentPrefs.customReminders.filter(r => r.id !== id);
+              appStorage.update({ customReminders: updatedCustom }).catch(console.error);
+            }
+          }
+
+          const updates = emotionEngine.push("happy", currentEmotionState);
+          if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
+
+          animationDirector.clearSequence(id.startsWith("reminder:") ? id : `reminder:${id}`);
+          engine.setInteraction("none");
+          this.observe();
+          this.think();
+          this.act();
+          return;
+        }
+      }
+
       const type = id as keyof typeof memory.activeReminders;
       if (memory.activeReminders[type]) {
         const active = { ...memory.activeReminders };
@@ -298,7 +342,7 @@ export function createBrain(
       const intents = celebrationEngine.handleEvent(event);
       currentIntents.push(...intents);
 
-      const adaptedPersonality = personalityEngine.adaptToCelebration(event, memoryEngine.get());
+      const adaptedPersonality = personalityEngine.adaptToInteraction(event as any, memoryEngine.get());
       
       const newTimeline = timelineEngine.push(
         memoryEngine.get().timeline, 
@@ -308,6 +352,13 @@ export function createBrain(
       
       memoryEngine.update({ timeline: newTimeline, ...adaptedPersonality });
 
+      this.act();
+    },
+
+    showCustomBubble(text, duration) {
+      currentIntents.push({ type: "SetBubble", text, duration });
+      const updates = emotionEngine.push("happy", currentEmotionState);
+      if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
       this.act();
     },
 
@@ -449,15 +500,23 @@ export function createBrain(
          if (intent.type === "SetInteraction") {
             interactionId = intent.interaction;
             const isReminder = intent.interaction.startsWith("reminder:");
-            
-            if (isReminder) {
-               const chain = getReminderChain(intent.interaction);
-               animationDirector.queueSequence({
-                  id: intent.interaction,
-                  priority: "Reminder",
-                  steps: chain
-               });
-            } else {
+                        if (isReminder) {
+                let chain;
+                if (intent.interaction.startsWith("reminder:custom_")) {
+                  const customId = intent.interaction.substring("reminder:".length);
+                  const customRem = currentPrefs.customReminders?.find(r => r.id === customId);
+                  const rType = customRem?.type || "other";
+                  const rLabel = customRem?.label || "Reminder!";
+                  chain = getCustomReminderChain(rType, rLabel);
+                } else {
+                  chain = getReminderChain(intent.interaction);
+                }
+                animationDirector.queueSequence({
+                   id: intent.interaction,
+                   priority: "Reminder",
+                   steps: chain
+                });
+             } else {
                let overrides: Partial<import("./core/types").ProceduralAnimationState> = {};
                if (intent.interaction === "ear-twitch") overrides.ears = "twitch";
                if (intent.interaction === "tail-flick") { overrides.tail = "wag"; overrides.posture = "shy"; overrides.eyes = "wide"; }
@@ -603,3 +662,46 @@ export function initializeBrain(brain: Brain, scheduler: import("@/system/schedu
     handle.cancel();
   };
 }
+
+function getCustomReminderChain(type: string, label: string): import("@/behavior/chains/behavior-chains").BehaviorChain {
+  const message = label;
+  switch (type) {
+    case "medicine":
+      return [
+        { durationMs: 1500, animationOverrides: { bodyMotion: "look-around", ears: "twitch" }, emotion: "concerned" },
+        { durationMs: 0, animationOverrides: { props: ["thermometer"], eyes: "squint" }, speechBubble: message, emotion: "concerned" }
+      ];
+    case "posture":
+      return [
+        { durationMs: 2000, animationOverrides: { posture: "stretch", eyes: "closed" }, emotion: "calm" },
+        { durationMs: 0, animationOverrides: { posture: "sit", eyes: "squint" }, speechBubble: message, emotion: "caring" }
+      ];
+    case "coffee":
+      return [
+        { durationMs: 1500, animationOverrides: { bodyMotion: "look-around", ears: "up" }, emotion: "happy" },
+        { durationMs: 0, animationOverrides: { props: ["mug"], eyes: "squint" }, speechBubble: message, emotion: "happy" }
+      ];
+    case "coding break":
+      return [
+        { durationMs: 1500, animationOverrides: { props: ["laptop"], eyes: "squint" }, emotion: "curious" },
+        { durationMs: 0, animationOverrides: { eyes: "happy-closed", mouth: "smile" }, speechBubble: message, emotion: "caring" }
+      ];
+    case "meetings":
+      return [
+        { durationMs: 1500, animationOverrides: { ears: "twitch", eyes: "wide" }, emotion: "concerned" },
+        { durationMs: 0, animationOverrides: { posture: "stand", bodyMotion: "bounce" }, speechBubble: message, emotion: "concerned" }
+      ];
+    case "lunch":
+      return [
+        { durationMs: 1500, animationOverrides: { bodyMotion: "bounce", tail: "wag" }, emotion: "excited" },
+        { durationMs: 0, animationOverrides: { props: ["food"], eyes: "squint" }, speechBubble: message, emotion: "excited" }
+      ];
+    case "other":
+    default:
+      return [
+        { durationMs: 1500, animationOverrides: { bodyMotion: "look-around", ears: "twitch" }, emotion: "curious" },
+        { durationMs: 0, animationOverrides: { eyes: "squint" }, speechBubble: message, emotion: "caring" }
+      ];
+  }
+}
+

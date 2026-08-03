@@ -51,6 +51,44 @@ function calculateNextSchedule(config: { intervalMs: number, jitterMs: number, t
   return Math.max(now.getTime() + 10000, base + jitter);
 }
 
+function calculateCustomNextSchedule(config: { intervalMs?: number, time?: string, countdownMs?: number, createdAt: number }, state: ReminderItem["state"]): number {
+  const now = new Date();
+
+  // 1. One-shot countdown
+  if (config.countdownMs) {
+    if (state === "idle") {
+      return config.createdAt + config.countdownMs;
+    }
+    // If acknowledged/ignored/completed, don't trigger again (keep scheduled far in future until deleted)
+    return Date.now() + 365 * 24 * 60 * 60 * 1000;
+  }
+
+  // 2. Clock-time based (Daily)
+  if (config.time) {
+    const [hours, minutes] = config.time.split(":").map(Number);
+    const scheduledTime = new Date(now);
+    scheduledTime.setHours(hours, minutes, 0, 0);
+
+    if (scheduledTime.getTime() <= now.getTime()) {
+      if (state === "idle") {
+         const missedByMs = now.getTime() - scheduledTime.getTime();
+         if (missedByMs > 2 * 60 * 60 * 1000) {
+           scheduledTime.setDate(scheduledTime.getDate() + 1);
+         }
+      } else {
+         scheduledTime.setDate(scheduledTime.getDate() + 1);
+      }
+    }
+    return scheduledTime.getTime();
+  }
+
+  // 3. Interval-based
+  const interval = config.intervalMs || 30 * 60 * 1000;
+  const base = now.getTime() + interval;
+  // Guarantee at least 10s in future
+  return Math.max(now.getTime() + 10000, base);
+}
+
 export function createReminderEngine(): ReminderEngine {
   let wasInMeeting = false;
 
@@ -63,8 +101,52 @@ export function createReminderEngine(): ReminderEngine {
       const active = { ...memory.activeReminders };
       let newTimeline = memory.timeline;
 
-      // 1. Check for missing schedule (initial boot) or reset "completed/ignored"
-      for (const key of Object.keys(active) as Array<keyof typeof active>) {
+      // 1. Sync custom reminders from preferences to active memory state
+      const customReminders = prefs.customReminders || [];
+      const customKeysInActive = Object.keys(active).filter(k => k.startsWith("custom_"));
+      const customIdsInPrefs = new Set(customReminders.map(r => r.id));
+
+      // Clean up deleted custom reminders from active memory
+      for (const key of customKeysInActive) {
+        if (!customIdsInPrefs.has(key)) {
+          delete active[key];
+          changed = true;
+          newTimeline = timeline.push(newTimeline, "reminder:deleted", `Removed inactive custom reminder ${key}`);
+        }
+      }
+
+      // Initialize/sync active custom reminders
+      for (const custom of customReminders) {
+        if (!custom.enabled) {
+          if (active[custom.id]) {
+            delete active[custom.id];
+            changed = true;
+          }
+          continue;
+        }
+
+        const item = active[custom.id];
+        if (!item || item.state === "idle" || item.state === "completed" || item.state === "ignored" || item.state === "acknowledged") {
+          const state = item ? item.state : "idle";
+          const scheduledFor = calculateCustomNextSchedule(custom, state);
+          
+          active[custom.id] = {
+            id: custom.id as any,
+            state: "scheduled",
+            scheduledFor
+          };
+          changed = true;
+          newTimeline = timeline.push(
+            newTimeline,
+            "reminder:scheduled",
+            `Scheduled custom reminder ${custom.label} for ${new Date(scheduledFor).toLocaleTimeString()}`
+          );
+        }
+      }
+
+      // 2. Check for standard missing schedule (initial boot) or reset "completed/ignored"
+      const standardKeys = ["water", "stretch", "eyes", "lunch", "dinner", "snack", "bio"] as const;
+      for (const key of standardKeys) {
         const item = active[key];
         const config = prefs.reminders[key];
         
@@ -107,8 +189,8 @@ export function createReminderEngine(): ReminderEngine {
         }
       }
 
-      // 2. Check triggered timeouts (ignored)
-      for (const key of Object.keys(active) as Array<keyof typeof active>) {
+      // 3. Check triggered timeouts (ignored) for all active reminders
+      for (const key of Object.keys(active)) {
         const item = active[key];
         // If it's been triggered for too long without ack, mark as ignored
         if (item.state === "triggered" && item.scheduledFor && now - item.scheduledFor > TRIGGERED_TIMEOUT_MS) {
@@ -118,15 +200,15 @@ export function createReminderEngine(): ReminderEngine {
         }
       }
 
-      // 3. Queue logic: Only ONE reminder can be triggered at a time.
+      // 4. Queue logic: Only ONE reminder can be triggered at a time.
       const isAnythingTriggered = Object.values(active).some(r => r.state === "triggered");
       const inCooldown = (now - memory.lastUserInteraction) < INTERACTION_COOLDOWN_MS;
 
       if (!isAnythingTriggered && !inCooldown) {
-        // Find the most overdue scheduled reminder
+        // Find the most overdue scheduled reminder (standard or custom)
         let mostOverdue: ReminderItem | null = null;
         
-        for (const key of Object.keys(active) as Array<keyof typeof active>) {
+        for (const key of Object.keys(active)) {
           const item = active[key];
           if (item.state === "scheduled" && item.scheduledFor && now >= item.scheduledFor) {
             if (!mostOverdue || (mostOverdue.scheduledFor && item.scheduledFor < mostOverdue.scheduledFor)) {
@@ -142,7 +224,13 @@ export function createReminderEngine(): ReminderEngine {
           if (context.userState === "Meeting" || isHidden) {
             // Defer entirely and track for summary
             mostOverdue.state = "ignored";
-            mostOverdue.scheduledFor = calculateNextSchedule(prefs.reminders[mostOverdue.id], "ignored");
+            
+            if (mostOverdue.id.startsWith("custom_")) {
+              const customRem = customReminders.find(r => r.id === mostOverdue.id);
+              mostOverdue.scheduledFor = customRem ? calculateCustomNextSchedule(customRem, "ignored") : now + 5 * 60 * 1000;
+            } else {
+              mostOverdue.scheduledFor = calculateNextSchedule(prefs.reminders[mostOverdue.id as ReminderItem["id"]], "ignored");
+            }
             
             const currentTracker = memory.meetingTracker || { meetingStartTime: null, missedReminders: [] };
             const newTracker = { 
@@ -167,15 +255,21 @@ export function createReminderEngine(): ReminderEngine {
             newTimeline = timeline.push(newTimeline, "reminder:triggered", `Triggered ${mostOverdue.id}`);
 
             // Stampede prevention
-            for (const key of Object.keys(active) as Array<keyof typeof active>) {
+            for (const key of Object.keys(active)) {
               const other = active[key];
-              const otherConfig = prefs.reminders[key];
               if (other.id !== mostOverdue.id && other.state === "scheduled" && other.scheduledFor && now >= other.scheduledFor) {
-                 if (!otherConfig.time) {
-                   const bumpMs = Math.min(10 * 60 * 1000, otherConfig.intervalMs || 10 * 60 * 1000);
-                   other.scheduledFor = now + bumpMs;
-                   newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Bumped ${key} to prevent reminder stampede`);
+                 if (other.id.startsWith("custom_")) {
+                   other.scheduledFor = now + 5 * 60 * 1000; // Bump custom reminders by 5 mins
+                   newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Bumped custom ${key} to prevent reminder stampede`);
                    changed = true;
+                 } else {
+                   const otherConfig = prefs.reminders[other.id as ReminderItem["id"]];
+                   if (!otherConfig.time) {
+                     const bumpMs = Math.min(10 * 60 * 1000, otherConfig.intervalMs || 10 * 60 * 1000);
+                     other.scheduledFor = now + bumpMs;
+                     newTimeline = timeline.push(newTimeline, "reminder:scheduled", `Bumped ${key} to prevent reminder stampede`);
+                     changed = true;
+                   }
                  }
               }
             }
@@ -183,7 +277,7 @@ export function createReminderEngine(): ReminderEngine {
         }
       }
 
-      // 4. Meeting Summary Logic
+      // 5. Meeting Summary Logic
       if (wasInMeeting && context.userState !== "Meeting") {
         // This is now handled globally by CatchUpBehavior when window is shown
       }

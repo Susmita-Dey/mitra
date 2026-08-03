@@ -9,11 +9,13 @@ All notable changes to this project will be documented in this file.
 - **✨ Dynamic Props & Costumes**: Stalk of bamboo (food) during meal times, laptop when coding, beach towel/sunglasses for sunny weather, umbrella for rain, coffee/tea mug for water breaks, and birthday hat/cake for celebrations.
 - **🎂 Birthday & Age Wishes**: Storing birth year correctly, computing age, and greeting you with a custom age wish.
 - **🖥️ DPI & Resolution Recovery**: Added window resize tracking to `EnvironmentService` to dynamically query and update screen geometry, DPI, and monitor count.
+- **📝 Custom Reminders & Command Bar**: Schedule custom reminders using natural language (e.g. *"medicine in 30m"*, *"coffee every 45m"*, or *"lunch at 1:30 PM"*). Live parsing previews show up as you type.
+- **🛡️ Safety Guardrails**: Prohibits self-harm, violent, and illegal reminder schedules. Intercepted inputs trigger supportive or cautionary speech bubbles and concerned emotional face shifts.
 
 ### 🐛 Bug Fixes
-- **Event Listener Leaks (P0/P1)**: Closed critical event listener leaks (arrow function removal in `App.tsx` and re-render creation in `SettingsPage.tsx`).
+- **Event & Timeout Leaks**: Closed critical event listener leaks (arrow function removal in `App.tsx` and re-render creation in `SettingsPage.tsx`). Implemented a timeout tracker in `Updater.tsx` to clear scheduled timeouts on unmount.
 - **Subsystem Lifecycle Disposal**: Added native `.dispose()` lifecycle callbacks to `AppStorage`, `WeatherSystem`, `BatterySystem`, and `WindowController` to unsubscribe from listeners/intervals.
-- **Plugin Lifecycle Leaks**: Implemented automatic registry and subscription cleanup when unloading plugins in `plugin-manager.ts`.
+- **Plugin Lifecycle Leaks**: Implemented automatic registry and subscription cleanup when unloading plugins in `plugin-manager.ts` and triggered `_pluginManager.unloadAll()` on root unmount.
 - **Cross-Platform Compatibility**: Resolved OS-specific process suffix assumptions in Rust `meeting.rs` to support cross-platform Zoom/Teams matching.
 - **macOS & Linux Compilation**: Added target conditional compilation guards to `test_media.rs` and added `libgtk-3-dev` to the Linux CI runner, resolving build failures on non-Windows targets caused by missing Windows-only dependencies.
 - **Tauri IPC Capabilities**: Added missing window management IPC capabilities to `default.json` preventing production runtime crashes.

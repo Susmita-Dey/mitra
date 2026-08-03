@@ -273,6 +273,7 @@ sequenceDiagram
   - `delight-engine.ts`
 - `core/animation-director.ts`: sequencing, preemption, priority stack for visual/interaction chains.
 - `memory.ts` and `memory-engine.ts`: persistent in-memory world history and reminder states.
+- `reminders/custom-reminder.ts`: behavior wrapper for custom reminder triggers.
 
 ### 6.3 Behavior Layer (`/home/runner/work/mitra/mitra/src/behavior`)
 
@@ -298,6 +299,7 @@ sequenceDiagram
 - `audio-system.ts`, `sound-manager.ts`.
 - `window-controller-impl.ts`: Tauri window operations and persisted position restore.
 - `event-bus.ts` + `event-bus-impl.ts`: typed decoupled events.
+- `reminder-parser.ts`: parses natural language inputs and validates safety guidelines.
 
 ### 6.6 Native Host Layer (`/home/runner/work/mitra/mitra/src-tauri/src`)
 
@@ -531,6 +533,12 @@ flowchart LR
 - **Pros:** no invasive API hooks; straightforward cross-platform adaptation.
 - **Cons:** heuristic by process names; can produce false negatives.
 
+### 11.6 Decision: Local Input Safety & Guardrails for Adaptive Behaviors
+
+- **Chosen:** Regex-based, local, offline content safety filtering for custom reminders.
+- **Pros:** instant, network-free, zero-telemetry response. Empathizes or redirects prompts to match the role of a supportive desktop companion.
+- **Cons:** limited scope of detection compared to cloud-based LLM safety classification.
+
 ---
 
 ## 12. Security and Privacy Engineering
@@ -549,12 +557,36 @@ flowchart LR
 3. **No dynamic eval-based plugin loading** (plugins are compiled TS)
 4. **Privacy-conscious environment snapshot** (no key content/window titles/cursor coordinates)
 5. **Minimal command set** in Rust (`get_screen_info`, `check_meeting_status`, `check_coding_status`, `get_git_hash`)
+6. **Local safety filtering** inside natural language command parser to block self-harm, violent, or illegal reminder schedules.
 
 ### 12.3 Security Gaps / Recommendations
 
 - Introduce formal plugin permission enforcement for event subscription path (`events` permission currently not explicitly guarded in manager).
 - Add stronger schema validation for persisted preference payloads before merge.
 - Add explicit timeout and retry policy wrappers around weather and location fetches.
+
+### 12.4 Software Development Lifecycle (SDLC) Model
+
+Mitra was engineered using an **Evolutionary Iterative Prototyping** lifecycle model. This methodology is highly suited for a desktop companion application where user interaction physics, animation fluidities, and native OS integrations require continuous micro-adjustments and verification:
+
+1. **Iterative Feature Increments**: Development progressed from visual prototypes (procedural skeletal rig in v0.1) to responsive contexts (meeting detection, media vibe in v0.2), to full system integration (DPI geometry, auto-updates in v0.9), and finally custom reminders and safety guardrails (v1.0).
+2. **Risk-Driven Mitigations**: Each iteration began with a risk assessment stage analyzing performance, memory leaks, and capability boundaries (e.g. process checking CPU overhead mitigated by 30s cache; unmanaged setTimeout leak mitigated by custom hook refs).
+3. **Verification-Driven Release Cycles**: Every cycle was verified through a dedicated validation gate (`FINAL_PRODUCTION_VERIFICATION.md`), aligning with the verification-validation principles of the V-Model.
+
+#### SDLC Flow Diagram
+
+```mermaid
+graph TD
+    A([Inception: Product Vision]) --> B[Iteration 1: Skeletal Rig & Postures v0.1]
+    B --> C[Risk Assessment: CPU Overhead & Animation Layering]
+    C --> D[Iteration 2: Context & Media Sensing v0.2]
+    D --> E[Risk Assessment: Native Resource Leaks & IPC Capability Faults]
+    E --> F[Iteration 3: Production Hardening v0.9]
+    F --> G[Verification Gate: P0/P1 Leaks & Capabilities Audit]
+    G --> H[Iteration 4: Custom Reminders & Safety Guardrails v1.0]
+    H --> I[Final Verification Pass: FINAL_PRODUCTION_VERIFICATION]
+    I --> J([Launch Ready Build])
+```
 
 ---
 

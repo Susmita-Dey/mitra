@@ -136,6 +136,7 @@ Tauri window URLs map to these pages via `/home/runner/work/mitra/mitra/src-taur
 | `/home/runner/work/mitra/mitra/src/brain/reminders/dinner-reminder.ts` | behavior wrapper for dinner reminder trigger |
 | `/home/runner/work/mitra/mitra/src/brain/reminders/snack-reminder.ts` | behavior wrapper for snack reminder trigger |
 | `/home/runner/work/mitra/mitra/src/brain/reminders/bio-reminder.ts` | behavior wrapper for bio reminder trigger |
+| `/home/runner/work/mitra/mitra/src/brain/reminders/custom-reminder.ts` | behavior wrapper for custom reminder triggers |
 
 ## 4.3 `/home/runner/work/mitra/mitra/src/behavior`
 
@@ -221,6 +222,7 @@ Tauri window URLs map to these pages via `/home/runner/work/mitra/mitra/src-taur
 | `/home/runner/work/mitra/mitra/src/system/trust-manager.ts` | trust preference adapter | app lifecycle service | app storage |
 | `/home/runner/work/mitra/mitra/src/system/notification-system.ts` | hidden-mode queue and resurface toast summary | app lifecycle service | toast callback abstraction |
 | `/home/runner/work/mitra/mitra/src/system/idle-detection.ts` | idle detection contracts/helpers | utility layer | none |
+| `/home/runner/work/mitra/mitra/src/system/reminder-parser.ts` | parses natural language inputs and validates safety guidelines | utility | none |
 | `/home/runner/work/mitra/mitra/src/system/index.ts` | system exports | build-time | TS module system |
 
 ## 4.6 `/home/runner/work/mitra/mitra/src/storage`
@@ -385,6 +387,7 @@ Steps:
 - `/home/runner/work/mitra/mitra/src/behavior/chains/behavior-chains.ts` chooses animation chain variant
 - Renderer bubble click dispatches `companion:reminder:ack`
 - `brain.acknowledgeReminder()` updates memory/habits and clears active sequence
+- **Custom Reminders**: Parsed from natural language inputs using `/home/runner/work/mitra/mitra/src/system/reminder-parser.ts`. Safety guardrails intercept crisis/violence/illegal keywords to trigger supportive/protective reactions instead of scheduling. One-shot custom reminders are deleted from storage upon acknowledgement.
 
 ## 7.3 Meeting hide and catch-up flow
 
@@ -513,7 +516,32 @@ Touchpoints:
 
 ---
 
-## 14. Final Notes
+## 14. Software Development Lifecycle (SDLC) Model
+
+Mitra was engineered using an **Evolutionary Iterative Prototyping** lifecycle model. This methodology is highly suited for a desktop companion application where user interaction physics, animation fluidities, and native OS integrations require continuous micro-adjustments and verification:
+
+1. **Iterative Feature Increments**: Development progressed from visual prototypes (procedural skeletal rig in v0.1) to responsive contexts (meeting detection, media vibe in v0.2), to full system integration (DPI geometry, auto-updates in v0.9), and finally custom reminders and safety guardrails (v1.0).
+2. **Risk-Driven Mitigations**: Each iteration began with a risk assessment stage analyzing performance, memory leaks, and capability boundaries (e.g. process checking CPU overhead mitigated by 30s cache; unmanaged setTimeout leak mitigated by custom hook refs).
+3. **Verification-Driven Release Cycles**: Every cycle was verified through a dedicated validation gate (`FINAL_PRODUCTION_VERIFICATION.md`), aligning with the verification-validation principles of the V-Model.
+
+#### SDLC Flow Diagram
+
+```mermaid
+graph TD
+    A([Inception: Product Vision]) --> B[Iteration 1: Skeletal Rig & Postures v0.1]
+    B --> C[Risk Assessment: CPU Overhead & Animation Layering]
+    C --> D[Iteration 2: Context & Media Sensing v0.2]
+    D --> E[Risk Assessment: Native Resource Leaks & IPC Capability Faults]
+    E --> F[Iteration 3: Production Hardening v0.9]
+    F --> G[Verification Gate: P0/P1 Leaks & Capabilities Audit]
+    G --> H[Iteration 4: Custom Reminders & Safety Guardrails v1.0]
+    H --> I[Final Verification Pass: FINAL_PRODUCTION_VERIFICATION]
+    I --> J([Launch Ready Build])
+```
+
+---
+
+## 15. Final Notes
 
 This codebase is architected around a clear mental model:
 
@@ -524,4 +552,5 @@ This codebase is architected around a clear mental model:
 - Render companion state
 
 When debugging, always locate the issue in that chain first; then inspect the exact module in this guide.
+
 

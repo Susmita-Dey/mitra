@@ -70,6 +70,21 @@ export interface TrustPreferences {
 }
 
 /**
+ * Custom user-specific reminders scheduled using natural language.
+ */
+export interface CustomReminder {
+  id: string;
+  label: string;
+  type: "medicine" | "posture" | "coffee" | "coding break" | "meetings" | "lunch" | "other";
+  enabled: boolean;
+  intervalMs?: number; // E.g., every 30m
+  time?: string;       // E.g., "14:00"
+  countdownMs?: number; // E.g., in 15m
+  createdAt: number;
+  lastTriggered?: number;
+}
+
+/**
  * The consolidated application state that requires persistence.
  */
 export interface AppPreferences {
@@ -77,6 +92,7 @@ export interface AppPreferences {
   selectedCharacter: string;
   windowPosition: WindowPosition | null;
   reminders: ReminderPreferences;
+  customReminders?: CustomReminder[];
   behavior: BehaviorPreferences;
   animation: AnimationSettings;
   audio: AudioPreferences;
@@ -103,6 +119,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
     snack: { intervalMs: 0, jitterMs: 5 * 60 * 1000, time: "17:00" },
     bio: { intervalMs: 2 * 60 * 60 * 1000, jitterMs: 15 * 60 * 1000 },
   },
+  customReminders: [],
   behavior: {
     idleAnimations: true,
     wanderEnabled: true,
@@ -138,3 +155,4 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   onboardingComplete: false,
   userName: "",
 };
+

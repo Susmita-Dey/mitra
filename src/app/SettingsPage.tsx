@@ -153,7 +153,8 @@ export function SettingsPage() {
         } as const),
         location: locationTrust,
       },
-      birthday: userBirthday
+      birthday: userBirthday,
+      customReminders: preferences?.customReminders || [],
     });
     try {
       await getCurrentWindow().hide();
@@ -445,6 +446,91 @@ export function SettingsPage() {
                 <input type="time" value={snackTime} disabled={!remindersEnabled} onChange={(e) => setSnackTime(e.target.value)} />
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="settings-section premium-reminders-section" style={{ marginTop: '24px' }}>
+          <div className="reminders-header" style={{ marginBottom: '12px' }}>
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px', verticalAlign: 'middle' }}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Custom Reminders
+            </h3>
+          </div>
+          
+          <div className="custom-reminders-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {(!preferences.customReminders || preferences.customReminders.length === 0) ? (
+              <div style={{ fontSize: '11px', opacity: 0.6, padding: '16px', textAlign: 'center', background: 'rgba(255, 249, 237, 0.05)', borderRadius: '8px', border: '1px dashed rgba(232, 106, 51, 0.3)' }}>
+                No custom reminders yet. Ask Mitra for a reminder (e.g. "medicine at 8pm" or "coffee every 2h") on the desktop companion!
+              </div>
+            ) : (
+              preferences.customReminders.map((reminder) => {
+                let emoji = "🔔";
+                if (reminder.type === "medicine") emoji = "💊";
+                if (reminder.type === "posture") emoji = "🧘";
+                if (reminder.type === "coffee") emoji = "☕";
+                if (reminder.type === "coding break") emoji = "💻";
+                if (reminder.type === "meetings") emoji = "📅";
+                if (reminder.type === "lunch") emoji = "🍜";
+
+                let scheduleText = "";
+                if (reminder.countdownMs) {
+                  const minutes = Math.round(reminder.countdownMs / 60000);
+                  scheduleText = minutes > 0 ? `Once, in ${minutes} mins` : `Once, in ${Math.round(reminder.countdownMs / 1000)} secs`;
+                } else if (reminder.time) {
+                  scheduleText = `Daily at ${reminder.time}`;
+                } else if (reminder.intervalMs) {
+                  const minutes = Math.round(reminder.intervalMs / 60000);
+                  scheduleText = minutes > 0 ? `Every ${minutes} mins` : `Every ${Math.round(reminder.intervalMs / 1000)} secs`;
+                }
+
+                return (
+                  <div key={reminder.id} className="premium-reminder-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', width: '100%', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div className="card-icon" style={{ fontSize: '20px', minWidth: '24px' }}>{emoji}</div>
+                      <div style={{ textAlign: 'left' }}>
+                        <div style={{ fontSize: '12px', fontWeight: '600', color: '#1e293b' }}>{reminder.label}</div>
+                        <div style={{ fontSize: '10px', color: '#64748b', marginTop: '2px' }}>{scheduleText}</div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                      <label className="premium-toggle" style={{ transform: 'scale(0.85)', margin: 0 }}>
+                        <input 
+                          type="checkbox" 
+                          checked={reminder.enabled} 
+                          onChange={async (e) => {
+                            const updatedList = preferences.customReminders!.map(r => 
+                              r.id === reminder.id ? { ...r, enabled: e.target.checked } : r
+                            );
+                            setPreferences({
+                              ...preferences,
+                              customReminders: updatedList
+                            });
+                            await appStorage.update({ customReminders: updatedList });
+                          }} 
+                        />
+                        <div className="premium-toggle-track"></div>
+                      </label>
+                      
+                      <button 
+                        onClick={async () => {
+                          const updatedList = preferences.customReminders!.filter(r => r.id !== reminder.id);
+                          setPreferences({
+                            ...preferences,
+                            customReminders: updatedList
+                          });
+                          await appStorage.update({ customReminders: updatedList });
+                        }}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="Delete reminder"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </section>
       </div>

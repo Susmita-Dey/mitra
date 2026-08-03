@@ -13,6 +13,7 @@ export type TimelineEventType =
   | "interaction"
   | "celebration"
   | "reminder:deferred"
+  | "reminder:deleted"
   | "reminder:summary";
 
 export interface TimelineEvent {
