@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { RendererProps } from "./types";
 import "./MockRenderer.css";
 
@@ -21,23 +22,32 @@ export function MockRenderer({ character }: RendererProps) {
 
   const { posture, eyes, mouth } = proceduralState;
   const { rig, refs } = useAnimationRig(proceduralState);
-  
+
+  const [bubbleAcked, setBubbleAcked] = useState(false);
+
   const hasBubble = !!character.bubbleText;
-  
+
   const isReminder = character.interaction?.startsWith("reminder:");
-  const reminderType = isReminder ? character.interaction.split(":")[1] : null;
+  const reminderType = isReminder ? character.interaction.split(":").slice(1).join(":") : null;
 
   const handleReminderClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Brief visual ack flash
+    setBubbleAcked(true);
+    setTimeout(() => setBubbleAcked(false), 600);
+
     if (reminderType) {
+      // For custom reminders: interaction = "reminder:custom_1234" → id = "custom_1234"
       window.dispatchEvent(
         new CustomEvent("companion:reminder:ack", { detail: { id: reminderType } })
       );
     } else {
-       // fallback for non-reminder bubbles if needed
-       window.dispatchEvent(
-          new CustomEvent("companion:reminder:ack", { detail: { id: "generic" } })
-       );
+      // Non-reminder bubbles (greetings, weather, catch-up) — just dismiss them
+      window.dispatchEvent(
+        new CustomEvent("companion:debug", {
+          detail: { type: "show-bubble", payload: { text: null, duration: 0 } }
+        })
+      );
     }
   };
 
@@ -504,8 +514,12 @@ export function MockRenderer({ character }: RendererProps) {
 
       {/* Dynamic Action Bubble (Reminders, Greetings, Summaries) */}
       {hasBubble && (
-        <div className="reminder-bubble" onClick={handleReminderClick}>
-          {character.bubbleText}
+        <div
+          className={`reminder-bubble${bubbleAcked ? " acked" : ""}`}
+          onClick={handleReminderClick}
+          title="Click to dismiss"
+        >
+          {bubbleAcked ? "✓" : character.bubbleText}
         </div>
       )}
     </div>

@@ -86,6 +86,17 @@
   transform: scale(1.05);
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
+
+/* Brief green flash when the user clicks the bubble */
+.reminder-bubble.acked {
+  background: #10b981;
+  border-color: #059669;
+  color: white;
+  font-size: 18px;
+  transform: scale(1.08);
+  transition: all 0.15s ease;
+}
+
 @keyframes popIn {
   0% { transform: scale(0.5) translateY(10px); opacity: 0; }
 }

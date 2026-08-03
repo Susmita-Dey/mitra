@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { createBrowserStorage } from "@/storage/browser-storage";
@@ -11,6 +11,8 @@ export function OnboardingPage() {
   const [userName, setUserName] = useState("");
   const [birthday, setBirthday] = useState("");
   const [storage, setStorage] = useState<any>(null);
+  const [nameShake, setNameShake] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const eventBus = createEventBus();
@@ -20,21 +22,27 @@ export function OnboardingPage() {
   }, []);
 
   const handleNext = () => setStep(2);
+
+  const triggerShake = () => {
+    setNameShake(true);
+    setTimeout(() => setNameShake(false), 600);
+    nameInputRef.current?.focus();
+  };
+
   const handleComplete = async () => {
     if (!storage) return;
+    if (!userName.trim()) {
+      triggerShake();
+      return;
+    }
     try {
-      let bday = "";
-      if (birthday) {
-        bday = birthday;
-      }
+      const bday = birthday || "";
       await storage.update({ onboardingComplete: true, userName: userName.trim(), birthday: bday });
       
       // Close onboarding window and show main window
       try {
         const mainWindow = await WebviewWindow.getByLabel("main");
-        if (mainWindow) {
-          await mainWindow.show();
-        }
+        if (mainWindow) await mainWindow.show();
       } catch (err) {
         console.warn("Could not find main window by label:", err);
       }
@@ -45,7 +53,6 @@ export function OnboardingPage() {
       await getCurrentWindow().close();
     } catch (err) {
       console.error("Failed to complete onboarding:", err);
-      // Force close to escape if everything else fails
       await getCurrentWindow().close();
     }
   };
@@ -59,13 +66,13 @@ export function OnboardingPage() {
           <div className="onboarding-step">
             <h1><span className="brand-text">Meet Mitra</span> <img src="/icon.png" alt="Mitra" style={{ width: '36px', height: '36px', objectFit: 'contain' }} /></h1>
             <p>
-              Mitra is your little companion who lives on your desktop. She's not a tool — she's a friend who keeps you company while you work.
+              Mitra is your little companion who lives on your desktop. Not a tool — a friend who keeps you company while you work.
             </p>
             <ul className="onboarding-features">
               <li><span className="emoji-icon">💧</span> <span>Reminds you to drink water, stretch, and take breaks.</span></li>
               <li><span className="emoji-icon">🌤️</span> <span>Reacts to your local weather — sunny, rainy, or stormy.</span></li>
-              <li><span className="emoji-icon">🖱️</span> <span>Drag him anywhere. She'll wander, sleep, and explore on her own.</span></li>
-              <li><span className="emoji-icon">💖</span> <span>Pet him, tickle her tummy, or give him a high-five!</span></li>
+              <li><span className="emoji-icon">🖱️</span> <span>Drag Mitra anywhere. Mitra will wander, sleep, and explore on their own.</span></li>
+              <li><span className="emoji-icon">💖</span> <span>Pet Mitra, tickle their tummy, or give a high-five!</span></li>
               <li><span className="emoji-icon">🔔</span> <span>Stays silent during meetings. Catches you up when you're back.</span></li>
             </ul>
             <button className="onboarding-btn primary" onClick={handleNext}>
@@ -77,27 +84,49 @@ export function OnboardingPage() {
           <div className="onboarding-step">
             <h1><span className="brand-text">What's your name?</span></h1>
             <p>
-              Mitra loves greeting her friends by name. 🦊
+              Mitra loves greeting friends by name. 🦊
             </p>
             <input 
+              ref={nameInputRef}
               type="text" 
               placeholder="Your name" 
               value={userName} 
               onChange={e => setUserName(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && userName.trim() && handleComplete()}
-              style={{ width: '100%', padding: '10px', margin: '15px 0 5px 0', borderRadius: '8px', border: 'none', fontSize: '16px' }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  if (userName.trim()) handleComplete();
+                  else triggerShake();
+                }
+              }}
+              className={nameShake ? "shake" : ""}
+              style={{
+                width: '100%',
+                padding: '10px',
+                margin: '15px 0 5px 0',
+                borderRadius: '8px',
+                border: nameShake ? '2px solid #ef4444' : '2px solid transparent',
+                fontSize: '16px',
+                outline: 'none',
+                transition: 'border-color 0.2s',
+                boxSizing: 'border-box',
+              }}
             />
+            {nameShake && (
+              <p style={{ fontSize: '11px', color: '#ef4444', margin: '0 0 8px 0', textAlign: 'left' }}>
+                Please enter your name first 😊
+              </p>
+            )}
             <div style={{ textAlign: 'left', marginBottom: '15px' }}>
               <label style={{ fontSize: '12px', color: '#64748B', fontWeight: 600, display: 'block', marginBottom: '4px' }}>When is your birthday? (Optional)</label>
               <input 
                 type="date" 
                 value={birthday}
                 onChange={e => setBirthday(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', fontSize: '14px', color: '#334155' }}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', fontSize: '14px', color: '#334155', boxSizing: 'border-box' }}
               />
             </div>
             <p className="highlight-text" style={{ fontSize: '11px', marginTop: '10px', opacity: 0.7 }}>
-              You can find Mitra's settings by clicking the <strong>⚙️ gear icon</strong> that appears when you hover over him.
+              You can find Mitra's settings by clicking the <strong>⚙️ gear icon</strong> that appears when you hover over Mitra.
             </p>
             <button className="onboarding-btn success" onClick={handleComplete} disabled={!userName.trim()}>
               Let's go, {userName.trim() || "friend"}! 🎉
