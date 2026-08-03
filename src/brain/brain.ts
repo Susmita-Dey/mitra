@@ -248,6 +248,7 @@ export function createBrain(
 
           animationDirector.clearSequence(id.startsWith("reminder:") ? id : `reminder:${id}`);
           engine.setInteraction("none");
+          engine.setBubbleText(null);
           this.observe();
           this.think();
           this.act();
@@ -329,6 +330,7 @@ export function createBrain(
         
         // Force an immediate tick to clear the interaction state and push emotion
         engine.setInteraction("none");
+        engine.setBubbleText(null);
         this.observe(); // Update currentWorldState before think()
         this.think();
         this.act();
@@ -376,9 +378,14 @@ export function createBrain(
     },
 
     showCustomBubble(text, duration) {
-      currentIntents.push({ type: "SetBubble", text, duration });
-      const updates = emotionEngine.push("happy", currentEmotionState);
-      if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
+      if (text === null) {
+        animationDirector.clearSequence("custom-speech-bubble");
+        engine.setBubbleText(null);
+      } else {
+        currentIntents.push({ type: "SetBubble", text, duration });
+        const updates = emotionEngine.push("happy", currentEmotionState);
+        if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
+      }
       this.act();
     },
 
@@ -617,6 +624,9 @@ export function createBrain(
              } else if (currentBubbleText === null) {
                  engine.setInteraction("none");
              }
+         },
+         (soundCategory) => {
+             currentIntents.push({ type: "PlaySound", category: soundCategory as any });
          }
       );
       

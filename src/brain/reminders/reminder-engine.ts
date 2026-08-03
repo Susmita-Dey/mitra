@@ -5,7 +5,7 @@ import type { TimelineEngine } from "../timeline";
 import type { ContextState } from "../core/types";
 
 const INTERACTION_COOLDOWN_MS = 30 * 1000; // 30 seconds cooldown after user interaction
-const TRIGGERED_TIMEOUT_MS = 2 * 60 * 1000;    // Move to "ignored" if not clicked in 5 mins
+const TRIGGERED_TIMEOUT_MS = 1 * 60 * 1000;    // Move to "ignored" if not clicked in 1 min
 
 export interface ReminderEngine {
   tick(

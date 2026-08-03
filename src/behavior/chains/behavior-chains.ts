@@ -20,19 +20,19 @@ const WATER_CHAINS: BehaviorChain[] = [
   [
     { durationMs: 1500, animationOverrides: { bodyMotion: "look-around", ears: "twitch" }, emotion: "curious" },
     { durationMs: 1500, animationOverrides: { mouth: "open", props: ["mug"] }, emotion: "curious" },
-    { durationMs: 0, animationOverrides: { props: ["mug"], eyes: "squint" }, speechBubble: "Let's grab some water together? 💧", emotion: "caring" }
+    { durationMs: 0, animationOverrides: { props: ["mug"], eyes: "squint" }, speechBubble: "Let's grab some water together? 💧", emotion: "caring", sound: "drink" }
   ],
   // Variant B: Tail wag -> Wave -> Bubble
   [
     { durationMs: 1500, animationOverrides: { tail: "wag", eyes: "wide" }, emotion: "curious" },
     { durationMs: 1500, animationOverrides: { posture: "stand", bodyMotion: "bounce" }, emotion: "caring" },
-    { durationMs: 0, animationOverrides: { props: ["mug"], eyes: "squint" }, speechBubble: "Let's grab some water together? 💧", emotion: "caring" }
+    { durationMs: 0, animationOverrides: { props: ["mug"], eyes: "squint" }, speechBubble: "Let's grab some water together? 💧", emotion: "caring", sound: "drink" }
   ],
   // Variant C: Stretch -> Smile -> Bubble
   [
     { durationMs: 2000, animationOverrides: { posture: "stretch", eyes: "closed" }, emotion: "curious" },
     { durationMs: 1000, animationOverrides: { mouth: "smile", eyes: "happy-closed" }, emotion: "caring" },
-    { durationMs: 0, animationOverrides: { props: ["mug"], eyes: "squint" }, speechBubble: "Let's grab some water together? 💧", emotion: "caring" }
+    { durationMs: 0, animationOverrides: { props: ["mug"], eyes: "squint" }, speechBubble: "Let's grab some water together? 💧", emotion: "caring", sound: "drink" }
   ]
 ];
 
@@ -88,7 +88,7 @@ function getFoodChain(reminderType: string, timeOfDay: TimeOfDay): BehaviorChain
     // 3. Offer & Bubble: Extend arm, wag tail, say text
     { durationMs: 2500, animationOverrides: { posture: "offering-prop", props: [propId], tail: "wag", eyes: "crescent" }, speechBubble: bubbleText, emotion: "caring" },
     // 4. Bite & Chew: Bring to mouth, puff cheeks, play chew sound
-    { durationMs: 2000, animationOverrides: { posture: "eating", props: [propId], bodyMotion: "chew", mouth: "chew", eyes: "happy-closed" }, emotion: "happy", sound: "chew" },
+    { durationMs: 2000, animationOverrides: { posture: "eating", props: [propId], bodyMotion: "chew", mouth: "chew", eyes: "happy-closed" }, speechBubble: bubbleText, emotion: "happy", sound: "chew" },
     // 5. Satisfied Reaction: Sit happily
     { durationMs: 0, animationOverrides: { posture: "satisfied", eyes: "crescent", mouth: "smile" }, speechBubble: bubbleText, emotion: "happy" }
   ];

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { RendererProps } from "./types";
 import "./MockRenderer.css";
 
@@ -23,8 +22,6 @@ export function MockRenderer({ character }: RendererProps) {
   const { posture, eyes, mouth } = proceduralState;
   const { rig, refs } = useAnimationRig(proceduralState);
 
-  const [bubbleAcked, setBubbleAcked] = useState(false);
-
   const hasBubble = !!character.bubbleText;
 
   const isReminder = character.interaction?.startsWith("reminder:");
@@ -32,9 +29,6 @@ export function MockRenderer({ character }: RendererProps) {
 
   const handleReminderClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Brief visual ack flash
-    setBubbleAcked(true);
-    setTimeout(() => setBubbleAcked(false), 600);
 
     if (reminderType) {
       // For custom reminders: interaction = "reminder:custom_1234" → id = "custom_1234"
@@ -607,11 +601,11 @@ export function MockRenderer({ character }: RendererProps) {
       {/* Dynamic Action Bubble (Reminders, Greetings, Summaries) */}
       {hasBubble && (
         <div
-          className={`reminder-bubble${bubbleAcked ? " acked" : ""}`}
+          className="reminder-bubble"
           onClick={handleReminderClick}
           title="Click to dismiss"
         >
-          {bubbleAcked ? "✓" : character.bubbleText}
+          {character.bubbleText}
         </div>
       )}
     </div>
