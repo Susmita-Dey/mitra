@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { listen } from "@tauri-apps/api/event";
@@ -10,6 +10,17 @@ export function Updater() {
   const [isChecking, setIsChecking] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const timeoutsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  const safeSetTimeout = (cb: () => void, delay: number) => {
+    const id = setTimeout(() => {
+      timeoutsRef.current.delete(id);
+      cb();
+    }, delay);
+    timeoutsRef.current.add(id);
+    return id;
+  };
 
   const checkForUpdate = async (manual = false) => {
     if (manual) {
@@ -25,14 +36,14 @@ export function Updater() {
         setMessage(null);
       } else if (manual) {
         setMessage("You are on the latest version! 🎉");
-        setTimeout(() => setMessage(null), 4000);
+        safeSetTimeout(() => setMessage(null), 4000);
       }
     } catch (err: any) {
       console.error("Failed to check for updates:", err);
       if (manual) {
         setError("Failed to check for updates. Are you offline?");
         setMessage(null);
-        setTimeout(() => setError(null), 5000);
+        safeSetTimeout(() => setError(null), 5000);
       }
     } finally {
       if (manual) setIsChecking(false);
@@ -41,13 +52,16 @@ export function Updater() {
 
   useEffect(() => {
     // Initial silent check
-    setTimeout(() => checkForUpdate(false), 5000);
+    safeSetTimeout(() => checkForUpdate(false), 5000);
 
     const unlisten = listen("companion:window:check_updates", () => {
       checkForUpdate(true);
     });
 
     return () => {
+      // Clear all active timers on unmount to prevent leaks
+      timeoutsRef.current.forEach(clearTimeout);
+      timeoutsRef.current.clear();
       unlisten.then((f: any) => f());
     };
   }, []);

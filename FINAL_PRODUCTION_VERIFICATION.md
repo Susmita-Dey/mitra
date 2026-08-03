@@ -60,6 +60,18 @@ We reproduced, root-caused, and implemented robust fixes for every verified issu
 - **Root Cause**: A custom `SetBubble` intent in `act()` used a raw `setTimeout` that conflicted with the animation director's tick loop, causing custom bubbles (boot greetings, git commits) to disappear after 1 second.
 - **Resolution**: Moved the `SetBubble` intent to the central animation director's queue during the `think` phase, letting the director manage its duration and clean it up naturally.
 
+### ✅ [Updater.tsx] Centralized Timeout Leak Cleansing
+- **Root Cause**: Pending `setTimeout` callbacks scheduled for silent updates, error clears, or messages were not cleared on unmount.
+- **Resolution**: Created a `timeoutsRef` Set in `Updater.tsx` that automatically stores active timeout IDs and clears them all in the unmount cleanup handler.
+
+### ✅ [App.tsx] Stale Plugin Registrations on Unmount
+- **Root Cause**: Plugins loaded in `App.tsx` were never unloaded when the main companion window was destroyed or reloaded.
+- **Resolution**: Added `_pluginManager.unloadAll()` to the unmount cleanup in `App.tsx` to automatically clean up all active plugin registrations and subscriptions.
+
+### ✅ [reminder-parser.ts & App.tsx] Content Safety & Custom Reminder Guardrails
+- **Root Cause**: Users typing custom reminders could schedule harmful prompts (suicide, self-harm, violence, illegal activity) which Mitra would display and adapt to.
+- **Resolution**: Implemented `checkSafety(input)` validation in `reminder-parser.ts` to identify crisis, violence, and illegal keywords. Intercepted inputs are blocked from scheduling and redirect to supportive or cautionary speech bubbles and concerned emotional face shifts.
+
 ---
 
 ## 2. False Positives

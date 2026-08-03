@@ -24,6 +24,8 @@ export type Interaction =
   | "poke"
   | "poke-alert"
   | "gentle-tap"
-  | "idle";
+  | "idle"
+  | `reminder:custom_${string}`
+  | string;
 
 export const DEFAULT_INTERACTION: Interaction = "idle";

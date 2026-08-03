@@ -28,13 +28,19 @@ Mitra is built to work offline and respect your boundary:
 * **Vibe to Music**: Listens along with your media controls (Windows-only via `win-gsmtc`) to sway and enjoy your music with you.
 * **Local Weather**: Fetches weather based on public IP, requiring zero invasive native OS location permissions.
 
+### 📝 Custom Reminders & Safety Guardrails
+Users can now add their own custom, personalized reminders:
+* **Natural Language Command Bar**: Ask Mitra for reminders using natural inputs (e.g. *"medicine in 30 minutes"*, *"coffee every 45m"*, or *"lunch at 1:30 PM"*). Live parsing previews show up as you type.
+* **Safety Guardrails**: Prohibits violent, self-harm, and illegal reminder inputs. When blocked, Mitra responds with empathetic support or cautionary guidance depending on the category.
+* **Settings Hub**: Turn on/off or permanently delete custom reminders at any time.
+
 ---
 
 ## 🛠️ Production Readiness & Stability Fixes
 
 This final release includes critical patches addressing memory, performance, and cross-platform readiness:
 
-1. **Zero Event Leaks (P0/P1)**: Swapped out anonymous event listeners in `App.tsx` and `SettingsPage.tsx` with static, memoized handlers. Fully cleaned up all window moved event listeners, weather intervals, battery event hooks, and plugin instances on unmount.
+1. **Zero Event & Timeout Leaks**: Swapped out anonymous event listeners in `App.tsx` and `SettingsPage.tsx` with static, memoized handlers. Fully cleaned up all window moved event listeners, weather intervals, battery event hooks, `setTimeout` timers, and plugin instances on unmount.
 2. **Cross-Platform Compatibility**: Rewrote backend process matching in Rust to be fully platform-agnostic, stripping `.exe` and platform-specific suffixes so context detection functions perfectly on Windows, macOS, and Linux.
 3. **Production Capability Permissions**: Added missing window management and update capabilities (`allow-set-ignore-cursor-events`, `allow-set-position`, `allow-set-size`, `allow-set-always-on-top`, `allow-minimize`, `allow-unminimize`) to prevent crashes in production.
 4. **Preserved Birth Year & Age Wishes**: Fixed the date picker to save and display the user's birth year, enabling Mitra to calculate your exact age and wish you a customized birthday (e.g. *"HAPPY 23rd BIRTHDAY, Susmita!!"*).

@@ -39,6 +39,7 @@ export interface CompanionMemory {
     dinner: ReminderItem;
     snack: ReminderItem;
     bio: ReminderItem;
+    [key: string]: ReminderItem;
   };
 
   /** History of events for debugging and organic state evaluation */

@@ -31,3 +31,5 @@ export { TaskbarBehavior } from "./presence-taskbar";
 export { CatchUpBehavior } from "./catch-up";
 export { UserBirthdayBehavior } from "./user-birthday";
 export { MitraBirthdayBehavior } from "./mitra-birthday";
+export { CustomReminderBehavior } from "@/brain/reminders/custom-reminder";
+

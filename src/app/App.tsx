@@ -4,7 +4,7 @@
  * Wires the Companion Engine, EnvironmentService, Brain, and rendering layers.
  * Mitra stays a companion surface — no routes, settings, or productivity UI.
  */
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { Companion } from "@/body";
 import { createBrain, initializeBrain } from "@/brain";
@@ -61,6 +61,7 @@ import {
   CatchUpBehavior,
   UserBirthdayBehavior,
   MitraBirthdayBehavior,
+  CustomReminderBehavior,
 } from "@/behavior/behaviors";
 import { createCompanionEngine } from "./companion-engine";
 
@@ -112,7 +113,7 @@ export function App() {
     meetingSystem.start(scheduler);
     
     const winCtrl       = createWindowController(appStorage);
-    const brain         = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus);
+    const brain         = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus, appStorage);
     const _pluginManager = createPluginManager(brain, eventBus);
 
     // Notification system: queues reminders when hidden, fires OS toast on resurface
@@ -269,6 +270,7 @@ export function App() {
     brain.registerBehavior(CatchUpBehavior);
     brain.registerBehavior(UserBirthdayBehavior);
     brain.registerBehavior(MitraBirthdayBehavior);
+    brain.registerBehavior(CustomReminderBehavior);
 
     const stopBrain = initializeBrain(brain, scheduler);
 
@@ -305,6 +307,8 @@ export function App() {
         brain.pushEmotion(detail.payload);
       } else if (detail.type === 'force-interaction') {
         brain.triggerInteraction(detail.payload);
+      } else if (detail.type === 'show-bubble') {
+        brain.showCustomBubble(detail.payload.text, detail.payload.duration);
       }
     };
 
@@ -359,6 +363,7 @@ export function App() {
       env.dispose();
       eventBus.clear();
       gitWatcher.stop();
+      _pluginManager.unloadAll().catch(console.error);
     };
   }, [engine]);
 
@@ -366,6 +371,8 @@ export function App() {
     <CompanionProvider engine={engine}>
       <Updater />
       <CompanionView />
+
+      <CommandBar appStorageRef={appStorageRef} />
 
       {/* Settings / Menu Gear Icon */}
       <button 
@@ -378,3 +385,160 @@ export function App() {
     </CompanionProvider>
   );
 }
+
+import { parseReminderString, checkSafety } from "@/system/reminder-parser";
+
+interface CommandBarProps {
+  appStorageRef: React.RefObject<any>;
+}
+
+function CommandBar({ appStorageRef }: CommandBarProps) {
+  const [inputValue, setInputValue] = useState("");
+  const [preview, setPreview] = useState<string | null>(null);
+  const [parsed, setParsed] = useState<any>(null);
+  const [safetyCheck, setSafetyCheck] = useState<any>(null);
+
+  useEffect(() => {
+    if (!inputValue.trim()) {
+      setPreview(null);
+      setParsed(null);
+      setSafetyCheck(null);
+      return;
+    }
+
+    // Safety validation check
+    const safety = checkSafety(inputValue);
+    if (!safety.safe) {
+      setParsed(null);
+      setPreview(safety.suggestion || "Please enter a safe reminder.");
+      setSafetyCheck(safety);
+      return;
+    }
+
+    setSafetyCheck(null);
+    const result = parseReminderString(inputValue);
+    if (result) {
+      setParsed(result);
+      let desc = "";
+      if (result.triggerType === "countdown" && result.countdownMs) {
+        desc = `in ${Math.round(result.countdownMs / 60000)}m`;
+        if (result.countdownMs < 60000) {
+          desc = `in ${Math.round(result.countdownMs / 1000)}s`;
+        }
+      } else if (result.triggerType === "interval" && result.intervalMs) {
+        desc = `every ${Math.round(result.intervalMs / 60000)}m`;
+        if (result.intervalMs < 60000) {
+          desc = `every ${Math.round(result.intervalMs / 1000)}s`;
+        }
+      } else if (result.triggerType === "time" && result.time) {
+        desc = `at ${result.time}`;
+      }
+      setPreview(`Will remind you to: "${result.label}" ${desc}`);
+    } else {
+      setPreview(null);
+      setParsed(null);
+    }
+  }, [inputValue]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (safetyCheck && !safetyCheck.safe) {
+      // Intercept and redirect to supportive/prohibitive message
+      let emotion = "concerned";
+      let duration = 8000;
+
+      if (safetyCheck.reason === "crisis") {
+        emotion = "concerned";
+        duration = 15000;
+      } else if (safetyCheck.reason === "negative") {
+        emotion = "happy";
+        duration = 8000;
+      } else if (safetyCheck.reason === "violence" || safetyCheck.reason === "illegal") {
+        emotion = "concerned";
+        duration = 8000;
+      }
+
+      window.dispatchEvent(new CustomEvent("companion:debug", {
+        detail: { type: "force-emotion", payload: emotion }
+      }));
+      window.dispatchEvent(new CustomEvent("companion:debug", {
+        detail: {
+          type: "show-bubble",
+          payload: {
+            text: safetyCheck.suggestion,
+            duration: duration
+          }
+        }
+      }));
+
+      setInputValue("");
+      setPreview(null);
+      setParsed(null);
+      setSafetyCheck(null);
+      return;
+    }
+
+    if (!parsed) return;
+
+    const storage = appStorageRef.current;
+    if (!storage) return;
+
+    const newReminder = {
+      id: `custom_${Date.now()}`,
+      label: parsed.label,
+      type: parsed.type,
+      enabled: true,
+      intervalMs: parsed.intervalMs,
+      time: parsed.time,
+      countdownMs: parsed.countdownMs,
+      createdAt: Date.now()
+    };
+
+    try {
+      const currentPrefs = await storage.load();
+      const updatedCustom = [...(currentPrefs.customReminders || []), newReminder];
+      await storage.update({ customReminders: updatedCustom });
+
+      // Trigger confirmation speech bubble on Mitra
+      window.dispatchEvent(new CustomEvent("companion:debug", {
+        detail: {
+          type: "show-bubble",
+          payload: {
+            text: `Got it! I'll remind you of: ${parsed.label} ⏰`,
+            duration: 5000
+          }
+        }
+      }));
+    } catch (err) {
+      console.error("Failed to save custom reminder", err);
+    }
+
+    setInputValue("");
+    setPreview(null);
+    setParsed(null);
+    setSafetyCheck(null);
+  };
+
+  return (
+    <div className="command-bar-wrapper">
+      <form onSubmit={handleSubmit} className="command-form">
+        <span className="command-icon">⏰</span>
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="Ask Mitra for a reminder..."
+          className="command-input"
+        />
+        {inputValue && <button type="submit" className="command-submit">➔</button>}
+      </form>
+      {preview && (
+        <div className="command-preview">
+          {preview}
+        </div>
+      )}
+    </div>
+  );
+}
+
