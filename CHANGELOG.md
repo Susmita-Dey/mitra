@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.0] - The Spotlight Update
+
+### 🚀 Features & Enhancements
+- **🔍 Universal Spotlight Command Palette**: Upgraded the command bar into a Raycast/Spotlight-style universal palette. It supports dynamic action registration, history navigation (using Arrow Up/Down keys), autocomplete suggestions (e.g. typing `water` suggests `💧 Drink Water`), and a keyboard toggle shortcut (`Ctrl + K` or `/`).
+- **🛡️ Fuzzy Clash Detection**: Prevents the creation of custom reminders that clash with built-in reminders (e.g. blocking posture, coffee/water, breaks, or meal keywords) with a guidance notice.
+- **↩️ Gmail-style Undo Action**: Shows a stateful Toast notification with a 3-second undo buffer when a reminder is scheduled, with a happy chirp sound and Mitra smiling face feedback.
+- **🔍 Settings Panel Filtering**: Added a search bar at the top of the Settings Page to dynamically filter sections (reminders, audio, privacy, etc.) based on keywords.
+- **🛡️ Strict Focus & Close Gestures**: Stopped the Command Bar from opening automatically on general Alt+Tab window focus. Closed the bar strictly on Escape, submit, close button, or clicking outside (eliminating unreliable blur events).
+- **🔒 Safety Hardening**: Upgraded safety validators to normalize strings (collapsing spaces, stripping symbols, mapping leet-speak) to block obfuscated prompts.
+
 ## [v1.0.0] - The Final Production Release
 
 ### 🚀 Features & Enhancements
