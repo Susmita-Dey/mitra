@@ -3,7 +3,7 @@ import type { AppPreferences, Emotion } from "@/types";
 
 export interface AudioSystem {
   playSound(
-    category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" | "chirps" | "yawns" | "stretch" | "wow" | "applause" | "smack" | "footsteps" | "idle",
+    category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" | "chirps" | "yawns" | "stretch" | "wow" | "applause" | "smack" | "footsteps" | "idle" | "chew",
     emotion?: Emotion
   ): void;
 }
@@ -14,7 +14,6 @@ const soundMap: Record<string, string[]> = {
   wow: ["/sounds/shrek_30-pop-wow-323262.wav"],
   applause: ["/sounds/miraclei-11l-applause_from_a_smal-1749174330556-355760.wav"],
   smack: ["/sounds/smack.wav"],
-  idle: ["/sounds/11325622-vinyl-stop-sound-effect-241388.wav"],
   chew: ["/sounds/apple-bite-39n-chew.wav"],
   sad: ["/sounds/11325622-cartoon-trombone-sound-effect-241387.wav"],
   sleepy: ["/sounds/freesound_community-yawning-6096.wav", "/sounds/dragon-studio-male-yawn-effect-376879.wav", "/sounds/pwlpl-yawning-sound-effect-521103.wav"],
