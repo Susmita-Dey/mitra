@@ -451,12 +451,12 @@ export function App() {
     };
   }, [engine]);
 
-  // Toast auto-clear
+  // Toast auto-clear — 7 seconds to give time to read + undo
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => {
       setToast(null);
-    }, 4000);
+    }, 7000);
     return () => clearTimeout(timer);
   }, [toast]);
 
@@ -474,6 +474,7 @@ export function App() {
 
       {toast && (
         <div className="mitra-toast open">
+          <div className="mitra-toast-progress" />
           <div className="mitra-toast-content">
             <span className="mitra-toast-icon">✓</span>
             <div className="mitra-toast-text">
@@ -502,6 +503,18 @@ export function App() {
       >
         ⚙️
       </button>
+
+      {/* Command Bar Discovery Hint */}
+      {/* {!isCommandBarOpen && (
+        <button
+          className="command-hint-btn"
+          onClick={() => setIsCommandBarOpen(true)}
+          title="Open command bar (Ctrl+K or /)"
+        >
+          <span className="command-hint-key">Ctrl+K</span>
+          <span className="command-hint-label">· set a reminder</span>
+        </button>
+      )} */}
     </CompanionProvider>
   );
 }
@@ -569,6 +582,7 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
 
     // 1. Suggestions matching prefix
     const list: Array<{ label: string; icon: string; value: string }> = [];
+    // Slash-command mode: only when the input *starts* with '/' (not mid-sentence)
     if (inputValue.startsWith("/")) {
       const query = val.substring(1);
       const actions = commandRegistry.getActions();
@@ -582,20 +596,17 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
         }
       }
     } else {
-      if (/\b(water|drink|hydrate|tea|coffee|caffeine|beverage|mug)\b/.test(val)) {
-        list.push({ label: "Drink Water / Coffee", icon: "💧", value: inputValue });
+      // Only suggest reminders that will pass the clash check.
+      // Water, stretch, coffee, meals, eyes are built-in — don't suggest them (they'll always fail).
+      if (/\b(med|pill|tablet|dose|vitamin|pills|vitamins|medicine)\b/.test(val)) {
+        list.push({ label: "Take Medicine · add a time", icon: "💊", value: "medicine at 8am" });
       }
-      if (/\b(stretch|sit|posture|back|slouch|spine|straight|stand)\b/.test(val)) {
-        list.push({ label: "Check Posture / Stretch", icon: "🧘", value: inputValue });
+      if (/\b(meeting|standup|call|zoom|huddle|sync)\b/.test(val)) {
+        list.push({ label: "Meeting Reminder · add a time", icon: "📅", value: "meeting at 3pm" });
       }
-      if (/\b(med|pill|tablet|dose|vitamin|pills|vitamins)\b/.test(val)) {
-        list.push({ label: "Take Medicine", icon: "💊", value: inputValue });
-      }
-      if (/\b(lunch|eat|food|meal|dinner|snack|breakfast)\b/.test(val)) {
-        list.push({ label: "Meal / Lunch", icon: "🍜", value: inputValue });
-      }
-      if (/\b(coding|break|rest|relax|screen|eyes|eye|visual|pause)\b/.test(val)) {
-        list.push({ label: "Coding Break / Rest", icon: "💻", value: inputValue });
+      // If they typed something that IS a built-in, hint them to Settings instead of letting them fail
+      if (/\b(water|drink|hydrate|coffee|caffeine|tea|stretch|posture|lunch|dinner|snack|eat|eyes|eye|break|rest)\b/.test(val)) {
+        list.push({ label: "This is a built-in reminder — customize in Settings ⚙️", icon: "ℹ️", value: "" });
       }
     }
     setSuggestions(list);
@@ -677,10 +688,20 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
           const updatedCustom = [...(currentPrefs.customReminders || []), newReminder];
           await storage.update({ customReminders: updatedCustom });
 
+          // Detect if the parser used the 30-minute default fallback
+          // (input had no time expression — countdown of exactly 30 minutes with no time/interval)
+          const isDefaultFallback =
+            parsed.triggerType === "countdown" &&
+            parsed.countdownMs === 30 * 60 * 1000 &&
+            !parsed.time &&
+            !parsed.intervalMs &&
+            !/\bin\s+\d+/i.test(cleanInput);
+
           let timeDesc = "";
           if (parsed.triggerType === "countdown" && parsed.countdownMs) {
             const mins = Math.round(parsed.countdownMs / 60000);
             timeDesc = mins > 0 ? `in ${mins}m` : `in ${Math.round(parsed.countdownMs / 1000)}s`;
+            if (isDefaultFallback) timeDesc += " (no time given — default)";
           } else if (parsed.triggerType === "interval" && parsed.intervalMs) {
             const mins = Math.round(parsed.intervalMs / 60000);
             timeDesc = mins > 0 ? `every ${mins}m` : `every ${Math.round(parsed.intervalMs / 1000)}s`;
@@ -765,6 +786,18 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
         setHistoryIndex(-1);
         setInputValue("");
       }
+    } else if (e.key === "Tab") {
+      // Tab autocompletes the first suggestion that has an actual value
+      const firstReal = suggestions.find(s => s.value);
+      if (firstReal) {
+        e.preventDefault();
+        setInputValue(firstReal.value);
+        requestAnimationFrame(() => {
+          if (inputRef.current) {
+            inputRef.current.setSelectionRange(firstReal.value.length, firstReal.value.length);
+          }
+        });
+      }
     } else if (e.key === "Escape") {
       e.preventDefault();
       setIsOpen(false);
@@ -780,9 +813,19 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
             <div 
               key={index} 
               className="suggestion-item"
+              onMouseDown={(e) => {
+                // Prevent blur from firing before we set the value
+                e.preventDefault();
+              }}
               onClick={() => {
                 setInputValue(s.value);
-                if (inputRef.current) inputRef.current.focus();
+                // Place cursor at end of the template so user can edit the time part
+                requestAnimationFrame(() => {
+                  if (inputRef.current) {
+                    inputRef.current.focus();
+                    inputRef.current.setSelectionRange(s.value.length, s.value.length);
+                  }
+                });
               }}
             >
               <span className="suggestion-icon">{s.icon}</span>
@@ -800,21 +843,10 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
           value={inputValue}
           onKeyDown={handleKeyDown}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Ask Mitra for a command or reminder..."
+          placeholder="Reminder or command… (Tab to autocomplete)"
           className="command-input"
         />
         {inputValue && <button type="submit" className="command-submit">➔</button>}
-        <button 
-          type="button" 
-          className="command-close"
-          onClick={() => {
-            setIsOpen(false);
-            setInputValue("");
-          }}
-          title="Close command bar"
-        >
-          ✕
-        </button>
       </form>
       {preview && (
         <div className="command-preview">
