@@ -544,13 +544,17 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
 
   // Auto-focus when opened
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
     if (isOpen && inputRef.current) {
-      setTimeout(() => {
+      timer = setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
         }
       }, 50);
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [isOpen]);
 
   // Click outside to close

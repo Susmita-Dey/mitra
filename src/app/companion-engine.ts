@@ -30,6 +30,7 @@ export interface CompanionEngine {
   setEmotion(emotion: Emotion): void;
   setInteraction(interaction: Interaction): void;
   setProceduralState(state: import("../brain/core/types").ProceduralAnimationState): void;
+  setPhysical(physical: import("../brain/core/types").PhysicalState): void;
   setBubbleText(text: string | null): void;
   setEnergy(energy: number): void;
   setAttention(attention: number): void;
@@ -50,8 +51,8 @@ export function createCompanionEngine(
   const patch = (next: Partial<Character>): void => {
     let hasChanges = false;
     for (const key of Object.keys(next) as Array<keyof Character>) {
-      if (key === "proceduralState") {
-        if (JSON.stringify(character.proceduralState) !== JSON.stringify(next.proceduralState)) {
+      if (key === "proceduralState" || key === "physical") {
+        if (JSON.stringify(character[key]) !== JSON.stringify(next[key])) {
           hasChanges = true;
           break;
         }
@@ -78,6 +79,7 @@ export function createCompanionEngine(
     setEmotion: (emotion) => patch({ emotion }),
     setInteraction: (interaction) => patch({ interaction }),
     setProceduralState: (proceduralState) => patch({ proceduralState }),
+    setPhysical: (physical) => patch({ physical }),
     setBubbleText: (bubbleText) => patch({ bubbleText }),
     setEnergy: (energy) => patch({ energy }),
     setAttention: (attention) => patch({ attention }),

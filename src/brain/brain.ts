@@ -116,6 +116,12 @@ export function createBrain(
      reason: "init"
   };
   
+  let currentPhysical: import("./core/types").PhysicalState = {
+    health: "healthy",
+    energy: "energetic",
+    behavior: "idle"
+  };
+  
   let currentContext: ContextState = {
     userState: "Available",
     timeOfDay: "Afternoon",
@@ -278,17 +284,30 @@ export function createBrain(
         }
 
         let shouldCelebrate = false;
+        let milestoneMessage = "";
+        
         if (type === 'water') {
           habits.waterToday++;
-          if ([1, 3, 5, 8].includes(habits.waterToday)) shouldCelebrate = true;
+          if ([1, 3, 5, 8].includes(habits.waterToday)) {
+            shouldCelebrate = true;
+            milestoneMessage = `Yay! That's glass #${habits.waterToday} of water today! 💧`;
+          }
         }
         if (type === 'stretch') {
           habits.stretchToday++;
-          if ([1, 2, 4].includes(habits.stretchToday)) shouldCelebrate = true;
+          if ([1, 2, 4].includes(habits.stretchToday)) {
+            shouldCelebrate = true;
+            const suffix = habits.stretchToday === 1 ? '1st' : habits.stretchToday === 2 ? '2nd' : '4th';
+            milestoneMessage = `Great job doing your ${suffix} stretch today! 🧘`;
+          }
         }
         if (type === 'eyes') {
           habits.eyesToday++;
-          if ([1, 2, 4].includes(habits.eyesToday)) shouldCelebrate = true;
+          if ([1, 2, 4].includes(habits.eyesToday)) {
+            shouldCelebrate = true;
+            const suffix = habits.eyesToday === 1 ? '1st' : habits.eyesToday === 2 ? '2nd' : '4th';
+            milestoneMessage = `Nice! That's your ${suffix} eye break today! 👀`;
+          }
         }
         
         memoryEngine.update({ 
@@ -300,6 +319,7 @@ export function createBrain(
         
         if (shouldCelebrate) {
           this.triggerCelebration("ReminderAcknowledged");
+          currentIntents.push({ type: "SetBubble", text: milestoneMessage, duration: 5000 });
         } else {
           const updates = emotionEngine.push("happy", currentEmotionState);
           if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
@@ -475,7 +495,7 @@ export function createBrain(
                   }
                }
                
-               const name = currentPrefs.userName?.trim();
+               const name = currentPrefs.userName?.trim().split(" ")[0];
                const greetingName = name ? `, ${name}` : "";
                for (const ci of cIntents) {
                   if (ci.type === "SetBubble") {
@@ -509,7 +529,7 @@ export function createBrain(
                   const rLabel = customRem?.label || "Reminder!";
                   chain = getCustomReminderChain(rType, rLabel);
                 } else {
-                  chain = getReminderChain(intent.interaction);
+                  chain = getReminderChain(intent.interaction, currentContext.timeOfDay);
                 }
                 animationDirector.queueSequence({
                    id: intent.interaction,
@@ -621,6 +641,8 @@ export function createBrain(
           if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
         } else if (intent.type === "SetProceduralState") {
           currentProceduralState = { ...currentProceduralState, ...intent.state } as ProceduralAnimationState;
+        } else if (intent.type === "ChangePhysical") {
+          currentPhysical = { ...currentPhysical, ...intent.state };
         }
       }
 
@@ -633,6 +655,7 @@ export function createBrain(
 
       // Commit resolved emotion and procedural states to the CompanionEngine store.
       engine.setEmotion(currentTempEmotion || currentEmotionState.mood);
+      engine.setPhysical(currentPhysical);
       
       if (currentProceduralState) {
          engine.setProceduralState(currentProceduralState);

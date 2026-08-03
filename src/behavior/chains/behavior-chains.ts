@@ -6,6 +6,7 @@ export interface ChainStep {
   animationOverrides?: Partial<ProceduralAnimationState>;
   speechBubble?: string;
   emotion?: Emotion;
+  sound?: string;
 }
 
 export type BehaviorChain = ChainStep[];
@@ -67,36 +68,31 @@ const EYES_CHAINS: BehaviorChain[] = [
   ]
 ];
 
-const LUNCH_CHAINS: BehaviorChain[] = [
-  // Variant A: Looks at clock -> Looks at user -> Waves
-  [
-    { durationMs: 1500, animationOverrides: { bodyMotion: "look-around", ears: "up" }, emotion: "excited" },
-    { durationMs: 1500, animationOverrides: { eyes: "wide", tail: "wag" }, emotion: "excited" },
-    { durationMs: 1500, animationOverrides: { posture: "stand", bodyMotion: "bounce" }, emotion: "excited" },
-    { durationMs: 0, animationOverrides: { posture: "sit", props: ["food"], eyes: "squint" }, speechBubble: "Lunch time! 🍜", emotion: "excited" }
-  ],
-  // Variant B: Excited bounce -> Smile
-  [
-    { durationMs: 2000, animationOverrides: { posture: "stand", bodyMotion: "bounce", tail: "wag" }, emotion: "excited" },
-    { durationMs: 1000, animationOverrides: { mouth: "smile", eyes: "sparkle" }, emotion: "excited" },
-    { durationMs: 0, animationOverrides: { posture: "sit", props: ["food"], eyes: "squint" }, speechBubble: "Lunch time! 🍜", emotion: "excited" }
-  ]
-];
+import type { TimeOfDay } from "@/brain/core/types";
+import { PropManager } from "@/behavior/prop-manager";
 
-const SNACK_CHAINS: BehaviorChain[] = [
-  [
-    { durationMs: 1500, animationOverrides: { ears: "twitch", eyes: "wide" }, emotion: "curious" },
-    { durationMs: 1500, animationOverrides: { mouth: "smile", tail: "wag" }, emotion: "excited" },
-    { durationMs: 0, animationOverrides: { posture: "sit", props: ["food"], eyes: "squint" }, speechBubble: "🥨 Snack break!", emotion: "happy" }
-  ]
-];
+// ... existing code ...
 
-const DINNER_CHAINS: BehaviorChain[] = [
-  [
-    { durationMs: 1500, animationOverrides: { bodyMotion: "bounce" }, emotion: "excited" },
-    { durationMs: 0, animationOverrides: { posture: "sit", props: ["food"], eyes: "squint" }, speechBubble: "🍲 Dinner time!", emotion: "excited" }
-  ]
-];
+function getFoodChain(reminderType: string, timeOfDay: TimeOfDay): BehaviorChain {
+  const propId = PropManager.getFoodProp(reminderType, timeOfDay);
+  const bubbleText = reminderType === "reminder:lunch" ? "Lunch break? 🍜" : 
+                     reminderType === "reminder:dinner" ? "Dinner time? 🍲" :
+                     reminderType === "reminder:snack" ? "Time for a little energy boost!" :
+                     "Time to eat! 😋";
+
+  return [
+    // 1. Notice Prop: Look at food in paw
+    { durationMs: 1500, animationOverrides: { posture: "holding-prop", props: [propId], bodyMotion: "look-around", ears: "up" }, emotion: "curious" },
+    // 2. Engage User: Look directly at user, tiny smile
+    { durationMs: 1000, animationOverrides: { posture: "holding-prop", props: [propId], mouth: "smile", eyes: "sparkle" }, emotion: "happy" },
+    // 3. Offer & Bubble: Extend arm, wag tail, say text
+    { durationMs: 2500, animationOverrides: { posture: "offering-prop", props: [propId], tail: "wag", eyes: "crescent" }, speechBubble: bubbleText, emotion: "caring" },
+    // 4. Bite & Chew: Bring to mouth, puff cheeks, play chew sound
+    { durationMs: 2000, animationOverrides: { posture: "eating", props: [propId], bodyMotion: "chew", mouth: "chew", eyes: "happy-closed" }, emotion: "happy", sound: "chew" },
+    // 5. Satisfied Reaction: Sit happily
+    { durationMs: 0, animationOverrides: { posture: "satisfied", eyes: "crescent", mouth: "smile" }, speechBubble: bubbleText, emotion: "happy" }
+  ];
+}
 
 const BIO_CHAINS: BehaviorChain[] = [
   [
@@ -105,17 +101,23 @@ const BIO_CHAINS: BehaviorChain[] = [
   ]
 ];
 
-export function getReminderChain(interactionId: string): BehaviorChain {
+export function getReminderChain(interactionId: string, timeOfDay: TimeOfDay = "Afternoon"): BehaviorChain {
   switch (interactionId) {
-    case "reminder:water": return randomVariant(WATER_CHAINS);
+    case "reminder:water": return randomVariant(WATER_CHAINS); // Could be migrated to PropManager later
     case "reminder:stretch": return randomVariant(STRETCH_CHAINS);
     case "reminder:eyes": return randomVariant(EYES_CHAINS);
-    case "reminder:lunch": return randomVariant(LUNCH_CHAINS);
-    case "reminder:snack": return randomVariant(SNACK_CHAINS);
-    case "reminder:dinner": return randomVariant(DINNER_CHAINS);
     case "reminder:bio": return randomVariant(BIO_CHAINS);
+    
+    // Food-based generic sequence
+    case "reminder:lunch":
+    case "reminder:snack":
+    case "reminder:dinner":
+    case "reminder:breakfast":
+      return getFoodChain(interactionId, timeOfDay);
+      
     default: return [
       { durationMs: 0, speechBubble: "Reminder!" }
     ];
   }
 }
+

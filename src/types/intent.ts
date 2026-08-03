@@ -7,6 +7,7 @@ import type { Emotion, Animation, Interaction } from "./index";
 export type Intent =
   // ── Character Intents ──────────────────────────────────────────────────
   | { type: "ChangeEmotion"; emotion: Emotion }
+  | { type: "ChangePhysical"; state: Partial<import("../brain/core/types").PhysicalState> }
   | { type: "PlayAnimation"; animation: Animation }
   | { type: "SetInteraction"; interaction: Interaction }
   | { type: "SetProceduralState"; state: Partial<import("../brain/core/types").ProceduralAnimationState> }
@@ -40,4 +41,4 @@ export type Intent =
   | { type: "ShowWindow" }
   
   // ── Audio Intents ──────────────────────────────────────────────────────
-  | { type: "PlaySound"; category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" | "chirps" | "yawns" | "stretch" | "wow" | "applause" | "smack" | "footsteps" | "idle"; emotion?: Emotion };
+  | { type: "PlaySound"; category: "greet" | "happy" | "sad" | "sleepy" | "curious" | "bored" | "alert" | "drink" | "chirps" | "yawns" | "stretch" | "wow" | "applause" | "smack" | "footsteps" | "idle" | "chew"; emotion?: Emotion };

@@ -32,19 +32,26 @@ export interface EmotionState {
 }
 
 export interface ProceduralAnimationState {
-  eyes: "open" | "closed" | "squint" | "wide" | "sparkle" | "happy-closed" | "sad";
-  mouth: "neutral" | "smile" | "grin" | "sad" | "open" | "yawn" | "smirk" | "laugh";
+  eyes: "open" | "closed" | "squint" | "wide" | "sparkle" | "happy-closed" | "sad" | "crescent";
+  mouth: "neutral" | "smile" | "grin" | "sad" | "open" | "yawn" | "smirk" | "laugh" | "chew";
   ears: "up" | "down" | "twitch";
   tail: "still" | "wag" | "flick" | "droop" | "curl";
-  posture: "stand" | "sit" | "lie-down" | "stretch" | "sleep" | "slump" | "high-five" | "thinking" | "shy" | "concerned" | "cheer";
-  bodyMotion: "still" | "breathe" | "bounce" | "sway" | "shiver" | "dance" | "look-around" | "wave";
+  posture: "stand" | "sit" | "lie-down" | "stretch" | "sleep" | "slump" | "high-five" | "thinking" | "shy" | "concerned" | "cheer" | "holding-prop" | "offering-prop" | "eating" | "satisfied";
+  bodyMotion: "still" | "breathe" | "bounce" | "sway" | "shiver" | "dance" | "look-around" | "wave" | "chew";
   rootScale: number;
   /** Active visual props (e.g., "laptop", "umbrella", "sunglasses") */
   props?: string[];
 }
 
+export interface PhysicalState {
+  health: "healthy" | "recovering" | "sick";
+  energy: "energetic" | "tired" | "sleepy";
+  behavior: "idle" | "sleeping" | "eating" | "walking" | "stretching";
+}
+
 export interface CompanionMemoryV2 {
   context: ContextState;
+  physical: PhysicalState;
   emotion: EmotionState;
   animation: ProceduralAnimationState;
   

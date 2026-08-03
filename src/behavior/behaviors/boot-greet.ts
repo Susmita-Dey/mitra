@@ -37,11 +37,10 @@ export const BootGreetBehavior: RegisteredBehavior = {
     });
     
     // Personalised greeting using the user's name if they set it during onboarding
-    const name = context.world.settings?.userName?.trim();
-    const greeting = name
-      ? `Hi ${name}! I missed you! 🦊`
-      : `Hi! I'm Mitra, your new desktop buddy! 🐾`;
-    context.emit({ type: "SetBubble", text: greeting, duration: 6000 });
+    const name = context.world.settings?.userName?.trim().split(" ")[0];
+    const greeting = name ? `Good to see you, ${name}! 👋` : "Good to see you! 👋";
+
+    context.emit({ type: "SetBubble", text: greeting, duration: 4000 });
     context.emit({ type: "SetInteraction", interaction: "none" });
     
     // Play happy sound

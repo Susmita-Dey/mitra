@@ -33,7 +33,8 @@ export interface AnimationDirector {
     now: number,
     emotion: EmotionState,
     emotionEngine: EmotionEngine,
-    setRenderState: (anim: ProceduralAnimationState, bubble: string | null, interactionId: string | null, tempEmotion: Emotion | null) => void
+    setRenderState: (anim: ProceduralAnimationState, bubble: string | null, interactionId: string | null, tempEmotion: Emotion | null) => void,
+    emitSound?: (category: string) => void
   ): void;
   
   queueSequence(opts: SequenceOptions): void;
@@ -113,7 +114,7 @@ export function createAnimationDirector(): AnimationDirector {
       }
     },
 
-    tick(now, emotion, emotionEngine, setRenderState) {
+    tick(now, emotion, emotionEngine, setRenderState, emitSound) {
       // 1. Check if active step expired
       if (activeSequence) {
         const currentStep = activeSequence.steps[activeSequence.currentStepIndex];
@@ -121,6 +122,11 @@ export function createAnimationDirector(): AnimationDirector {
           if (activeSequence.currentStepIndex < activeSequence.steps.length - 1) {
             activeSequence.currentStepIndex++;
             activeSequence.stepStartedAt = now;
+            
+            const nextStep = activeSequence.steps[activeSequence.currentStepIndex];
+            if (nextStep.sound && emitSound) {
+              emitSound(nextStep.sound);
+            }
           } else {
             activeSequence = null; // chain finished
           }
@@ -131,6 +137,9 @@ export function createAnimationDirector(): AnimationDirector {
       if (!activeSequence && queue.length > 0) {
         const next = queue.shift()!;
         activeSequence = { ...next, stepStartedAt: now };
+        if (activeSequence.steps[0]?.sound && emitSound) {
+          emitSound(activeSequence.steps[0].sound);
+        }
       }
 
       // 3. Derive base procedural state from emotion

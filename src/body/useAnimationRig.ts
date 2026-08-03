@@ -103,6 +103,12 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         eyes: "open" as const, mouth: "neutral" as const, ears: "up" as const, tail: "still" as const, posture: "stand" as const, bodyMotion: "breathe" as const, props: [] as string[]
       };
 
+      // Pause animation if window is hidden to save battery
+      if ((window as any).IS_HIDDEN) {
+        reqRef.current = requestAnimationFrame(loop);
+        return;
+      }
+
       // 1. Determine TARGET values based on Posture/Action
       let target: RigState = {
         rootY: 0, bodyScaleX: 1, bodyScaleY: 1, bodyRot: 0,
@@ -137,18 +143,18 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         target.rightLegRot = 20;
         target.tailRot = -100;
       } else if (state.posture === "sleep") {
-        // Curled up sleeping pose perfectly matching reference
-        target.rootY = 65; // Very low
-        target.bodyScaleY = 0.8;
-        target.bodyScaleX = 1.1; 
-        target.bodyRot = 85; // Torso curled sideways
-        target.headRot = 65; // Head tucked deeply
-        target.headY = 55; // Head lowered into chest
-        target.leftLegRot = -80; // Legs tucked flat
-        target.rightLegRot = 80;
-        target.leftArmRot = 75; // Arms tucked flat
-        target.rightArmRot = -75;
-        target.tailRot = -210; // Tail wraps completely over the head/body
+        // Cozy sleeping pose: tail wrapped, arms tucked, head resting
+        target.rootY = 65;
+        target.bodyScaleY = 0.85;
+        target.bodyScaleX = 1.15; 
+        target.bodyRot = 90; 
+        target.headRot = 75;
+        target.headY = 50; 
+        target.leftLegRot = -90; 
+        target.rightLegRot = 90;
+        target.leftArmRot = 90; 
+        target.rightArmRot = -90;
+        target.tailRot = -160; // Wraps around body
       } else if (state.posture === "stretch") {
         target.rootY = -25;
         target.bodyScaleY = 1.25;
@@ -215,10 +221,41 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         target.leftLegRot = 5;
         target.rightLegRot = -5;
         target.tailRot = 40;       // Tail up
+      } else if (state.posture === "holding-prop") {
+        target.rightArmRot = -120; // Reach back to hold prop
+        target.headRot = 5;
+      } else if (state.posture === "offering-prop") {
+        target.rightArmRot = -70;  // Extend arm forward
+        target.headRot = -5;       // Tilt head up slightly
+        target.tailRot = 15;       // Gentle tail wag readiness
+      } else if (state.posture === "eating") {
+        target.rightArmRot = -30;  // Bring hand near mouth
+        target.headRot = 10;       // Tilt head down to eat
+      } else if (state.posture === "satisfied") {
+        target.rootY = 5;          // Sit happily
+        target.headRot = -5;
+        target.leftArmRot = -10;
+        target.rightArmRot = -10;
+        target.tailRot = 20;
       }
 
       // 2. Add Oscillation layers based on bodyMotion
-      if (state.bodyMotion === "breathe") {
+      if (state.posture === "sleep") {
+        const sleepBreathe = Math.sin(t * 1.5); 
+        target.bodyScaleY += sleepBreathe * 0.03;
+        target.bodyScaleX -= sleepBreathe * 0.01;
+        target.headRot += sleepBreathe * 1.5;
+        target.rootY += sleepBreathe * 1.5;
+        
+        // Gentle occasional ear twitch while sleeping
+        if (Math.sin(t * 3.5) > 0.96) {
+           target.rightEarRot += 15;
+        }
+        
+        // Very slow occasional tail wrap motion
+        const tailMove = Math.sin(t * 0.8);
+        target.tailRot += tailMove * 5;
+      } else if (state.bodyMotion === "breathe") {
         const breathe = Math.sin(t * 2); // 4 sec loop roughly
         target.bodyScaleY += breathe * 0.02;
         target.bodyScaleX -= breathe * 0.01;
@@ -251,6 +288,10 @@ export function useAnimationRig(proceduralState: ProceduralAnimationState | null
         // Shift eyes to enhance 3D feel
         target.eyeLookX = look * 3.5;
         target.eyeLookY = Math.abs(look) * 1.5;
+      } else if (state.bodyMotion === "chew") {
+        const chew = Math.abs(Math.sin(t * 15));
+        target.headY += chew * 2;
+        target.bodyScaleX += chew * 0.05;
       } else if (state.bodyMotion === "wave") {
         const wave = Math.sin(t * 15);
         target.leftArmRot = 140 + wave * 30;
