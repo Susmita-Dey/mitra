@@ -26,6 +26,7 @@ import { HelloWorldPlugin } from "@/plugin/examples/hello-world-plugin";
 import { CompanionProvider } from "./companion-context";
 import { useCharacter } from "./use-character";
 import "./global.css";
+import { commandRegistry, type CommandContext } from "@/system/command-registry";
 
 import {
   IdleBehavior,
@@ -79,6 +80,15 @@ function CompanionView() {
 export function App() {
   const engine = useMemo(() => createCompanionEngine(), []);
   const appStorageRef = useRef<any>(null);
+  const winCtrlRef = useRef<any>(null);
+
+  const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
+  const [toast, setToast] = useState<{ id: string; label: string; details?: string } | null>(null);
+
+  const isCommandBarOpenRef = useRef(false);
+  isCommandBarOpenRef.current = isCommandBarOpen;
+  
+  const updateClickThroughRef = useRef<(() => void) | null>(null);
 
   const openSettingsWindow = async () => {
     try {
@@ -93,6 +103,12 @@ export function App() {
       console.error("Failed to open settings window", err);
     }
   };
+
+  useEffect(() => {
+    if (updateClickThroughRef.current) {
+      updateClickThroughRef.current();
+    }
+  }, [isCommandBarOpen]);
 
   useEffect(() => {
     const eventBus      = createEventBus();
@@ -113,7 +129,9 @@ export function App() {
     meetingSystem.start(scheduler);
     
     const winCtrl       = createWindowController(appStorage);
+    winCtrlRef.current = winCtrl;
     const brain         = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus, appStorage);
+    (window as any).__brain_instance = brain;
     const _pluginManager = createPluginManager(brain, eventBus);
 
     // Notification system: queues reminders when hidden, fires OS toast on resurface
@@ -138,7 +156,7 @@ export function App() {
       const char = engine.getCharacter();
       const isIdleOrSleeping = char.animation === "idle" || char.animation === "sleep" || char.animation === "wander" || char.animation === "walk";
       const hasBubble = !!char.bubbleText;
-      const shouldIgnore = clickThroughPref && isIdleOrSleeping && !hasBubble;
+      const shouldIgnore = clickThroughPref && isIdleOrSleeping && !hasBubble && !isCommandBarOpenRef.current;
       
       if (lastIgnoreState !== shouldIgnore) {
         lastIgnoreState = shouldIgnore;
@@ -146,6 +164,7 @@ export function App() {
       }
     };
 
+    updateClickThroughRef.current = updateClickThrough;
     const unsubscribeEngine = engine.subscribe(updateClickThrough);
 
     // Assume onboarding might be active until storage loads, to prevent premature greetings
@@ -320,6 +339,65 @@ export function App() {
     const handleEarTwitch = () => handleInteraction("ear-twitch");
     const handlePoke      = () => handleInteraction("poke");
 
+    // Sound player listener
+    const handlePlaySound = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.category) {
+        audioSystem.playSound(detail.category);
+      }
+    };
+    window.addEventListener("companion:sound:play", handlePlaySound);
+
+    // Command Bar Trigger listeners
+    const handleOpenCommandBar = () => {
+      setIsCommandBarOpen(true);
+    };
+    const handleCloseCommandBar = () => {
+      setIsCommandBarOpen(false);
+      setToast(null);
+    };
+    window.addEventListener("companion:command-bar:open", handleOpenCommandBar);
+    window.addEventListener("companion:command-bar:close", handleCloseCommandBar);
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
+        return;
+      }
+      if (e.key === "/" || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k")) {
+        e.preventDefault();
+        setIsCommandBarOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+
+    const unlistenFocusCommandBar = listen("companion:window:focus_command_bar", () => {
+      setIsCommandBarOpen(true);
+    });
+
+    const handleUndo = async (e: Event) => {
+      const ce = e as CustomEvent;
+      const id = ce.detail?.id;
+      if (!id) return;
+      try {
+        const currentPrefs = await appStorage.load();
+        const updatedCustom = (currentPrefs.customReminders || []).filter((r: any) => r.id !== id);
+        await appStorage.update({ customReminders: updatedCustom });
+        
+        window.dispatchEvent(new CustomEvent("companion:debug", {
+          detail: {
+            type: "show-bubble",
+            payload: {
+              text: "Cancelled that reminder! 🛑",
+              duration: 3000
+            }
+          }
+        }));
+      } catch (err) {
+        console.error("Failed to undo custom reminder", err);
+      }
+    };
+    window.addEventListener("companion:reminder:undo", handleUndo);
+
     window.addEventListener("companion:debug", handleDebug);
     window.addEventListener("companion:reminder:ack", handleAck);
     window.addEventListener("companion:drag:start", handleDragStart);
@@ -347,6 +425,12 @@ export function App() {
       unlistenTask.then((f: any) => f());
       unlistenPrefs.then((f: any) => f());
       unsubscribeEngine();
+      window.removeEventListener("companion:sound:play", handlePlaySound);
+      window.removeEventListener("companion:command-bar:open", handleOpenCommandBar);
+      window.removeEventListener("companion:command-bar:close", handleCloseCommandBar);
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+      window.removeEventListener("companion:reminder:undo", handleUndo);
+      unlistenFocusCommandBar.then((f: any) => f());
       window.removeEventListener("companion:debug", handleDebug);
       window.removeEventListener("companion:reminder:ack", handleAck);
       window.removeEventListener("companion:drag:start", handleDragStart);
@@ -367,12 +451,48 @@ export function App() {
     };
   }, [engine]);
 
+  // Toast auto-clear
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => {
+      setToast(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   return (
     <CompanionProvider engine={engine}>
       <Updater />
       <CompanionView />
 
-      <CommandBar appStorageRef={appStorageRef} />
+      <CommandBar 
+        isOpen={isCommandBarOpen} 
+        setIsOpen={setIsCommandBarOpen} 
+        appStorageRef={appStorageRef} 
+        setToast={setToast}
+      />
+
+      {toast && (
+        <div className="mitra-toast open">
+          <div className="mitra-toast-content">
+            <span className="mitra-toast-icon">✓</span>
+            <div className="mitra-toast-text">
+              <strong className="mitra-toast-title">{toast.label}</strong>
+              {toast.details && <span className="mitra-toast-desc">{toast.details}</span>}
+            </div>
+            <button 
+              className="mitra-toast-undo"
+              onClick={() => {
+                const ce = new CustomEvent("companion:reminder:undo", { detail: { id: toast.id } });
+                window.dispatchEvent(ce);
+                setToast(null);
+              }}
+            >
+              Undo
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Settings / Menu Gear Icon */}
       <button 
@@ -386,152 +506,315 @@ export function App() {
   );
 }
 
-import { parseReminderString, checkSafety } from "@/system/reminder-parser";
-
 interface CommandBarProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
   appStorageRef: React.RefObject<any>;
+  setToast: (toast: { id: string; label: string; details?: string } | null) => void;
 }
 
-function CommandBar({ appStorageRef }: CommandBarProps) {
+function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarProps) {
   const [inputValue, setInputValue] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
-  const [parsed, setParsed] = useState<any>(null);
-  const [safetyCheck, setSafetyCheck] = useState<any>(null);
+  const [suggestions, setSuggestions] = useState<Array<{ label: string; icon: string; value: string }>>([]);
+  const [history, setHistory] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("mitra_command_history");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus when opened
   useEffect(() => {
-    if (!inputValue.trim()) {
-      setPreview(null);
-      setParsed(null);
-      setSafetyCheck(null);
-      return;
-    }
-
-    // Safety validation check
-    const safety = checkSafety(inputValue);
-    if (!safety.safe) {
-      setParsed(null);
-      setPreview(safety.suggestion || "Please enter a safe reminder.");
-      setSafetyCheck(safety);
-      return;
-    }
-
-    setSafetyCheck(null);
-    const result = parseReminderString(inputValue);
-    if (result) {
-      setParsed(result);
-      let desc = "";
-      if (result.triggerType === "countdown" && result.countdownMs) {
-        desc = `in ${Math.round(result.countdownMs / 60000)}m`;
-        if (result.countdownMs < 60000) {
-          desc = `in ${Math.round(result.countdownMs / 1000)}s`;
+    if (isOpen && inputRef.current) {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
         }
-      } else if (result.triggerType === "interval" && result.intervalMs) {
-        desc = `every ${Math.round(result.intervalMs / 60000)}m`;
-        if (result.intervalMs < 60000) {
-          desc = `every ${Math.round(result.intervalMs / 1000)}s`;
-        }
-      } else if (result.triggerType === "time" && result.time) {
-        desc = `at ${result.time}`;
+      }, 50);
+    }
+  }, [isOpen]);
+
+  // Click outside to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const el = document.querySelector(".command-bar-wrapper");
+      if (el && !el.contains(e.target as Node)) {
+        setIsOpen(false);
+        setInputValue("");
       }
-      setPreview(`Will remind you to: "${result.label}" ${desc}`);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Handle Autocomplete Suggestions & Preview
+  useEffect(() => {
+    const val = inputValue.trim().toLowerCase();
+    if (!val) {
+      setPreview(null);
+      setSuggestions([]);
+      return;
+    }
+
+    // 1. Suggestions matching prefix
+    const list: Array<{ label: string; icon: string; value: string }> = [];
+    if (inputValue.startsWith("/")) {
+      const query = val.substring(1);
+      const actions = commandRegistry.getActions();
+      for (const action of actions) {
+        if (action.id.startsWith(query) || action.keywords.some(k => k.startsWith(query))) {
+          list.push({
+            label: action.name,
+            icon: action.icon,
+            value: `/${action.id}`
+          });
+        }
+      }
+    } else {
+      if (/\b(water|drink|hydrate|tea|coffee|caffeine|beverage|mug)\b/.test(val)) {
+        list.push({ label: "Drink Water / Coffee", icon: "💧", value: inputValue });
+      }
+      if (/\b(stretch|sit|posture|back|slouch|spine|straight|stand)\b/.test(val)) {
+        list.push({ label: "Check Posture / Stretch", icon: "🧘", value: inputValue });
+      }
+      if (/\b(med|pill|tablet|dose|vitamin|pills|vitamins)\b/.test(val)) {
+        list.push({ label: "Take Medicine", icon: "💊", value: inputValue });
+      }
+      if (/\b(lunch|eat|food|meal|dinner|snack|breakfast)\b/.test(val)) {
+        list.push({ label: "Meal / Lunch", icon: "🍜", value: inputValue });
+      }
+      if (/\b(coding|break|rest|relax|screen|eyes|eye|visual|pause)\b/.test(val)) {
+        list.push({ label: "Coding Break / Rest", icon: "💻", value: inputValue });
+      }
+    }
+    setSuggestions(list);
+
+    // 2. Real-time command preview
+    const matched = commandRegistry.findAction(inputValue);
+    if (matched && matched.action.preview) {
+      const prev = matched.action.preview(matched.cleanInput);
+      if (prev) {
+        setPreview(prev.details ? `${prev.label} (${prev.details})` : prev.label);
+      } else {
+        setPreview(null);
+      }
     } else {
       setPreview(null);
-      setParsed(null);
     }
   }, [inputValue]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const text = inputValue.trim();
+    if (!text) return;
 
-    if (safetyCheck && !safetyCheck.safe) {
-      // Intercept and redirect to supportive/prohibitive message
-      let emotion = "concerned";
-      let duration = 8000;
+    const matched = commandRegistry.findAction(text);
+    if (!matched) return;
 
-      if (safetyCheck.reason === "crisis") {
-        emotion = "concerned";
-        duration = 15000;
-      } else if (safetyCheck.reason === "negative") {
-        emotion = "happy";
-        duration = 8000;
-      } else if (safetyCheck.reason === "violence" || safetyCheck.reason === "illegal") {
-        emotion = "concerned";
-        duration = 8000;
-      }
-
-      window.dispatchEvent(new CustomEvent("companion:debug", {
-        detail: { type: "force-emotion", payload: emotion }
-      }));
-      window.dispatchEvent(new CustomEvent("companion:debug", {
-        detail: {
-          type: "show-bubble",
-          payload: {
-            text: safetyCheck.suggestion,
-            duration: duration
-          }
-        }
-      }));
-
-      setInputValue("");
-      setPreview(null);
-      setParsed(null);
-      setSafetyCheck(null);
-      return;
-    }
-
-    if (!parsed) return;
-
+    const { action, cleanInput } = matched;
     const storage = appStorageRef.current;
     if (!storage) return;
 
-    const newReminder = {
-      id: `custom_${Date.now()}`,
-      label: parsed.label,
-      type: parsed.type,
-      enabled: true,
-      intervalMs: parsed.intervalMs,
-      time: parsed.time,
-      countdownMs: parsed.countdownMs,
-      createdAt: Date.now()
+    const context: CommandContext = {
+      brain: (window as any).__brain_instance,
+      appStorage: storage,
+      winCtrl: (window as any).__win_controller, // Fallback if ref hasn't written
     };
 
-    try {
-      const currentPrefs = await storage.load();
-      const updatedCustom = [...(currentPrefs.customReminders || []), newReminder];
-      await storage.update({ customReminders: updatedCustom });
+    const result = await action.execute(cleanInput, context);
 
-      // Trigger confirmation speech bubble on Mitra
+    if (result.success) {
+      // Success feedback triggers
+      window.dispatchEvent(new CustomEvent("companion:sound:play", {
+        detail: { category: "chirps" }
+      }));
+
+      if (result.feedbackEmotion) {
+        window.dispatchEvent(new CustomEvent("companion:debug", {
+          detail: { type: "force-emotion", payload: result.feedbackEmotion }
+        }));
+      }
+
+      if (result.feedbackText) {
+        window.dispatchEvent(new CustomEvent("companion:debug", {
+          detail: {
+            type: "show-bubble",
+            payload: {
+              text: result.feedbackText,
+              duration: 5000
+            }
+          }
+        }));
+      }
+
+      // If reminder was parsed
+      if (action.id === "remind" && result.data?.parsed) {
+        const parsed = result.data.parsed;
+        const newReminder = {
+          id: `custom_${Date.now()}`,
+          label: parsed.label,
+          type: parsed.type,
+          enabled: true,
+          intervalMs: parsed.intervalMs,
+          time: parsed.time,
+          countdownMs: parsed.countdownMs,
+          createdAt: Date.now()
+        };
+
+        try {
+          const currentPrefs = await storage.load();
+          const updatedCustom = [...(currentPrefs.customReminders || []), newReminder];
+          await storage.update({ customReminders: updatedCustom });
+
+          let timeDesc = "";
+          if (parsed.triggerType === "countdown" && parsed.countdownMs) {
+            const mins = Math.round(parsed.countdownMs / 60000);
+            timeDesc = mins > 0 ? `in ${mins}m` : `in ${Math.round(parsed.countdownMs / 1000)}s`;
+          } else if (parsed.triggerType === "interval" && parsed.intervalMs) {
+            const mins = Math.round(parsed.intervalMs / 60000);
+            timeDesc = mins > 0 ? `every ${mins}m` : `every ${Math.round(parsed.intervalMs / 1000)}s`;
+          } else if (parsed.triggerType === "time" && parsed.time) {
+            timeDesc = `at ${parsed.time}`;
+          }
+
+          setToast({
+            id: newReminder.id,
+            label: parsed.label,
+            details: timeDesc
+          });
+
+          // Face transition to happy smile
+          window.dispatchEvent(new CustomEvent("companion:debug", {
+            detail: { type: "force-emotion", payload: "happy" }
+          }));
+
+          window.dispatchEvent(new CustomEvent("companion:debug", {
+            detail: {
+              type: "show-bubble",
+              payload: {
+                text: `Got it! I'll remind you to: ${parsed.label} ⏰`,
+                duration: 4000
+              }
+            }
+          }));
+
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      // Add to command history
+      const nextHistory = [text, ...history.filter((h) => h !== text)].slice(0, 50);
+      setHistory(nextHistory);
+      localStorage.setItem("mitra_command_history", JSON.stringify(nextHistory));
+      setHistoryIndex(-1);
+
+      setIsOpen(false);
+      setInputValue("");
+    } else {
+      // Error / safety interception
+      window.dispatchEvent(new CustomEvent("companion:debug", {
+        detail: { type: "force-emotion", payload: "concerned" }
+      }));
       window.dispatchEvent(new CustomEvent("companion:debug", {
         detail: {
           type: "show-bubble",
           payload: {
-            text: `Got it! I'll remind you of: ${parsed.label} ⏰`,
-            duration: 5000
+            text: result.message || "Failed to parse command.",
+            duration: 8000
           }
         }
       }));
-    } catch (err) {
-      console.error("Failed to save custom reminder", err);
-    }
 
-    setInputValue("");
-    setPreview(null);
-    setParsed(null);
-    setSafetyCheck(null);
+      if (result.data?.safety) {
+        // Clear inputs on safety blocks
+        setInputValue("");
+        setIsOpen(false);
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (history.length > 0) {
+        const nextIndex = historyIndex + 1;
+        if (nextIndex < history.length) {
+          setHistoryIndex(nextIndex);
+          setInputValue(history[nextIndex]);
+        }
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const nextIndex = historyIndex - 1;
+      if (nextIndex >= 0) {
+        setHistoryIndex(nextIndex);
+        setInputValue(history[nextIndex]);
+      } else {
+        setHistoryIndex(-1);
+        setInputValue("");
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setIsOpen(false);
+      setInputValue("");
+    }
   };
 
   return (
-    <div className="command-bar-wrapper">
+    <div className={`command-bar-wrapper ${isOpen ? "open" : ""}`}>
+      {suggestions.length > 0 && (
+        <div className="command-suggestions">
+          {suggestions.map((s, index) => (
+            <div 
+              key={index} 
+              className="suggestion-item"
+              onClick={() => {
+                setInputValue(s.value);
+                if (inputRef.current) inputRef.current.focus();
+              }}
+            >
+              <span className="suggestion-icon">{s.icon}</span>
+              <span className="suggestion-label">{s.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="command-form">
         <span className="command-icon">⏰</span>
         <input
+          ref={inputRef}
           type="text"
           value={inputValue}
+          onKeyDown={handleKeyDown}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Ask Mitra for a reminder..."
+          placeholder="Ask Mitra for a command or reminder..."
           className="command-input"
         />
         {inputValue && <button type="submit" className="command-submit">➔</button>}
+        <button 
+          type="button" 
+          className="command-close"
+          onClick={() => {
+            setIsOpen(false);
+            setInputValue("");
+          }}
+          title="Close command bar"
+        >
+          ✕
+        </button>
       </form>
       {preview && (
         <div className="command-preview">
