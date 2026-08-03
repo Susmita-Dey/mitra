@@ -36,7 +36,7 @@ Mitra is designed to be completely out of your way until you need her. There are
 - **Drag anywhere**: Click and hold to drag her anywhere on your screen.
 - **Interactions**: Try clicking on her tummy, her paws, or giving her a high-five! She has a custom physics-based animation system that makes her respond dynamically to your interactions.
 - **🧠 Behavior Chains & Anticipation**: Mitra doesn't just pop up reminders out of nowhere. Before asking you to drink water or stretch, you'll see her yawn, stretch, or look around naturally—just like a real companion winding up to say something!
-- **Reminders**: She will automatically know when it's time for lunch, dinner, or when you need a stretch. When she gives you a reminder bubble, you can click the bubble to dismiss it.
+- **Reminders & Props**: She will automatically know when it's time for lunch, dinner, or when you need a stretch. She even pulls out props (like a coffee mug or food) and plays happy chewing sounds when it's eating time! When she gives you a reminder bubble, you can click the bubble to dismiss it.
 - **Custom Reminders & Command Bar**: Ask Mitra for any custom reminders using natural language (e.g. *"medicine in 30m"*, *"coffee every 1h"*, or *"lunch at 1:30 PM"*). Live parsing previews show up as you type. Includes local safety filters to prevent self-harm, violent, or illegal schedules.
 - **🎵 Music Vibes**: She listens along to your music (Windows-only) and enjoys the tunes with you!
 - **🤫 Meeting Privacy**: She intelligently detects when you're on a Zoom or Teams call and stays completely out of the way.
