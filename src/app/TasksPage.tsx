@@ -33,7 +33,10 @@ export function TasksPage() {
 
   // Keep track of mounted state to prevent state updates on unmounted component
   const isMounted = useRef(true);
-  useEffect(() => () => { isMounted.current = false; }, []);
+  useEffect(() => () => {
+    isMounted.current = false;
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+  }, []);
 
   const addTask = (e: React.FormEvent) => {
     e.preventDefault();

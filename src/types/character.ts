@@ -17,6 +17,7 @@ export interface Character {
   animation: Animation;
   emotion: Emotion;
   interaction: Interaction;
+  physical?: import("../brain/core/types").PhysicalState;
   proceduralState?: ProceduralAnimationState;
   bubbleText?: string | null;
   energy?: number;

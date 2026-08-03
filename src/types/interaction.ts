@@ -12,7 +12,6 @@ export type Interaction =
   | "reminder:meal"
   | "reminder:bio"
   | "drag" 
-  | "state:sick"
   | "weather:rain"
   | "weather:beach"
   | "weather:cloudy"

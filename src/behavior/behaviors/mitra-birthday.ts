@@ -38,8 +38,8 @@ export const MitraBirthdayBehavior: RegisteredBehavior = {
     
     context.emit({ type: "ChangeEmotion", emotion: "happy" });
     
-    const name = context.world.settings?.userName?.trim();
-    const greeting = name ? `${name}, today is my Birthday!! 🎂 Let's celebrate!` : `Today is my Birthday!! 🎂 Let's celebrate!`;
+    const name = context.world.settings?.userName?.trim().split(" ")[0];
+    const greeting = name ? `Yay, it's my birthday, ${name}! 🎉` : "Yay, it's my birthday! 🎉";
     
     context.emit({ type: "SetBubble", text: greeting, duration: 15000 });
     context.emit({ type: "SetProceduralState", state: { posture: "cheer", bodyMotion: "dance", eyes: "sparkle", mouth: "open", ears: "up", tail: "wag", props: ["birthday-hat", "birthday-cake"] } });

@@ -521,7 +521,7 @@ Touchpoints:
 Mitra was engineered using an **Evolutionary Iterative Prototyping** lifecycle model. This methodology is highly suited for a desktop companion application where user interaction physics, animation fluidities, and native OS integrations require continuous micro-adjustments and verification:
 
 1. **Iterative Feature Increments**: Development progressed from visual prototypes (procedural skeletal rig in v0.1) to responsive contexts (meeting detection, media vibe in v0.2), to full system integration (DPI geometry, auto-updates in v0.9), and finally custom reminders and safety guardrails (v1.0).
-2. **Risk-Driven Mitigations**: Each iteration began with a risk assessment stage analyzing performance, memory leaks, and capability boundaries (e.g. process checking CPU overhead mitigated by 30s cache; unmanaged setTimeout leak mitigated by custom hook refs).
+2. **Risk-Driven Mitigations**: Each iteration began with a risk assessment stage analyzing performance, memory leaks, and capability boundaries (e.g. process checking CPU overhead mitigated by 30s cache; unmanaged setTimeout leak mitigated by custom hook refs; 60fps animation GPU drain mitigated by pausing the `requestAnimationFrame` loop when the window is hidden).
 3. **Verification-Driven Release Cycles**: Every cycle was verified through a dedicated validation gate (`FINAL_PRODUCTION_VERIFICATION.md`), aligning with the verification-validation principles of the V-Model.
 
 #### SDLC Flow Diagram

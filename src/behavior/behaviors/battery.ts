@@ -27,7 +27,7 @@ export const BatteryBehavior: RegisteredBehavior = {
     // Show sick emotion and thermometer prop
     context.emit({ type: "ChangeEmotion", emotion: "sad" });
     context.emit({ type: "PlayAnimation", animation: "sit" });
-    context.emit({ type: "SetInteraction", interaction: "state:sick" });
+    context.emit({ type: "ChangePhysical", state: { health: "sick", energy: "tired" } });
     // This state persists natively until battery recovers.
   },
 };

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { RendererProps } from "./types";
 import "./MockRenderer.css";
 
@@ -23,8 +22,6 @@ export function MockRenderer({ character }: RendererProps) {
   const { posture, eyes, mouth } = proceduralState;
   const { rig, refs } = useAnimationRig(proceduralState);
 
-  const [bubbleAcked, setBubbleAcked] = useState(false);
-
   const hasBubble = !!character.bubbleText;
 
   const isReminder = character.interaction?.startsWith("reminder:");
@@ -32,9 +29,6 @@ export function MockRenderer({ character }: RendererProps) {
 
   const handleReminderClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Brief visual ack flash
-    setBubbleAcked(true);
-    setTimeout(() => setBubbleAcked(false), 600);
 
     if (reminderType) {
       // For custom reminders: interaction = "reminder:custom_1234" → id = "custom_1234"
@@ -71,9 +65,8 @@ export function MockRenderer({ character }: RendererProps) {
     >
       <svg
         className="panda-svg"
-        viewBox="0 -20 200 260"
+        viewBox="-40 -20 280 280"
         xmlns="http://www.w3.org/2000/svg"
-       
       >
         <defs>
           <radialGradient id="blush" cx="50%" cy="50%" r="50%">
@@ -83,7 +76,14 @@ export function MockRenderer({ character }: RendererProps) {
         </defs>
 
         {/* Shadow underneath */}
-        <ellipse className="panda-shadow" cx="100" cy="225" rx="60" ry="10" fill="rgba(0,0,0,0.15)" />
+        <ellipse 
+          className="panda-shadow" 
+          cx="100" 
+          cy="225" 
+          rx={60 * rig.bodyScaleX + (posture === 'sleep' ? 30 : 0)} 
+          ry={10 + (posture === 'sleep' ? 8 : 0)} 
+          fill={`rgba(0,0,0,${posture === 'sleep' ? 0.08 : 0.15})`} 
+        />
 
         {/* Main Panda Group */}
         <g className="panda-group" ref={refs.root} style={{ 
@@ -244,6 +244,102 @@ export function MockRenderer({ character }: RendererProps) {
               ) : (
                 <ellipse cx="156" cy="186" rx="4" ry="6" fill="#5c2915" transform="rotate(20 156 186)" />
               )}
+              
+              {/* === Prop Manager: Dynamically rendered props held in right paw === */}
+              {(() => {
+                const p = proceduralState.props?.find(p => p.startsWith("prop-") || p === "food");
+                if (!p) return null;
+                return (
+                  <g className="prop-held" transform="translate(155, 190)">
+                    {p === "prop-cookie" && (
+                      <g>
+                        <circle cx="0" cy="0" r="14" fill="#D97706" />
+                        <circle cx="-5" cy="-4" r="2.5" fill="#451A03" />
+                        <circle cx="6" cy="-2" r="2" fill="#451A03" />
+                        <circle cx="2" cy="5" r="3" fill="#451A03" />
+                        <circle cx="-6" cy="6" r="1.5" fill="#451A03" />
+                        <circle cx="7" cy="6" r="2.5" fill="#451A03" />
+                      </g>
+                    )}
+                    {p === "prop-apple" && (
+                      <g>
+                        <path d="M -10,10 Q 0,-15 10,10 Q 0,15 -10,10 Z" fill="#FEF08A" />
+                        <path d="M -10,10 Q 0,-15 10,10" fill="none" stroke="#EF4444" strokeWidth="4" strokeLinecap="round" />
+                        <circle cx="-1" cy="2" r="1.5" fill="#451A03" />
+                        <circle cx="3" cy="4" r="1.5" fill="#451A03" />
+                      </g>
+                    )}
+                    {p === "prop-pretzel" && (
+                      <g>
+                        <path d="M -12,0 C -12,-15 0,-15 0,0 C 0,15 -12,15 -12,0" fill="none" stroke="#B45309" strokeWidth="4" />
+                        <path d="M 12,0 C 12,-15 0,-15 0,0 C 0,15 12,15 12,0" fill="none" stroke="#B45309" strokeWidth="4" />
+                        <path d="M -8,5 L 8,-5 M -8,-5 L 8,5" stroke="#B45309" strokeWidth="4" strokeLinecap="round" />
+                        <circle cx="-8" cy="-8" r="1" fill="#FFF" />
+                        <circle cx="8" cy="-8" r="1" fill="#FFF" />
+                        <circle cx="0" cy="8" r="1" fill="#FFF" />
+                      </g>
+                    )}
+                    {(p === "prop-juice" || p === "prop-water" || p === "prop-coffee") && (
+                      <g>
+                        <rect x="-8" y="-12" width="16" height="24" rx="2" fill={p === "prop-coffee" ? "#E2E8F0" : "#60A5FA"} />
+                        <path d="M -10,-8 L 10,-8" stroke="#FFFFFF" strokeWidth="2" opacity="0.5" />
+                        {p === "prop-juice" && <path d="M 0,-12 L 5,-20" stroke="#FCD34D" strokeWidth="2" strokeLinecap="round" />}
+                      </g>
+                    )}
+                    {p === "prop-lunchbox" && (
+                      <g>
+                        <rect x="-15" y="-10" width="30" height="20" rx="4" fill="#F43F5E" />
+                        <rect x="-15" y="-10" width="30" height="6" fill="#FDA4AF" rx="2" />
+                        <rect x="-4" y="-12" width="8" height="4" rx="1" fill="#E2E8F0" />
+                      </g>
+                    )}
+                    {p === "prop-sandwich" && (
+                      <g>
+                        <path d="M -12,10 L 0,-12 L 12,10 Z" fill="#FCD34D" />
+                        <path d="M -10,8 L 0,-10 L 10,8 Z" fill="#4ADE80" />
+                        <path d="M -8,6 L 0,-8 L 8,6 Z" fill="#FCA5A5" />
+                        <path d="M -14,12 L 14,12" stroke="#D97706" strokeWidth="3" strokeLinecap="round" />
+                      </g>
+                    )}
+                    {p === "prop-riceball" && (
+                      <g>
+                        <path d="M -12,10 L 0,-12 L 12,10 Z" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="2" strokeLinejoin="round" />
+                        <rect x="-4" y="2" width="8" height="8" fill="#111827" />
+                      </g>
+                    )}
+                    {(p === "prop-soup" || p === "prop-dinnerplate") && (
+                      <g>
+                        <path d="M -15,-5 Q 0,15 15,-5 Z" fill="#E2E8F0" />
+                        <ellipse cx="0" cy="-5" rx="15" ry="4" fill="#F8FAFC" />
+                        {p === "prop-soup" && <ellipse cx="0" cy="-5" rx="12" ry="2" fill="#FBBF24" />}
+                      </g>
+                    )}
+                    {p === "prop-toast" && (
+                      <g>
+                        <rect x="-10" y="-12" width="20" height="24" rx="3" fill="#FDE68A" />
+                        <rect x="-10" y="-12" width="20" height="24" rx="3" fill="none" stroke="#D97706" strokeWidth="2" />
+                        <rect x="-4" y="-4" width="8" height="8" fill="#FEF08A" />
+                      </g>
+                    )}
+                    {p === "prop-cereal" && (
+                      <g>
+                        <path d="M -14,-2 Q 0,12 14,-2 Z" fill="#93C5FD" />
+                        <ellipse cx="0" cy="-2" rx="14" ry="4" fill="#E0F2FE" />
+                        <circle cx="-5" cy="-2" r="2" fill="#F87171" />
+                        <circle cx="2" cy="-1" r="2" fill="#FBBF24" />
+                        <circle cx="6" cy="-3" r="2" fill="#34D399" />
+                      </g>
+                    )}
+                    {p === "food" && (
+                      <g>
+                        <rect x="-4" y="-30" width="8" height="40" rx="2" fill="#4ADE80" />
+                        <rect x="-5" y="-15" width="10" height="3" fill="#22C55E" />
+                        <path d="M 4,-25 Q 15,-25 10,-15 Q 4,-20 4,-25" fill="#16A34A" />
+                      </g>
+                    )}
+                  </g>
+                );
+              })()}
             </g>
           </g>
 
@@ -448,17 +544,7 @@ export function MockRenderer({ character }: RendererProps) {
             )}
           </g>
           
-          {/* Food Prop (Bamboo - drawn on top of head/torso) */}
-          {proceduralState.props?.includes("food") && (
-            <g className="prop-food">
-              <rect x="130" y="120" width="12" height="60" rx="4" fill="#4ADE80" />
-              <rect x="128" y="140" width="16" height="4" rx="2" fill="#22C55E" />
-              <rect x="128" y="160" width="16" height="4" rx="2" fill="#22C55E" />
-              {/* Leaves */}
-              <path d="M 142,125 Q 155,120 150,135 Q 140,130 142,125" fill="#16A34A" />
-              <path d="M 130,145 Q 115,140 120,155 Q 130,150 130,145" fill="#16A34A" />
-            </g>
-          )}
+          {/* Old food prop has been migrated to the right paw */}
           
           {/* Umbrella Prop (Drawn ON TOP of everything, held in right hand) */}
           {proceduralState.props?.includes("umbrella") && (
@@ -515,11 +601,11 @@ export function MockRenderer({ character }: RendererProps) {
       {/* Dynamic Action Bubble (Reminders, Greetings, Summaries) */}
       {hasBubble && (
         <div
-          className={`reminder-bubble${bubbleAcked ? " acked" : ""}`}
+          className="reminder-bubble"
           onClick={handleReminderClick}
           title="Click to dismiss"
         >
-          {bubbleAcked ? "✓" : character.bubbleText}
+          {character.bubbleText}
         </div>
       )}
     </div>

@@ -19,7 +19,7 @@
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
-        "resizable": true,
+        "resizable": false,
         "maximizable": false,
         "fullscreen": false,
         "shadow": false,
@@ -29,7 +29,7 @@
       {
         "label": "settings",
         "title": "Mitra Settings",
-        "width": 400,
+        "width": 470,
         "height": 550,
         "minWidth": 350,
         "minHeight": 450,
@@ -62,7 +62,7 @@
       {
         "label": "tasks",
         "title": "Tasks & Goals",
-        "width": 380,
+        "width": 450,
         "height": 550,
         "minWidth": 350,
         "minHeight": 500,

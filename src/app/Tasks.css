@@ -68,11 +68,13 @@
 
 .add-task-form input {
   flex: 1;
-  padding: 12px 14px;
+  height: 44px;
+  padding: 0 14px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   font-size: 14px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .add-task-form input:focus {
@@ -84,10 +86,12 @@
   position: relative;
   display: flex;
   align-items: center;
+  height: 44px;
 }
 
 .add-task-form select {
-  padding: 12px 32px 12px 14px;
+  height: 44px;
+  padding: 0 32px 0 14px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   background: white;
@@ -98,6 +102,7 @@
   cursor: pointer;
   font-size: 14px;
   transition: border-color 0.2s;
+  box-sizing: border-box;
 }
 
 .add-task-form select:focus {
@@ -118,6 +123,7 @@
   color: white;
   border: none;
   width: 44px;
+  height: 44px;
   border-radius: 8px;
   font-size: 24px;
   font-weight: 300;
@@ -127,6 +133,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 10px rgba(232, 106, 51, 0.2);
+  box-sizing: border-box;
 }
 
 .add-btn:hover {

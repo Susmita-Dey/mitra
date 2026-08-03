@@ -40,6 +40,11 @@ export function StateDebug({ character }: StateDebugProps) {
         <div>Action: {character.animation}</div>
         <div>Int: {character.interaction}</div>
         <div>Mood: {character.emotion}</div>
+        {character.physical && (
+          <div>
+            H: {character.physical.health} B: {character.physical.behavior}
+          </div>
+        )}
         <div>E: {Math.round(character.energy ?? 0)} A: {Math.round(character.attention ?? 0)}</div>
       </div>
 

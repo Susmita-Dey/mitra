@@ -33,6 +33,7 @@ export const SleepBehavior: RegisteredBehavior = {
   },
   execute: (context: BehaviorContext) => {
     context.emit({ type: "PlayAnimation", animation: "sleep" });
+    context.emit({ type: "ChangePhysical", state: { behavior: "sleeping", energy: "sleepy" } });
     // Re-push sleepy to keep the EmotionEngine's sticky state confirmed.
     context.emit({ type: "ChangeEmotion", emotion: "sleepy" });
     context.setMemory({ wasAsleep: true });

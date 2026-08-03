@@ -129,7 +129,7 @@ export function OnboardingPage() {
               You can find Mitra's settings by clicking the <strong>⚙️ gear icon</strong> that appears when you hover over Mitra.
             </p>
             <button className="onboarding-btn success" onClick={handleComplete} disabled={!userName.trim()}>
-              Let's go, {userName.trim() || "friend"}! 🎉
+              Let's go, {userName.trim().split(" ")[0] || "friend"}! 🎉
             </button>
           </div>
         )}

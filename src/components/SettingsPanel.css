@@ -1,9 +1,18 @@
+.settings-panel, .settings-panel * {
+  margin: 0;
+  padding: auto;
+  box-sizing: border-box;
+}
+
 .settings-panel {
   position: absolute;
   top: 10px;
   left: 10px;
   right: 10px;
   bottom: 10px;
+  justify-content: center;
+  padding: auto;
+  align-items: center;
   background: rgba(255, 255, 255, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 16px;
@@ -12,7 +21,6 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
   font-family: 'Inter', 'Nunito', sans-serif;
   color: #1A1A1A;
   animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -190,11 +198,18 @@
   background: rgba(255, 255, 255, 0.5);
   border-top: 1px solid rgba(255, 255, 255, 0.3);
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .save-btn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  white-space: nowrap;
   background: linear-gradient(135deg, #E86A33 0%, #C24F1E 100%);
   color: white;
   border: none;
@@ -213,6 +228,11 @@
 }
 
 .exit-btn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  white-space: nowrap;
   background: rgba(239, 68, 68, 0.1);
   color: #EF4444;
   border: none;

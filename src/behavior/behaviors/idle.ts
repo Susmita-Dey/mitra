@@ -43,6 +43,7 @@ export const IdleBehavior: RegisteredBehavior = {
       context.emit({ type: "PlayAnimation", animation: anim });
     }
     
+    context.emit({ type: "ChangePhysical", state: { behavior: "idle", energy: "energetic", health: "healthy" } });
     context.emit({ type: "ChangeEmotion", emotion: "neutral" });
   },
 };

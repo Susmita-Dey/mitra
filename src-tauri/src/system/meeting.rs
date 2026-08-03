@@ -35,7 +35,7 @@ pub fn check_meeting_status(state: tauri::State<'_, SystemState>) -> bool {
     guard.0.processes().values().any(|p| {
         let name = p.name().to_string_lossy().to_lowercase();
         let base_name = name.strip_suffix(".exe").unwrap_or(&name);
-        meeting_apps.iter().any(|&app| base_name == app)
+        meeting_apps.contains(&base_name)
     })
 }
 
@@ -50,6 +50,6 @@ pub fn check_coding_status(state: tauri::State<'_, SystemState>) -> bool {
     guard.0.processes().values().any(|p| {
         let name = p.name().to_string_lossy().to_lowercase();
         let base_name = name.strip_suffix(".exe").unwrap_or(&name);
-        coding_apps.iter().any(|&app| base_name == app)
+        coding_apps.contains(&base_name)
     })
 }
