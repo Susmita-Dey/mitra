@@ -150,7 +150,8 @@ export function App() {
     gitWatcher.start();
     
     let clickThroughPref = false;
-    let lastIgnoreState: boolean | null = null;
+    let lastIgnoreState: boolean |null = null;
+let clickThroughBusy = false;
 
     const updateClickThrough = () => {
       const char = engine.getCharacter();
@@ -160,7 +161,16 @@ export function App() {
       
       if (lastIgnoreState !== shouldIgnore) {
         lastIgnoreState = shouldIgnore;
-        winCtrl.setIgnoreCursorEvents(shouldIgnore).catch(console.error);
+        if (clickThroughBusy) return;
+
+clickThroughBusy = true;
+
+winCtrl
+    .setIgnoreCursorEvents(shouldIgnore)
+    .catch(console.error)
+    .finally(() => {
+        clickThroughBusy = false;
+    });
       }
     };
 

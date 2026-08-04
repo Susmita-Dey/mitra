@@ -20,11 +20,26 @@ export const TaskbarBehavior: RegisteredBehavior = {
     return context.world.presence === "Taskbar";
   },
   execute: (context: BehaviorContext) => {
-    if (context.world.character.animation !== "idle") {
-      context.emit({ type: "PlayAnimation", animation: "idle" });
-      context.emit({ type: "ChangeEmotion", emotion: "neutral" });
+    const enteringTaskbar =
+      context.world.character.animation !== "idle";
+
+    if (!enteringTaskbar) {
+      return;
     }
-    // Also instruct to return home
-    context.emit({ type: "MoveToTaskbar" });
-  },
+
+    context.emit({
+      type: "PlayAnimation",
+      animation: "idle",
+    });
+
+    context.emit({
+      type: "ChangeEmotion",
+      emotion: "neutral",
+    });
+
+    // Only move ONCE when transitioning
+    context.emit({
+      type: "MoveToTaskbar",
+    });
+  }
 };

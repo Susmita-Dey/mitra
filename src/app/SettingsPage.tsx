@@ -169,7 +169,7 @@ export function SettingsPage() {
 
     // Reload whenever another window (e.g. companion) updates localStorage
     const handleStorageEvent = (e: StorageEvent) => {
-      if (e.key === "mitra_preferences" && isMounted) {
+      if (e.key === "mitra_preferences" && isMounted && !document.hasFocus()) {
         loadPrefs();
       }
     };
@@ -178,14 +178,14 @@ export function SettingsPage() {
     // Also reload when the settings window is shown/focused
     // (handles the case where companion added a reminder while settings was hidden)
     const handleFocus = () => { if (isMounted) loadPrefs(); };
-    window.addEventListener("focus", handleFocus);
+    // window.addEventListener("focus", handleFocus);
 
     return () => {
       isMounted = false;
       if (unlisten) unlisten();
       appStorage.dispose();
       window.removeEventListener("storage", handleStorageEvent);
-      window.removeEventListener("focus", handleFocus);
+      // window.removeEventListener("focus", handleFocus);
     };
   }, [applyPrefs]);
 
@@ -236,9 +236,17 @@ export function SettingsPage() {
         birthday: saveBirthday(userBirthday),
         customReminders: preferences?.customReminders || [],
       });
+      // setSaveStatus("saved");
+      // setTimeout(() => setSaveStatus("idle"), 1500);
       setSaveStatus("saved");
-      setTimeout(() => setSaveStatus("idle"), 1500);
-      try { await getCurrentWindow().hide(); } catch (_) {}
+
+      setTimeout(() => {
+        setSaveStatus("idle");
+      }, 1500);
+
+      // Don't auto-hide.
+      // Let user press Close.
+      // try { await getCurrentWindow().hide(); } catch (_) {}
     } catch (err) {
       console.error("Failed to save settings", err);
       setSaveStatus("error");

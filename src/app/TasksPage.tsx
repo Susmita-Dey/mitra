@@ -17,6 +17,7 @@ export function TasksPage() {
   const [newTaskSize, setNewTaskSize] = useState<"small" | "big">("small");
   const [undoTask, setUndoTask] = useState<Task | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const busy = useRef(false);
 
   // Load tasks from localStorage on mount
   useEffect(() => {
@@ -28,7 +29,14 @@ export function TasksPage() {
 
   // Save tasks to localStorage when changed
   useEffect(() => {
-    localStorage.setItem("mitra_tasks", JSON.stringify(tasks));
+    const id = setTimeout(() => {
+      localStorage.setItem(
+        "mitra_tasks",
+        JSON.stringify(tasks)
+      );
+    }, 150);
+
+    return () => clearTimeout(id);
   }, [tasks]);
 
   // Keep track of mounted state to prevent state updates on unmounted component
@@ -41,30 +49,45 @@ export function TasksPage() {
   const addTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
-    setTasks([...tasks, { id: Date.now().toString(), text: newTaskText.trim(), size: newTaskSize, done: false }]);
+    setTasks(prev => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        text: newTaskText.trim(),
+        size: newTaskSize,
+        done: false,
+      },
+    ]);
     setNewTaskText("");
   };
 
   const toggleTask = async (id: string, currentlyDone: boolean, size: "small" | "big") => {
-    const task = tasks.find(t => t.id === id);
-    if (!task) return;
+    if (busy.current) return;
+    busy.current = true;
 
-    const newTasks = tasks.map(t => t.id === id ? { ...t, done: !currentlyDone } : t);
-    setTasks(newTasks);
+    try {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
 
-    if (!currentlyDone) {
-      await emit("task:completed", { size });
+      const newTasks = tasks.map(t => t.id === id ? { ...t, done: !currentlyDone } : t);
+      setTasks(newTasks);
 
-      // Show undo toast first — only delete after 5s if not undone
-      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-      setUndoTask(task);
+      if (!currentlyDone) {
+        await emit("task:completed", { size });
 
-      undoTimerRef.current = setTimeout(() => {
-        if (isMounted.current) {
-          setTasks(prev => prev.filter(t => t.id !== id));
-          setUndoTask(null);
-        }
-      }, 5000);
+        // Show undo toast first — only delete after 5s if not undone
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+        setUndoTask(task);
+
+        undoTimerRef.current = setTimeout(() => {
+          if (isMounted.current) {
+            setTasks(prev => prev.filter(t => t.id !== id));
+            setUndoTask(null);
+          }
+        }, 5000);
+      }
+    } finally {
+      busy.current = false;
     }
   };
 
@@ -77,7 +100,13 @@ export function TasksPage() {
     }
   };
 
-  const handleClose = () => getCurrentWebviewWindow().hide();
+  const handleClose = async () => {
+    try {
+      await getCurrentWebviewWindow().hide();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <div className="tasks-container">

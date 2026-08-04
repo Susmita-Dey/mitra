@@ -5,8 +5,11 @@ import type { AppStorage } from "../storage";
 const EDGE_MARGIN_PX = 16;
 
 export function createWindowController(storage: AppStorage): WindowController {
+  let lastPosition: { x: number; y: number } | null = null;
+  let alwaysOnTop = true;
+  let ignoreCursor = false;
   const win = getCurrentWindow();
-  
+
   let moveTimeout: ReturnType<typeof setTimeout>;
   // Track position automatically on move to persist it
   const unlistenMovedPromise = win.onMoved(({ payload }) => {
@@ -31,7 +34,20 @@ export function createWindowController(storage: AppStorage): WindowController {
     },
 
     async moveTo(x: number, y: number) {
-      await win.setPosition(new PhysicalPosition(x, y));
+      if (
+        lastPosition &&
+        lastPosition.x === x &&
+        lastPosition.y === y
+      ) {
+        return;
+      }
+
+      lastPosition = { x, y };
+      console.count("moveTo");
+
+      await win.setPosition(
+        new PhysicalPosition(x, y)
+      );
     },
 
     async animateTo(x: number, y: number) {
@@ -74,13 +90,29 @@ export function createWindowController(storage: AppStorage): WindowController {
       await this.moveTo(targetX, targetY);
     },
 
-    async setAlwaysOnTop(alwaysOnTop: boolean) {
-      await win.setAlwaysOnTop(alwaysOnTop);
+    async setAlwaysOnTop(value: boolean) {
+
+      if (alwaysOnTop === value) {
+        return;
+      }
+
+      alwaysOnTop = value;
+
+      await win.setAlwaysOnTop(value);
     },
 
     async restorePosition() {
       const prefs = await storage.load();
       const savedPos = prefs.windowPosition;
+      console.count("restorePosition");
+      if (
+        lastPosition &&
+        savedPos &&
+        lastPosition.x === savedPos.x &&
+        lastPosition.y === savedPos.y
+      ) {
+        return;
+      }
       const monitors = await availableMonitors();
       const primary = await primaryMonitor() ?? monitors[0];
 
@@ -90,14 +122,14 @@ export function createWindowController(storage: AppStorage): WindowController {
         const winSize = await win.outerSize();
         const w = winSize.width > 0 ? winSize.width : 200;
         const h = winSize.height > 0 ? winSize.height : 200;
-        
+
         // Verify the saved position is inside at least one connected monitor
         const isVisible = monitors.some((m: import("@tauri-apps/api/window").Monitor) => {
           const mLeft = m.position.x;
           const mRight = m.position.x + m.size.width;
           const mTop = m.position.y;
           const mBottom = m.position.y + m.size.height;
-          
+
           return (
             savedPos.x + w > mLeft &&
             savedPos.x < mRight &&
@@ -135,6 +167,13 @@ export function createWindowController(storage: AppStorage): WindowController {
     },
 
     async setIgnoreCursorEvents(ignore: boolean) {
+      if (ignoreCursor === ignore) {
+        return;
+      }
+
+      ignoreCursor = ignore;
+      console.count("ignoreCursor");
+
       await win.setIgnoreCursorEvents(ignore);
     },
   };
