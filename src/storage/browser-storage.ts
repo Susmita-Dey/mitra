@@ -18,6 +18,11 @@ export function createBrowserStorage(): Storage {
     },
 
     async save<T>(key: string, value: T): Promise<void> {
+      // Yield to the microtask queue before the synchronous JSON.stringify +
+      // localStorage.setItem so we don't block the current React paint frame.
+      // Write ordering within an async chain is preserved because each caller
+      // awaits this method before continuing.
+      await Promise.resolve();
       try {
         const serialized = JSON.stringify(value);
         window.localStorage.setItem(key, serialized);

@@ -149,6 +149,32 @@ export function createBrain(
   let currentBubbleText: string | null = null;
   let currentTempEmotion: import("@/types").Emotion | null = null;
 
+  // ── Reentrancy guard ────────────────────────────────────────────────────
+  //
+  // The scheduler fires observe → think → act every 1 s. Several Brain API
+  // methods (acknowledgeReminder, triggerInteraction, etc.) also call the
+  // same cycle synchronously to produce immediate feedback.
+  //
+  // In production, the scheduler's microtask can overlap with one of these
+  // inline calls, causing the intent array to be processed twice and
+  // triggering duplicate IPC commands. The guard below makes the cycle
+  // non-reentrant: if a tick is already running, the caller is skipped and
+  // the next scheduled tick will handle the updated state.
+  // ---------------------------------------------------------------------------
+  let ticking = false;
+
+  const safeTick = () => {
+    if (ticking) return;
+    ticking = true;
+    try {
+      brainInstance.observe();
+      brainInstance.think();
+      brainInstance.act();
+    } finally {
+      ticking = false;
+    }
+  };
+
   const getContext = (): BehaviorContext => ({
     world: currentWorldState!,
     setMemory: (update) => memoryEngine.update(update),
@@ -157,7 +183,11 @@ export function createBrain(
     }
   });
 
-  return {
+  // brainInstance is assigned by the return statement below so safeTick can
+  // reference it before the object literal is complete.
+  let brainInstance: Brain;
+
+  return (brainInstance = {
     pushEmotion(emotion: import("@/types").Emotion) {
       const updates = emotionEngine.push(emotion, currentEmotionState);
       if (updates) {
@@ -184,10 +214,8 @@ export function createBrain(
       });
       this.pushEmotion("happy");
       soundManager.playFoley("chirp"); // Play a happy purr sound
-      // Force immediate tick
-      this.observe();
-      this.think();
-      this.act();
+      // Use safeTick to avoid reentrant overlap with the scheduler.
+      safeTick();
     },
 
     debugForceReminder(type: string) {
@@ -206,10 +234,8 @@ export function createBrain(
           lastUserInteraction: Date.now() - 60_000 // 60s ago = no cooldown
         });
         
-        // Force immediate tick
-        this.observe();
-        this.think();
-        this.act();
+        // Use safeTick to avoid reentrant overlap with the scheduler.
+        safeTick();
       }
     },
 
@@ -249,9 +275,7 @@ export function createBrain(
           animationDirector.clearSequence(id.startsWith("reminder:") ? id : `reminder:${id}`);
           engine.setInteraction("none");
           engine.setBubbleText(null);
-          this.observe();
-          this.think();
-          this.act();
+          safeTick();
           return;
         }
       }
@@ -327,13 +351,11 @@ export function createBrain(
         }
         
         animationDirector.clearSequence(`reminder:${type}`);
-        
-        // Force an immediate tick to clear the interaction state and push emotion
+
+        // Use safeTick to avoid reentrant overlap with the scheduler.
         engine.setInteraction("none");
         engine.setBubbleText(null);
-        this.observe(); // Update currentWorldState before think()
-        this.think();
-        this.act();
+        safeTick();
       }
     },
 
@@ -353,11 +375,9 @@ export function createBrain(
         `User triggered interaction: ${interaction}`
       );
       memoryEngine.update({ timeline: newTimeline });
-      
-      // Must run the full cycle so think() processes SetInteraction → animationDirector
-      this.observe();
-      this.think();
-      this.act();
+
+      // Use safeTick to avoid reentrant overlap with the scheduler.
+      safeTick();
     },
 
     triggerCelebration(event) {
@@ -374,7 +394,9 @@ export function createBrain(
       
       memoryEngine.update({ timeline: newTimeline, ...adaptedPersonality });
 
-      this.act();
+      // Use safeTick rather than this.act() alone — ensures observe/think also
+      // run so the celebration intents are processed with fresh world state.
+      safeTick();
     },
 
     showCustomBubble(text, duration) {
@@ -386,7 +408,7 @@ export function createBrain(
         const updates = emotionEngine.push("happy", currentEmotionState);
         if (updates) currentEmotionState = { ...currentEmotionState, ...updates };
       }
-      this.act();
+      safeTick();
     },
 
     observe() {
@@ -423,10 +445,11 @@ export function createBrain(
     },
 
     think() {
-      // Update Context Engine asynchronously
+      // Update Context Engine — now synchronous, reads MeetingSystem state directly.
+      // No longer issues its own IPC calls or fires unordered async promises.
       contextEngine.tick(currentContext, (updates) => {
          currentContext = { ...currentContext, ...updates };
-      });
+      }, meetingSystem?.getState());
       
       // Step 1 — advance emotion decay timers and reminder timers.
       emotionEngine.tick(currentEmotionState, (updates) => {
@@ -617,8 +640,8 @@ export function createBrain(
              currentProceduralState = animState;
              currentBubbleText = bubbleText;
              currentTempEmotion = tempEmotion;
-             engine.setEnergy(currentEmotionState.energy);
-             engine.setAttention(currentEmotionState.attention);
+             // Note: energy and attention are committed in act() via batchUpdate()
+             // to avoid a premature React re-render here during think().
              if (interactionId) {
                  engine.setInteraction(interactionId as import("@/types").Interaction);
              } else if (currentBubbleText === null) {
@@ -663,31 +686,46 @@ export function createBrain(
         audioSystem
       });
 
-      // Commit resolved emotion and procedural states to the CompanionEngine store.
-      engine.setEmotion(currentTempEmotion || currentEmotionState.mood);
-      engine.setPhysical(currentPhysical);
-      
-      if (currentProceduralState) {
-         engine.setProceduralState(currentProceduralState);
-      }
-      engine.setBubbleText(currentBubbleText);
+      // Commit all resolved states to the CompanionEngine in ONE atomic batch.
+      // Previously 6 separate setter calls → up to 6 React re-renders/second.
+      // batchUpdate() calls patch() once → at most 1 re-render per brain tick.
+      const resolvedEmotion = currentTempEmotion || currentEmotionState.mood;
+      engine.batchUpdate({
+        emotion: resolvedEmotion,
+        physical: currentPhysical,
+        ...(currentProceduralState ? { proceduralState: currentProceduralState } : {}),
+        bubbleText: currentBubbleText,
+        energy: currentEmotionState.energy,
+        attention: currentEmotionState.attention,
+      });
       
       // Clear intents after execution so next tick starts fresh
       currentIntents = [];
     },
-  };
+  });
 }
 
 /** Bootstraps the brain's perception cycle on application start. */
 export function initializeBrain(brain: Brain, scheduler: import("@/system/scheduler").SchedulerService): () => void {
+  // Inline reentrancy guard for the scheduler tick — prevents the 1-second
+  // interval from overlapping with a manually triggered safeTick() inside
+  // the Brain (e.g. from acknowledgeReminder or triggerInteraction).
+  let schedulerTicking = false;
+
   const tick = () => {
-    brain.observe();
-    brain.think();
-    brain.act();
+    if (schedulerTicking) return;
+    schedulerTicking = true;
+    try {
+      brain.observe();
+      brain.think();
+      brain.act();
+    } finally {
+      schedulerTicking = false;
+    }
   };
 
   const handle = scheduler.schedule(tick, { intervalMs: 1000, priority: 100 });
-  
+
   // Run an immediate initial tick
   tick();
 

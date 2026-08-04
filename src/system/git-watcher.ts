@@ -18,22 +18,47 @@ export function createGitWatcher(onCommit: () => void): GitWatcher {
         }
         lastCommitHash = hash;
       }
-    } catch (e) {
-      // API might not be available in production or if Vite server is offline
-      // Fallback to the previous mock logic for demonstration purposes
-      if (Math.random() < 0.20) {
-        // onCommit(); // Uncomment to keep the random mock if real git is unavailable
-      }
+    } catch {
+      // get_git_hash is not available in production installs (no git repo).
+      // This catch is intentionally silent — the feature degrades gracefully.
     }
   };
 
   return {
     start() {
       if (hasStarted) return;
+
+      // Git commit detection only makes sense in a dev environment where the app
+      // runs against a local source repo. In a production install there is no
+      // .git folder, git spawning is wasteful, and on Windows even a single
+      // git process spawn can flash a console window.
+      // Completely disabled in production — zero process spawns.
+      if (!import.meta.env.DEV) return;
+
       hasStarted = true;
-      // Check every 10 seconds
-      intervalId = setInterval(checkGitLog, 10000);
-      // Started monitoring
+
+      // In Tauri production builds the app runs from an install directory with no
+      // git repo, so get_git_hash always throws. We run one probe first: if it
+      // returns null we are almost certainly in a production install with no git
+      // context and we skip the polling loop entirely to avoid spawning `git`
+      // (and its MSYS2 subshells) every 10 s.
+      (async () => {
+        try {
+          const { invoke } = await import("@tauri-apps/api/core");
+          const hash = await invoke<string | null>("get_git_hash");
+          if (hash === null || hash === undefined) {
+            // No git repo at launch — don't start the polling interval.
+            hasStarted = false;
+            return;
+          }
+          lastCommitHash = hash;
+          // Git repo confirmed: start the interval.
+          intervalId = setInterval(checkGitLog, 10_000);
+        } catch {
+          // Tauri IPC not available or git not installed — skip silently.
+          hasStarted = false;
+        }
+      })();
     },
     stop() {
       if (intervalId) {
@@ -41,6 +66,6 @@ export function createGitWatcher(onCommit: () => void): GitWatcher {
         intervalId = null;
       }
       hasStarted = false;
-    }
+    },
   };
 }

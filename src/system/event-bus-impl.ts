@@ -1,8 +1,60 @@
 import type { EventBus, EventName, EventHandler, SystemEvents, Unsubscribe } from "./event-bus";
 
+// ---------------------------------------------------------------------------
+// Batched microtask flusher
+// ---------------------------------------------------------------------------
+//
+// Events published in the same synchronous frame are coalesced into a single
+// flush pass rather than each scheduling its own independent microtask.
+//
+// Before (original):
+//   publish("a") → queueMicrotask(handlersA)
+//   publish("b") → queueMicrotask(handlersB)
+//   → Two independent microtasks; handlersA may trigger state that handlersB
+//     observes in an intermediate, inconsistent form.
+//
+// After (batched):
+//   publish("a") → enqueue pending op, schedule ONE flush microtask if needed
+//   publish("b") → enqueue pending op (flush already scheduled)
+//   → Single microtask runs both; handlers see a consistent snapshot.
+//
+// Handler isolation is preserved: each handler is still called independently
+// and errors are caught per-handler. The only change is that multiple publishes
+// within the same synchronous call stack share one microtask boundary.
+// ---------------------------------------------------------------------------
+
+interface PendingDispatch {
+  event: EventName;
+  handlers: Array<EventHandler<any>>;
+  payload: unknown;
+}
+
 export function createEventBus(): EventBus {
   // We use a Map of Sets for O(1) adds/removes and to prevent duplicate handlers
   const listeners = new Map<EventName, Set<EventHandler<any>>>();
+
+  // Pending dispatches for the current synchronous frame.
+  const pending: PendingDispatch[] = [];
+  let flushScheduled = false;
+
+  const flush = () => {
+    flushScheduled = false;
+    // Drain all pending dispatches in FIFO order.
+    // We take a snapshot of the length to avoid processing events that are
+    // published by handlers during this flush (they'll be picked up next tick).
+    const count = pending.length;
+    for (let i = 0; i < count; i++) {
+      const { handlers, payload } = pending[i];
+      for (const handler of handlers) {
+        try {
+          handler(payload);
+        } catch (error) {
+          console.error(`[EventBus] Error in handler:`, error);
+        }
+      }
+    }
+    pending.splice(0, count);
+  };
 
   return {
     subscribe<K extends EventName>(event: K, handler: EventHandler<SystemEvents[K]>): Unsubscribe {
@@ -30,19 +82,17 @@ export function createEventBus(): EventBus {
       const eventListeners = listeners.get(event);
       if (!eventListeners || eventListeners.size === 0) return;
 
-      // Create a snapshot of handlers to prevent issues if handlers unsubscribe during execution
-      const handlersToExecute = Array.from(eventListeners);
+      // Snapshot handlers at publish time so unsubscriptions during this
+      // flush don't affect the current batch.
+      const handlers = Array.from(eventListeners);
 
-      // Execute asynchronously in the next microtask (async-safe decoupled execution)
-      queueMicrotask(() => {
-        for (const handler of handlersToExecute) {
-          try {
-            handler(payload);
-          } catch (error) {
-            console.error(`[EventBus] Error in handler for event "${event}":`, error);
-          }
-        }
-      });
+      pending.push({ event, handlers, payload });
+
+      // Schedule a single flush microtask for this frame if not already scheduled.
+      if (!flushScheduled) {
+        flushScheduled = true;
+        queueMicrotask(flush);
+      }
     },
 
     clear(event?: EventName): void {
@@ -50,6 +100,14 @@ export function createEventBus(): EventBus {
         listeners.delete(event);
       } else {
         listeners.clear();
+      }
+      // Also clear any pending dispatches for the cleared event(s).
+      if (event) {
+        for (let i = pending.length - 1; i >= 0; i--) {
+          if (pending[i].event === event) pending.splice(i, 1);
+        }
+      } else {
+        pending.length = 0;
       }
     },
   };

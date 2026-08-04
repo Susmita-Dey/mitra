@@ -3,6 +3,11 @@
  *
  * Tauri renders a native transparent webview; every layer must opt out of
  * opaque backgrounds or the desktop will show a solid rectangle behind Mitra.
+ *
+ * SECONDARY PAGES (settings, onboarding, tasks) import this file too.
+ * They need normal browser interaction: text selection, scrolling, focus.
+ * The overrides below restore those behaviors when the page is NOT the
+ * companion surface (detected via the [data-page] attribute on <html>).
  */
 *,
 *::before,
@@ -22,7 +27,44 @@ body,
 }
 
 body {
-  /* Prevent accidental text selection while Mitra sits over other apps. */
+  /* Prevent accidental text selection while Mitra sits over other apps.
+   * Secondary pages (settings/onboarding/tasks) override this below. */
+  user-select: none;
+}
+
+/* ── Secondary-page overrides ─────────────────────────────────────────────
+ *
+ * Settings, Onboarding, and Tasks windows are real app pages with scrollable
+ * content and interactive inputs. They need:
+ *   - user-select: text  (so inputs, labels, and text are selectable/editable)
+ *   - overflow: auto     (so the page can scroll)
+ *   - background: white  (no transparent compositor — these are opaque windows)
+ *
+ * We detect secondary pages by the presence of a data-page attribute on <html>
+ * which main.tsx sets when rendering anything other than the companion App.
+ * ─────────────────────────────────────────────────────────────────────── */
+html[data-page] body,
+html[data-page] #root {
+  user-select: text;
+  overflow: auto;
+  background: #ffffff;
+}
+
+/* Inputs, textareas, and selects always need text-selection and cursor */
+input,
+textarea,
+select {
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+select {
+  cursor: pointer;
+}
+
+button {
+  cursor: pointer;
   user-select: none;
 }
 

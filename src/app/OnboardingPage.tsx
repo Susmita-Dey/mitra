@@ -66,14 +66,16 @@ export function OnboardingPage() {
           <div className="onboarding-step">
             <h1><span className="brand-text">Meet Mitra</span> <img src="/icon.png" alt="Mitra" style={{ width: '36px', height: '36px', objectFit: 'contain' }} /></h1>
             <p>
-              Mitra is your little companion who lives on your desktop. Not a tool — a friend who keeps you company while you work.
+              Mitra is your little companion who lives on your desktop — not a tool, but a friend who keeps you company while you work.
             </p>
             <ul className="onboarding-features">
-              <li><span className="emoji-icon">💧</span> <span>Reminds you to drink water, stretch, and take breaks.</span></li>
-              <li><span className="emoji-icon">🌤️</span> <span>Reacts to your local weather — sunny, rainy, or stormy.</span></li>
-              <li><span className="emoji-icon">🖱️</span> <span>Drag Mitra anywhere. Mitra will wander, sleep, and explore on their own.</span></li>
-              <li><span className="emoji-icon">💖</span> <span>Pet Mitra, tickle their tummy, or give a high-five!</span></li>
-              <li><span className="emoji-icon">🔔</span> <span>Stays silent during meetings. Catches you up when you're back.</span></li>
+              <li><span className="emoji-icon">💧</span> <span>Reminds you to drink water, stretch, take breaks, and eat on time.</span></li>
+              <li><span className="emoji-icon">🌤️</span> <span>Reacts to your local weather — sunny, rainy, cold, or stormy.</span></li>
+              <li><span className="emoji-icon">🖱️</span> <span>Drag Mitra anywhere. They'll wander, nap, peek, and explore on their own.</span></li>
+              <li><span className="emoji-icon">💖</span> <span>Pet Mitra, tickle their tummy, give a high-five, or just say hi!</span></li>
+              <li><span className="emoji-icon">🔕</span> <span>Automatically hides during meetings. Catches you up when you're back.</span></li>
+              <li><span className="emoji-icon">⌨️</span> <span>Press <strong>Ctrl+K</strong> to set reminders, run commands, and talk to Mitra.</span></li>
+              <li><span className="emoji-icon">✅</span> <span>Open <strong>Tasks & Goals</strong> from the tray to track what you're working on.</span></li>
             </ul>
             <button className="onboarding-btn primary" onClick={handleNext}>
               Sounds good →
@@ -86,11 +88,11 @@ export function OnboardingPage() {
             <p>
               Mitra loves greeting friends by name. 🦊
             </p>
-            <input 
+            <input
               ref={nameInputRef}
-              type="text" 
-              placeholder="Your name" 
-              value={userName} 
+              type="text"
+              placeholder="Your name"
+              value={userName}
               onChange={e => setUserName(e.target.value)}
               onKeyDown={e => {
                 if (e.key === "Enter") {
@@ -118,15 +120,15 @@ export function OnboardingPage() {
             )}
             <div style={{ textAlign: 'left', marginBottom: '15px' }}>
               <label style={{ fontSize: '12px', color: '#64748B', fontWeight: 600, display: 'block', marginBottom: '4px' }}>When is your birthday? (Optional)</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={birthday}
                 onChange={e => setBirthday(e.target.value)}
                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: 'none', fontSize: '14px', color: '#334155', boxSizing: 'border-box' }}
               />
             </div>
             <p className="highlight-text" style={{ fontSize: '11px', marginTop: '10px', opacity: 0.7 }}>
-              You can find Mitra's settings by clicking the <strong>⚙️ gear icon</strong> that appears when you hover over Mitra.
+              Hover over Mitra to see the <strong>⚙️ settings icon</strong>, or right-click Mitra for a menu. Press <strong>Ctrl+K</strong> to set reminders any time.
             </p>
             <button className="onboarding-btn success" onClick={handleComplete} disabled={!userName.trim()}>
               Let's go, {userName.trim().split(" ")[0] || "friend"}! 🎉

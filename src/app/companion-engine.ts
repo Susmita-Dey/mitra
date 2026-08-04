@@ -34,6 +34,32 @@ export interface CompanionEngine {
   setBubbleText(text: string | null): void;
   setEnergy(energy: number): void;
   setAttention(attention: number): void;
+  /**
+   * Merge multiple character fields in ONE atomic update → at most one
+   * React re-render regardless of how many fields changed.
+   * Prefer this over calling individual setters in a loop.
+   */
+  batchUpdate(updates: Partial<Character>): void;
+}
+
+/**
+ * Shallow structural equality for flat objects with primitive leaf values.
+ * Avoids JSON.stringify heap allocation — called on every engine tick for
+ * proceduralState and physical comparisons.
+ */
+function shallowEqual(
+  a: Record<string, unknown> | null | undefined,
+  b: Record<string, unknown> | null | undefined,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (a[key] !== b[key]) return false;
+  }
+  return true;
 }
 
 export function createCompanionEngine(
@@ -52,7 +78,12 @@ export function createCompanionEngine(
     let hasChanges = false;
     for (const key of Object.keys(next) as Array<keyof Character>) {
       if (key === "proceduralState" || key === "physical") {
-        if (JSON.stringify(character[key]) !== JSON.stringify(next[key])) {
+        // Shallow structural equality — avoids JSON.stringify heap allocation on every tick.
+        // Both objects have only primitive leaf values so this is exact.
+        if (!shallowEqual(
+          character[key] as unknown as Record<string, unknown>,
+          next[key] as unknown as Record<string, unknown>,
+        )) {
           hasChanges = true;
           break;
         }
@@ -83,5 +114,7 @@ export function createCompanionEngine(
     setBubbleText: (bubbleText) => patch({ bubbleText }),
     setEnergy: (energy) => patch({ energy }),
     setAttention: (attention) => patch({ attention }),
+    // One patch call = at most one notify() = at most one React re-render.
+    batchUpdate: (updates) => patch(updates),
   };
 }

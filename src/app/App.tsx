@@ -27,6 +27,7 @@ import { CompanionProvider } from "./companion-context";
 import { useCharacter } from "./use-character";
 import "./global.css";
 import { commandRegistry, type CommandContext } from "@/system/command-registry";
+import { syncVisibilityState } from "@/system/executors";
 
 import {
   IdleBehavior,
@@ -81,14 +82,14 @@ export function App() {
   const engine = useMemo(() => createCompanionEngine(), []);
   const appStorageRef = useRef<any>(null);
   const winCtrlRef = useRef<any>(null);
+  const brainRef = useRef<import("@/brain").Brain | null>(null);
+  const audioSystemRef = useRef<import("@/system/audio-system").AudioSystem | null>(null);
 
   const [isCommandBarOpen, setIsCommandBarOpen] = useState(false);
   const [toast, setToast] = useState<{ id: string; label: string; details?: string } | null>(null);
 
   const isCommandBarOpenRef = useRef(false);
   isCommandBarOpenRef.current = isCommandBarOpen;
-
-  const updateClickThroughRef = useRef<(() => void) | null>(null);
 
   const openSettingsWindow = async () => {
     try {
@@ -104,11 +105,9 @@ export function App() {
     }
   };
 
-  useEffect(() => {
-    if (updateClickThroughRef.current) {
-      updateClickThroughRef.current();
-    }
-  }, [isCommandBarOpen]);
+  // isCommandBarOpenRef.current is read synchronously inside the updateClickThrough
+  // closure subscribed to the engine. No second useEffect needed — the engine
+  // subscription is the single, authoritative trigger path.
 
   useEffect(() => {
     const eventBus = createEventBus();
@@ -131,6 +130,8 @@ export function App() {
     const winCtrl = createWindowController(appStorage);
     winCtrlRef.current = winCtrl;
     const brain = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus, appStorage);
+    brainRef.current = brain;
+    audioSystemRef.current = audioSystem;
     (window as any).__brain_instance = brain;
     const _pluginManager = createPluginManager(brain, eventBus);
 
@@ -151,30 +152,30 @@ export function App() {
 
     let clickThroughPref = false;
     let lastIgnoreState: boolean | null = null;
-    let clickThroughBusy = false;
 
     const updateClickThrough = () => {
       const char = engine.getCharacter();
-      const isIdleOrSleeping = char.animation === "idle" || char.animation === "sleep" || char.animation === "wander" || char.animation === "walk";
+      const isIdleOrSleeping =
+        char.animation === "idle" ||
+        char.animation === "sleep" ||
+        char.animation === "wander" ||
+        char.animation === "walk";
       const hasBubble = !!char.bubbleText;
-      const shouldIgnore = clickThroughPref && isIdleOrSleeping && !hasBubble && !isCommandBarOpenRef.current;
+      const shouldIgnore =
+        clickThroughPref && isIdleOrSleeping && !hasBubble && !isCommandBarOpenRef.current;
 
+      // Guard: only call IPC when the desired state actually changes.
+      // The clickThroughBusy guard is no longer needed — the IPC serial queue
+      // in WindowController ensures setIgnoreCursorEvents calls are serialized.
       if (lastIgnoreState !== shouldIgnore) {
         lastIgnoreState = shouldIgnore;
-        if (clickThroughBusy) return;
-
-        clickThroughBusy = true;
-
-        winCtrl
-          .setIgnoreCursorEvents(shouldIgnore)
-          .catch(console.error)
-          .finally(() => {
-            clickThroughBusy = false;
-          });
+        winCtrl.setIgnoreCursorEvents(shouldIgnore).catch(console.error);
       }
     };
 
-    updateClickThroughRef.current = updateClickThrough;
+    // Single update path: engine subscription only.
+    // isCommandBarOpenRef.current is read inside the closure so command-bar
+    // state changes are naturally captured on the next engine notification.
     const unsubscribeEngine = engine.subscribe(updateClickThrough);
 
     // Assume onboarding might be active until storage loads, to prevent premature greetings
@@ -185,21 +186,34 @@ export function App() {
       clickThroughPref = !!prefs?.behavior?.clickThrough;
       if (!prefs?.onboardingComplete) {
         (window as any).ONBOARDING_ACTIVE = true;
-        // Hide main window, show onboarding window
-        await getCurrentWindow().hide();
+        // Guard: only hide if currently visible — avoids redundant IPC on transparent window.
+        try {
+          const isVis = await getCurrentWindow().isVisible();
+          if (isVis) await getCurrentWindow().hide();
+        } catch { /* non-fatal */ }
         const onboardWin = await WebviewWindow.getByLabel("onboarding");
-        if (onboardWin) await onboardWin.show();
+        if (onboardWin) {
+          const isOnboardVis = await onboardWin.isVisible().catch(() => false);
+          if (!isOnboardVis) await onboardWin.show();
+        }
       } else {
         (window as any).ONBOARDING_ACTIVE = false;
-        await getCurrentWindow().show();
+        // Guard: only show if currently hidden.
+        try {
+          const isVis = await getCurrentWindow().isVisible();
+          if (!isVis) await getCurrentWindow().show();
+        } catch { await getCurrentWindow().show(); }
       }
       updateClickThrough();
     }).catch(console.error);
 
     const unlistenOnboarding = listen("onboarding-completed", async () => {
-      console.log("Onboarding completed event received!");
       (window as any).ONBOARDING_ACTIVE = false;
-      await getCurrentWindow().show();
+      // Guard: only show if currently hidden (avoids redundant IPC on transparent window)
+      try {
+        const isVis = await getCurrentWindow().isVisible();
+        if (!isVis) await getCurrentWindow().show();
+      } catch { await getCurrentWindow().show(); }
     });
 
     const unlistenTask = listen("task:completed", (e: any) => {
@@ -215,12 +229,20 @@ export function App() {
     (window as any).IS_HIDDEN = false;
     const unlistenHidden = listen("companion:window:hidden", () => {
       (window as any).IS_HIDDEN = true;
+      // Sync the executor visibility guard so brain ticks don't re-issue hide IPC.
+      syncVisibilityState(true);
+      // Disable click-through BEFORE the window becomes hidden — prevents WebView2
+      // from rendering the transparent window as a solid black rectangle.
+      winCtrl.setIgnoreCursorEvents(false).catch(console.error);
+      lastIgnoreState = false;
       notificationSystem.setHidden(true);
     });
     const unlistenShown = listen("companion:window:shown", () => {
       (window as any).IS_HIDDEN = false;
+      // Sync the executor visibility guard so brain ticks don't re-issue show IPC.
+      syncVisibilityState(false);
       notificationSystem.setHidden(false);
-      notificationSystem.onResurface(); // flush queued notifications as OS toast summary
+      notificationSystem.onResurface();
       // Trigger a special event to evaluate the CatchUp behavior
       window.dispatchEvent(new CustomEvent("companion:window:shown"));
     });
@@ -392,16 +414,8 @@ export function App() {
         const currentPrefs = await appStorage.load();
         const updatedCustom = (currentPrefs.customReminders || []).filter((r: any) => r.id !== id);
         await appStorage.update({ customReminders: updatedCustom });
-
-        window.dispatchEvent(new CustomEvent("companion:debug", {
-          detail: {
-            type: "show-bubble",
-            payload: {
-              text: "Cancelled that reminder! 🛑",
-              duration: 3000
-            }
-          }
-        }));
+        // Direct brain call — no CustomEvent round-trip.
+        brain.showCustomBubble("Cancelled that reminder! 🛑", 3000);
       } catch (err) {
         console.error("Failed to undo custom reminder", err);
       }
@@ -480,6 +494,8 @@ export function App() {
         setIsOpen={setIsCommandBarOpen}
         appStorageRef={appStorageRef}
         setToast={setToast}
+        brainRef={brainRef}
+        audioSystemRef={audioSystemRef}
       />
 
       {toast && (
@@ -534,9 +550,13 @@ interface CommandBarProps {
   setIsOpen: (open: boolean) => void;
   appStorageRef: React.RefObject<any>;
   setToast: (toast: { id: string; label: string; details?: string } | null) => void;
+  /** Direct brain reference — avoids DOM CustomEvent round-trip for feedback calls. */
+  brainRef: React.RefObject<import("@/brain").Brain | null>;
+  /** Direct audio system reference — avoids CustomEvent round-trip for sound feedback. */
+  audioSystemRef: React.RefObject<import("@/system/audio-system").AudioSystem | null>;
 }
 
-function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarProps) {
+function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast, brainRef, audioSystemRef }: CommandBarProps) {
   const [inputValue, setInputValue] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Array<{ label: string; icon: string; value: string }>>([]);
@@ -651,36 +671,30 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
     const storage = appStorageRef.current;
     if (!storage) return;
 
+    // Access brain and audio directly via refs — no CustomEvent round-trip.
+    const brain = brainRef.current;
+    const audio = audioSystemRef.current;
+
     const context: CommandContext = {
-      brain: (window as any).__brain_instance,
+      brain: brain ?? (window as any).__brain_instance,
       appStorage: storage,
-      winCtrl: (window as any).__win_controller, // Fallback if ref hasn't written
+      winCtrl: (window as any).__win_controller,
     };
 
     const result = await action.execute(cleanInput, context);
 
     if (result.success) {
-      // Success feedback triggers
-      window.dispatchEvent(new CustomEvent("companion:sound:play", {
-        detail: { category: "chirps" }
-      }));
+      // Play success chirp directly — no CustomEvent needed.
+      audio?.playSound("chirps");
 
-      if (result.feedbackEmotion) {
-        window.dispatchEvent(new CustomEvent("companion:debug", {
-          detail: { type: "force-emotion", payload: result.feedbackEmotion }
-        }));
+      // Push feedback emotion directly to brain.
+      if (result.feedbackEmotion && brain) {
+        brain.pushEmotion(result.feedbackEmotion as import("@/types").Emotion);
       }
 
-      if (result.feedbackText) {
-        window.dispatchEvent(new CustomEvent("companion:debug", {
-          detail: {
-            type: "show-bubble",
-            payload: {
-              text: result.feedbackText,
-              duration: 5000
-            }
-          }
-        }));
+      // Show feedback bubble directly.
+      if (result.feedbackText && brain) {
+        brain.showCustomBubble(result.feedbackText, 5000);
       }
 
       // If reminder was parsed
@@ -703,7 +717,6 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
           await storage.update({ customReminders: updatedCustom });
 
           // Detect if the parser used the 30-minute default fallback
-          // (input had no time expression — countdown of exactly 30 minutes with no time/interval)
           const isDefaultFallback =
             parsed.triggerType === "countdown" &&
             parsed.countdownMs === 30 * 60 * 1000 &&
@@ -729,51 +742,40 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
             details: timeDesc
           });
 
-          // Face transition to happy smile
-          window.dispatchEvent(new CustomEvent("companion:debug", {
-            detail: { type: "force-emotion", payload: "happy" }
-          }));
-
-          window.dispatchEvent(new CustomEvent("companion:debug", {
-            detail: {
-              type: "show-bubble",
-              payload: {
-                text: `Got it! I'll remind you to: ${parsed.label} ⏰`,
-                duration: 4000
-              }
-            }
-          }));
+          // Direct Brain calls — replaces 2 sequential companion:debug CustomEvents.
+          if (brain) {
+            brain.pushEmotion("happy");
+            brain.showCustomBubble(`Got it! I'll remind you to: ${parsed.label} ⏰`, 4000);
+          }
 
         } catch (err) {
           console.error(err);
         }
       }
 
-      // Add to command history
+      // Persist command history — deferred write to avoid blocking the submit path.
       const nextHistory = [text, ...history.filter((h) => h !== text)].slice(0, 50);
       setHistory(nextHistory);
-      localStorage.setItem("mitra_command_history", JSON.stringify(nextHistory));
       setHistoryIndex(-1);
+      // Yield to the event loop before writing so the UI can update first.
+      Promise.resolve().then(() => {
+        try {
+          localStorage.setItem("mitra_command_history", JSON.stringify(nextHistory));
+        } catch (err) {
+          console.error("[CommandBar] Failed to save history", err);
+        }
+      });
 
       setIsOpen(false);
       setInputValue("");
     } else {
-      // Error / safety interception
-      window.dispatchEvent(new CustomEvent("companion:debug", {
-        detail: { type: "force-emotion", payload: "concerned" }
-      }));
-      window.dispatchEvent(new CustomEvent("companion:debug", {
-        detail: {
-          type: "show-bubble",
-          payload: {
-            text: result.message || "Failed to parse command.",
-            duration: 8000
-          }
-        }
-      }));
+      // Error / safety interception — direct Brain calls.
+      if (brain) {
+        brain.pushEmotion("concerned");
+        brain.showCustomBubble(result.message || "Failed to parse command.", 8000);
+      }
 
       if (result.data?.safety) {
-        // Clear inputs on safety blocks
         setInputValue("");
         setIsOpen(false);
       }

@@ -1,8 +1,16 @@
-import { invoke } from "@tauri-apps/api/core";
 import { ContextState, TimeOfDay, UserState } from "./types";
+import type { MeetingState } from "@/system/meeting-system";
 
 export interface ContextEngine {
-  tick(currentContext: ContextState, setContext: (ctx: Partial<ContextState>) => void): Promise<void>;
+  // NOTE: tick() is now synchronous — it no longer fires its own IPC calls.
+  // Meeting/coding state comes from MeetingSystem (already polled every 30s).
+  // This eliminates a second independent IPC polling source that was duplicating
+  // sysinfo lookups at a different cadence (10s vs 30s).
+  tick(
+    currentContext: ContextState,
+    setContext: (ctx: Partial<ContextState>) => void,
+    meetingState?: MeetingState,
+  ): void;
 }
 
 function calculateTimeOfDay(): TimeOfDay {
@@ -16,58 +24,48 @@ function calculateTimeOfDay(): TimeOfDay {
 
 function synthesizeUserState(context: ContextState): UserState {
   if (context.isMeetingRunning) return "Meeting";
-  if (context.isFullscreen) return "Focused"; // Assumption: Fullscreen often means focused (movie/game/presentation)
-  
+  if (context.isFullscreen) return "Focused";
+
   const now = Date.now();
   const idleTime = now - context.lastUserInteraction;
-  
-  if (idleTime > 60 * 60 * 1000) return "Away"; // 1 hour idle
-  if (idleTime > 15 * 60 * 1000) return "Focused"; // 15 mins idle implies deep work, not away
-  
+
+  if (idleTime > 60 * 60 * 1000) return "Away";       // 1 hour idle
+  if (idleTime > 15 * 60 * 1000) return "Focused";    // 15 min deep work
   return "Available";
 }
 
 export function createContextEngine(): ContextEngine {
-  let lastMeetingCheck = 0;
-  
   return {
-    async tick(currentContext, setContext) {
-      const now = Date.now();
+    tick(currentContext, setContext, meetingState) {
       const updates: Partial<ContextState> = {};
       let stateChanged = false;
 
-      // Update time of day
+      // Time of day — pure computation, no IPC needed
       const timeOfDay = calculateTimeOfDay();
       if (timeOfDay !== currentContext.timeOfDay) {
         updates.timeOfDay = timeOfDay;
         stateChanged = true;
       }
 
-      // Check meeting status via OS process check every 10 seconds to save CPU
-      if (now - lastMeetingCheck > 10000) {
-        lastMeetingCheck = now;
-        try {
-          const isMeetingRunning = await invoke<boolean>("check_meeting_status");
-          if (isMeetingRunning !== currentContext.isMeetingRunning) {
-            updates.isMeetingRunning = isMeetingRunning;
-            stateChanged = true;
-          }
-          
-          const isCoding = await invoke<boolean>("check_coding_status");
-          if (isCoding !== currentContext.isCoding) {
-            updates.isCoding = isCoding;
-            stateChanged = true;
-          }
-        } catch (err) {
-          console.warn("[ContextEngine] Failed to check OS process status", err);
+      // Meeting / coding state — read from MeetingSystem snapshot.
+      // MeetingSystem polls sysinfo every 30s via the central Scheduler.
+      // We no longer issue our own IPC calls here, eliminating the duplicate
+      // 10s polling and the fire-and-forgotten async promise that was running
+      // outside the brain tick cycle with no ordering guarantee.
+      if (meetingState) {
+        if (meetingState.inMeeting !== currentContext.isMeetingRunning) {
+          updates.isMeetingRunning = meetingState.inMeeting;
+          stateChanged = true;
+        }
+        if (meetingState.inCoding !== currentContext.isCoding) {
+          updates.isCoding = meetingState.inCoding;
+          stateChanged = true;
         }
       }
 
-      // We might add fullscreen check via Tauri later. 
-      // For now, we synthesize UserState based on what we have.
+      // Synthesize user state from the (potentially updated) context
       const syntheticContext = { ...currentContext, ...updates };
       const newUserState = synthesizeUserState(syntheticContext);
-      
       if (newUserState !== currentContext.userState) {
         updates.userState = newUserState;
         stateChanged = true;
@@ -76,6 +74,6 @@ export function createContextEngine(): ContextEngine {
       if (stateChanged) {
         setContext(updates);
       }
-    }
+    },
   };
 }

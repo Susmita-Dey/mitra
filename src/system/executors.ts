@@ -9,6 +9,23 @@ export interface ExecutorDependencies {
   audioSystem?: AudioSystem;
 }
 
+// ---------------------------------------------------------------------------
+// Visibility guard
+// ---------------------------------------------------------------------------
+// The presence engine emits HideWindow/ShowWindow on every brain tick when
+// inMeeting === true (or false). Without a guard these fire IPC commands
+// 1×/second even when the window state has not changed.
+//
+// On Windows with transparent + undecorated WebView2 windows, repeated
+// hide/show IPC calls — especially concurrent ones from Rust tray and JS —
+// cause the compositor to flash a solid black rectangle.
+//
+// We track intended visibility here so each IPC call is only issued once
+// per actual state transition. This complements the IPC serial queue in
+// WindowController which serializes the calls themselves.
+// ---------------------------------------------------------------------------
+let intendedHidden = false;
+
 export function executeIntents(intents: Intent[], deps: ExecutorDependencies) {
   for (const intent of intents) {
     // ── Character Intents ──────────────────────────────────────────────────
@@ -46,11 +63,26 @@ export function executeIntents(intents: Intent[], deps: ExecutorDependencies) {
     else if (intent.type === "SnapToEdge") {
       deps.windowController?.snapToEdge().catch(console.error);
     } else if (intent.type === "MoveToTaskbar") {
-      deps.windowController?.restorePosition().catch(console.error); // Restore goes to bottom right currently
+      deps.windowController?.restorePosition().catch(console.error);
     } else if (intent.type === "HideWindow") {
-      deps.windowController?.hide().catch(console.error);
+      // Guard: only issue IPC if not already hidden.
+      // Repeated hide calls on a transparent WebView2 window cause black flashes.
+      if (!intendedHidden) {
+        intendedHidden = true;
+        // Disable click-through BEFORE hiding to prevent WebView2 compositor
+        // from painting the transparent window as a black rectangle.
+        deps.windowController?.setIgnoreCursorEvents(false)
+          .catch(console.error)
+          .finally(() => {
+            deps.windowController?.hide().catch(console.error);
+          });
+      }
     } else if (intent.type === "ShowWindow") {
-      deps.windowController?.show().catch(console.error);
+      // Guard: only issue IPC if currently hidden.
+      if (intendedHidden) {
+        intendedHidden = false;
+        deps.windowController?.show().catch(console.error);
+      }
     }
 
     // ── Audio Intents ──────────────────────────────────────────────────────
@@ -58,4 +90,13 @@ export function executeIntents(intents: Intent[], deps: ExecutorDependencies) {
       deps.audioSystem?.playSound(intent.category, intent.emotion);
     }
   }
+}
+
+/**
+ * Sync the visibility guard with external events (tray hide/show).
+ * Must be called whenever the window is hidden or shown outside of executeIntents
+ * (e.g. from the system tray menu handler).
+ */
+export function syncVisibilityState(isHidden: boolean) {
+  intendedHidden = isHidden;
 }

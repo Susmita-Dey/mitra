@@ -177,8 +177,7 @@ export function SettingsPage() {
 
     // Also reload when the settings window is shown/focused
     // (handles the case where companion added a reminder while settings was hidden)
-    const handleFocus = () => { if (isMounted) loadPrefs(); };
-    // window.addEventListener("focus", handleFocus);
+    // window.addEventListener("focus", handleFocus); // reserved for future use
 
     return () => {
       isMounted = false;
