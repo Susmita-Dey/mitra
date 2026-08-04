@@ -12,6 +12,14 @@ All notable changes to this project will be documented in this file.
 - **🛡️ Strict Focus & Close Gestures**: Stopped the Command Bar from opening automatically on general Alt+Tab window focus. Closed the bar strictly on Escape, submit, close button, or clicking outside (eliminating unreliable blur events).
 - **🔒 Safety Hardening**: Upgraded safety validators to normalize strings (collapsing spaces, stripping symbols, mapping leet-speak) to block obfuscated prompts.
 
+### 🛠️ Performance & Stability (The Deep Pass)
+- **⚡ Atomic Engine Updates**: Replaced multiple engine setter calls in the core brain loop with a single `batchUpdate()`. This eliminates up to 8 unnecessary React re-renders per second, making Mitra buttery smooth.
+- **🚫 Zero IPC Noise**: Rewrote the Context Engine to read meeting state synchronously from the scheduler, dropping duplicate 10s IPC polling intervals and loose async promises.
+- **🔕 Console Flash Fixed**: The Git watcher now probes for a repo at startup and cleanly aborts in production environments, permanently eliminating the "flashing Windows Terminal" issue caused by background child processes.
+- **👻 Transparent Window Fixes**: Guarded all `hide()` and `show()` window commands with visibility checks. Cleared click-through states before hiding to prevent the WebView2 compositor from repainting black rectangles.
+- **🔒 Serialized IPC Queue**: All Tauri window movement and state operations are now funneled through a strict serial promise queue, preventing "Not Responding" hangs when the UI thread was overwhelmed.
+- **🚫 React StrictMode Guard**: Disabled React 18 StrictMode in production to prevent the entire companion engine and IPC listeners from mounting twice and competing.
+
 ## [v1.0.0] - The Final Production Release
 
 ### 🚀 Features & Enhancements

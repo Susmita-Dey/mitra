@@ -1,56 +1,53 @@
-# 🦊 Mitra v1.0.0 - The Official Final Release
+# 🦊 Mitra v1.1.0 - The Spotlight & Stability Update
 
-We are incredibly proud to present the **Official Final Release of Mitra v1.0.0**! 
+We are incredibly proud to present **Mitra v1.1.0**! 
 
-Mitra has evolved from a simple reminder tool into a truly responsive, zero-telemetry desktop companion. This release consolidates all of our major features, architectural improvements, and bug fixes into a single, polished build that is ready for millions of users worldwide.
-
----
-
-## 🧠 Core Features & Highlights
-
-### ✨ Behavior Chains & Natural Anticipation
-Mitra doesn't interrupt you with abrupt notifications. With our new **Behavior Chains** architecture:
-* Before reminding you to stretch, rest your eyes, or drink water, Mitra will anticipate the action naturally (e.g. yawning, looking around, or stretching).
-* **Polite Interruption Handling**: If you start active keyboard or mouse inputs while Mitra is preparing a reminder, she will cancel the animation and hold her thought to keep you in your flow.
-* Reminders are coupled with perfectly synchronized audio cues and custom visual speech bubbles.
-
-### 🎒 Dynamic Props & Costumes
-Mitra holds and interacts with virtual props depending on your environment, actions, and settings:
-* **Meal Times**: Holds a stalk of bamboo (food) during Lunch, Snack, and Dinner times.
-* **Coding Buddy**: Opens up a tiny laptop with glowing code lines when you are working in VS Code or JetBrains IDEs.
-* **Weather Reactions**: Holds a blue umbrella when it's raining, or rests on a yellow beach towel with sunglasses when it's sunny.
-* **Self-Care**: Holds a blue coffee/tea mug to prompt you to drink water.
-* **Celebrations**: Wears a blue party hat and holds a pink birthday cake with lit candles.
-
-### 🤫 Smart Context Awareness & Privacy
-Mitra is built to work offline and respect your boundary:
-* **Meeting Privacy**: Automatically detects active calls (Zoom, Teams, Discord, Webex, Slack, etc.) and keeps Mitra silent.
-* **Vibe to Music**: Listens along with your media controls (Windows-only via `win-gsmtc`) to sway and enjoy your music with you.
-* **Local Weather**: Fetches weather based on public IP, requiring zero invasive native OS location permissions.
-
-### 📝 Custom Reminders & Safety Guardrails
-Users can now add their own custom, personalized reminders:
-* **Natural Language Command Bar**: Ask Mitra for reminders using natural inputs (e.g. *"medicine in 30 minutes"*, *"coffee every 45m"*, or *"lunch at 1:30 PM"*). Live parsing previews show up as you type.
-* **Safety Guardrails**: Prohibits violent, self-harm, and illegal reminder inputs. When blocked, Mitra responds with empathetic support or cautionary guidance depending on the category.
-* **Settings Hub**: Turn on/off or permanently delete custom reminders at any time.
+This release brings a highly-requested power-user feature—the Universal Command Palette—alongside the deepest performance and stability audit we've ever done. Mitra has never been smoother, faster, or safer.
 
 ---
 
-## 🛠️ Production Readiness & Stability Fixes
+## 🔍 The Spotlight Command Palette
 
-This final release includes critical patches addressing memory, performance, and cross-platform readiness:
+Press **`Ctrl + K`** (or `/` when focused) to instantly summon Mitra's new Command Bar.
+* **Universal Actions:** Type what you want to do. Need to drink water? Type `water` and select `💧 Drink Water`.
+* **Custom Reminders:** Schedule anything using natural language (e.g. *"medicine in 30 minutes"*, *"coffee every 45m"*, or *"lunch at 1:30 PM"*). Live parsing previews show up as you type.
+* **Smart History:** Use the `Up` and `Down` arrow keys to cycle through your recently used commands.
+* **Fuzzy Clash Detection:** Mitra actively prevents you from creating custom reminders that accidentally clash with her built-in routines, keeping your schedule clean.
 
-1. **Zero Event & Timeout Leaks**: Swapped out anonymous event listeners in `App.tsx` and `SettingsPage.tsx` with static, memoized handlers. Fully cleaned up all window moved event listeners, weather intervals, battery event hooks, `setTimeout` timers, and plugin instances on unmount.
-2. **Cross-Platform Compatibility**: Rewrote backend process matching in Rust to be fully platform-agnostic, stripping `.exe` and platform-specific suffixes so context detection functions perfectly on Windows, macOS, and Linux.
-3. **Production Capability Permissions**: Added missing window management and update capabilities (`allow-set-ignore-cursor-events`, `allow-set-position`, `allow-set-size`, `allow-set-always-on-top`, `allow-minimize`, `allow-unminimize`) to prevent crashes in production.
-4. **Preserved Birth Year & Age Wishes**: Fixed the date picker to save and display the user's birth year, enabling Mitra to calculate your exact age and wish you a customized birthday (e.g. *"HAPPY 23rd BIRTHDAY, Susmita!!"*).
-5. **Fixed Food Prop Rotations & Layering**: Swapped inverted arm angles for the food prop so Mitra holds the bamboo stalk centrally, and moved the SVG rendering order so the prop is not hidden behind her head.
+## ↩️ Gmail-style Undo
+
+Made a mistake? Every time you schedule a reminder or complete a task, Mitra now shows a stateful Toast notification with a **3-second undo buffer**. Complete with a happy chirp and a smiling face, you're always in control.
+
+## 🔍 Settings Search & Organization
+
+The Settings page now features a dynamic search bar. Just type what you're looking for (like "audio" or "privacy") and the panel will instantly filter down to the exact section you need.
+
+---
+
+## 🛠️ The Deep Performance & Stability Pass
+
+We paused feature development to completely audit the backend and frontend. The result is the most stable version of Mitra ever released:
+
+### 🔕 No More Flashing Consoles
+Fixed a critical bug where Mitra would occasionally flash a black Windows Terminal on the screen. We completely disabled the Git commit watcher in production builds and added `CREATE_NO_WINDOW` flags to ensure zero rogue background processes are spawned.
+
+### ⚡ Buttery Smooth Rendering (Zero Lag)
+We discovered the animation engine was triggering up to 8 unnecessary React re-renders *every single second*. We replaced this with an atomic `batchUpdate()` architecture. Mitra now renders at most 1 time per tick, eliminating CPU spikes and typing lag across the entire app.
+
+### 👻 Transparent Window Fixes
+Fixed the dreaded "black box" flickering on Windows. All `hide()` and `show()` window commands are now guarded with strict visibility checks. We also properly clear click-through states before hiding to prevent the WebView2 compositor from repainting black rectangles on your desktop.
+
+### 🔒 Serialized IPC Queue
+All Tauri window movement and state operations (like dodging your mouse or hiding during a meeting) are now funneled through a strict serial promise queue. This completely eliminates the "Not Responding" hangs caused when the UI thread was overwhelmed by competing commands.
+
+### 🚫 Zero IPC Noise
+Rewrote the Context Engine to read meeting state synchronously from the scheduler, dropping duplicate 10-second IPC polling intervals and loose async promises. Mitra is now dead silent on your system buses until she needs to be.
 
 ---
 
 ## 📦 How to Install
 
-Download the native installer for your system:
+Download the native installer for your system from our Releases page:
 * **Windows**: Download the `.msi` or `.exe` installer.
 * **macOS**: Download the `.dmg` package and drag Mitra to your Applications.
 * **Linux**: Download the `.deb` or `.AppImage` package.
