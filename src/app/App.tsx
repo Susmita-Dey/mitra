@@ -87,7 +87,7 @@ export function App() {
 
   const isCommandBarOpenRef = useRef(false);
   isCommandBarOpenRef.current = isCommandBarOpen;
-  
+
   const updateClickThroughRef = useRef<(() => void) | null>(null);
 
   const openSettingsWindow = async () => {
@@ -111,26 +111,26 @@ export function App() {
   }, [isCommandBarOpen]);
 
   useEffect(() => {
-    const eventBus      = createEventBus();
-    const backend       = createBrowserStorage();
-    const appStorage    = createAppStorage(backend, eventBus);
+    const eventBus = createEventBus();
+    const backend = createBrowserStorage();
+    const appStorage = createAppStorage(backend, eventBus);
     appStorageRef.current = appStorage;
-    const trustManager  = createTrustManager(appStorage);
-    const env           = createEnvironmentService();
-    const scheduler     = createSchedulerService();
-    const audioSystem   = createAudioSystem(eventBus);
+    const trustManager = createTrustManager(appStorage);
+    const env = createEnvironmentService();
+    const scheduler = createSchedulerService();
+    const audioSystem = createAudioSystem(eventBus);
     const batterySystem = createBatterySystem();
     const weatherSystem = createWeatherSystem(trustManager);
     const meetingSystem = createMeetingSystem();
-    
+
     batterySystem.start();
     weatherSystem.start();
     // MeetingSystem uses the central Scheduler — no raw setInterval
     meetingSystem.start(scheduler);
-    
-    const winCtrl       = createWindowController(appStorage);
+
+    const winCtrl = createWindowController(appStorage);
     winCtrlRef.current = winCtrl;
-    const brain         = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus, appStorage);
+    const brain = createBrain(engine, env, winCtrl, audioSystem, batterySystem, weatherSystem, meetingSystem, eventBus, appStorage);
     (window as any).__brain_instance = brain;
     const _pluginManager = createPluginManager(brain, eventBus);
 
@@ -143,34 +143,34 @@ export function App() {
       });
     });
     (window as any).__notificationSystem = notificationSystem;
-    
-    const gitWatcher    = createGitWatcher(() => {
+
+    const gitWatcher = createGitWatcher(() => {
       brain.triggerCelebration("GitCommit");
     });
     gitWatcher.start();
-    
+
     let clickThroughPref = false;
-    let lastIgnoreState: boolean |null = null;
-let clickThroughBusy = false;
+    let lastIgnoreState: boolean | null = null;
+    let clickThroughBusy = false;
 
     const updateClickThrough = () => {
       const char = engine.getCharacter();
       const isIdleOrSleeping = char.animation === "idle" || char.animation === "sleep" || char.animation === "wander" || char.animation === "walk";
       const hasBubble = !!char.bubbleText;
       const shouldIgnore = clickThroughPref && isIdleOrSleeping && !hasBubble && !isCommandBarOpenRef.current;
-      
+
       if (lastIgnoreState !== shouldIgnore) {
         lastIgnoreState = shouldIgnore;
         if (clickThroughBusy) return;
 
-clickThroughBusy = true;
+        clickThroughBusy = true;
 
-winCtrl
-    .setIgnoreCursorEvents(shouldIgnore)
-    .catch(console.error)
-    .finally(() => {
-        clickThroughBusy = false;
-    });
+        winCtrl
+          .setIgnoreCursorEvents(shouldIgnore)
+          .catch(console.error)
+          .finally(() => {
+            clickThroughBusy = false;
+          });
       }
     };
 
@@ -195,7 +195,7 @@ winCtrl
       }
       updateClickThrough();
     }).catch(console.error);
-    
+
     const unlistenOnboarding = listen("onboarding-completed", async () => {
       console.log("Onboarding completed event received!");
       (window as any).ONBOARDING_ACTIVE = false;
@@ -227,11 +227,11 @@ winCtrl
 
     let lastPlaying = false;
     let lastTrack = "";
-    
+
     const unlistenMedia = listen("media-session-update", (event: any) => {
       const state = event.payload;
       const trackId = `${state.title}-${state.artist}`;
-      
+
       if (state.is_playing && !lastPlaying) {
         eventBus.publish("media:started", { title: state.title, artist: state.artist, source: state.source });
         lastPlaying = true;
@@ -310,7 +310,7 @@ winCtrl
         brain.acknowledgeReminder(ce.detail.id);
       }
     };
-    
+
     const handlePointerDown = () => {
       brain.registerInteraction();
     };
@@ -341,13 +341,13 @@ winCtrl
       }
     };
 
-    const handlePet       = () => handleInteraction("pet");
-    const handleTickle    = () => handleInteraction("tickle");
-    const handleTap       = () => handleInteraction("gentle-tap");
-    const handleHighFive  = () => handleInteraction("high-five");
+    const handlePet = () => handleInteraction("pet");
+    const handleTickle = () => handleInteraction("tickle");
+    const handleTap = () => handleInteraction("gentle-tap");
+    const handleHighFive = () => handleInteraction("high-five");
     const handleTailFlick = () => handleInteraction("tail-flick");
     const handleEarTwitch = () => handleInteraction("ear-twitch");
-    const handlePoke      = () => handleInteraction("poke");
+    const handlePoke = () => handleInteraction("poke");
 
     // Sound player listener
     const handlePlaySound = (e: Event) => {
@@ -392,7 +392,7 @@ winCtrl
         const currentPrefs = await appStorage.load();
         const updatedCustom = (currentPrefs.customReminders || []).filter((r: any) => r.id !== id);
         await appStorage.update({ customReminders: updatedCustom });
-        
+
         window.dispatchEvent(new CustomEvent("companion:debug", {
           detail: {
             type: "show-bubble",
@@ -475,10 +475,10 @@ winCtrl
       <Updater />
       <CompanionView />
 
-      <CommandBar 
-        isOpen={isCommandBarOpen} 
-        setIsOpen={setIsCommandBarOpen} 
-        appStorageRef={appStorageRef} 
+      <CommandBar
+        isOpen={isCommandBarOpen}
+        setIsOpen={setIsCommandBarOpen}
+        appStorageRef={appStorageRef}
         setToast={setToast}
       />
 
@@ -491,7 +491,7 @@ winCtrl
               <strong className="mitra-toast-title">{toast.label}</strong>
               {toast.details && <span className="mitra-toast-desc">{toast.details}</span>}
             </div>
-            <button 
+            <button
               className="mitra-toast-undo"
               onClick={() => {
                 const ce = new CustomEvent("companion:reminder:undo", { detail: { id: toast.id } });
@@ -506,7 +506,7 @@ winCtrl
       )}
 
       {/* Settings / Menu Gear Icon */}
-      <button 
+      <button
         className="settings-btn"
         onClick={openSettingsWindow}
         title="Mitra Options"
@@ -824,8 +824,8 @@ function CommandBar({ isOpen, setIsOpen, appStorageRef, setToast }: CommandBarPr
       {suggestions.length > 0 && (
         <div className="command-suggestions">
           {suggestions.map((s, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="suggestion-item"
               onMouseDown={(e) => {
                 // Prevent blur from firing before we set the value
